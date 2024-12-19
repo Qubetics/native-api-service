@@ -242,7 +242,7 @@ export const nodeIpDetail = {
 		RecvMonitor: [],
 		Channels: [],
 	},
-	remote_ip: environment.nodeIp,
+	// remote_ip: environment.nodeIp,
 };
 
 export enum TRANSACTION_TYPE {
