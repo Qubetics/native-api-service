@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-      - feature/*
-
 permissions:
   id-token: write
   contents: read
