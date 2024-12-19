@@ -10,19 +10,11 @@ class Environment implements IEnvironment {
 
 	public address_prefix: string;
 
-	public secretKey: string;
-
-	public applyEncryption: boolean;
-
 	public env: string;
-
-	public saltValue: number;
 
 	public httpHost: string;
 
 	public databaseUrl: string;
-
-	// public databaseReplicaUrl: string;
 
 	public redisHost: string;
 
@@ -30,31 +22,7 @@ class Environment implements IEnvironment {
 
 	public rabbitMq: string;
 
-	public publicKey: string;
-
-	public privateKey: string;
-
-	public recaptchaSiteKey: string;
-
-	public recaptchaUrl: string;
-
-	public coinMarketApi: string;
-
-	public coinMarketKey: string;
-
-	public currency: string;
-
-	public symbol: string;
-
 	public evmHost: string;
-
-	public nodeInfoUrl: string;
-
-	public locationApiUrl: string;
-
-	public nodeIp: string;
-
-	public redisExpiry: number;
 
 	public validators: string;
 
@@ -70,30 +38,11 @@ class Environment implements IEnvironment {
 		this.address_prefix = <string>process.env.ADDRESS_PREFIX;
 		const port: string | undefined | number = process.env.PORT || 3146;
 		this.port = Number(port);
-		this.applyEncryption = JSON.parse(<string>process.env.APPLY_ENCRYPTION);
-		this.secretKey = <string>process.env.SECRET_KEY;
-		this.saltValue = (process.env.SALT_VALUE as unknown as number) || 10;
 		this.httpHost = <string>process.env.NATIVE_TENDERMINT_HTTP_HOST;
 		this.databaseUrl = <string>process.env.DATABASE_URL;
-		// this.databaseReplicaUrl = <string>process.env.DATABASE_REPLICA_URL;
 		this.redisHost = <string>process.env.REDIS_HOST;
 		this.redisPort = <string>process.env.REDIS_PORT;
 		this.rabbitMq = <string>process.env.RABITMQ_URL;
-		this.publicKey = <string>process.env.PUBLIC_KEY;
-		this.privateKey = <string>process.env.PRIVATE_KEY;
-		this.recaptchaSiteKey = <string>(
-			process.env.REACT_APP_RECAPTCHA_SITE_KEY
-		);
-		this.recaptchaUrl = <string>process.env.GOOGLE_RECAPTCHA_URL;
-		this.coinMarketApi = <string>process.env.COIN_MARKET_API_PATH;
-		this.coinMarketKey = <string>process.env.COIN_MARKET_API_KEY;
-		this.symbol = <string>process.env.TOKEN_SYMBOL;
-		this.currency = <string>process.env.TOKEN_CURRENCY;
-		this.evmHost = <string>process.env.SWAGGER_HTTP_HOST;
-		this.nodeInfoUrl = <string>process.env.NODE_INFO_URL;
-		this.locationApiUrl = <string>process.env.LOCATION_API_URL;
-		this.nodeIp = <string>process.env.NODE_IP;
-		this.redisExpiry = Number(process.env.API_REDIS_EXPIRY);
 		this.validators = <string>process.env.VALIDATORS;
 		this.excludedValidators = <string>process.env.EXCLUDING_VALIDATORS;
 	}
