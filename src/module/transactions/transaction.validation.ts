@@ -339,7 +339,7 @@ export const updateTransactionValidation = (
 			.custom((value, helpers) => {
 				if (!value) {
 					return helpers.error('custom.required');
-				} else if (!value.startsWith('shido')) {
+				} else if (!value.startsWith('qubetics')) {
 					return helpers.error('custom.validHash');
 				} else if (value.startsWith(' ')) {
 					return helpers.error('custom.noLeadingSpaces');
@@ -351,7 +351,7 @@ export const updateTransactionValidation = (
 				'custom.required': 'from address is required',
 				'custom.noLeadingSpaces':
 					'address should not start with a space',
-				'custom.validHash': 'from address should start with shido',
+				'custom.validHash': 'from address should start with qubetics',
 				'custom.hashLength':
 					'from address length should be equals to 44',
 				'string.base': 'from address must be a string',
@@ -361,7 +361,7 @@ export const updateTransactionValidation = (
 			.custom((value, helpers) => {
 				if (!value) {
 					return helpers.error('custom.required');
-				} else if (!value.startsWith('shido')) {
+				} else if (!value.startsWith('qubetics')) {
 					return helpers.error('custom.validHash');
 				} else if (value.startsWith(' ')) {
 					return helpers.error('custom.noLeadingSpaces');
@@ -373,7 +373,7 @@ export const updateTransactionValidation = (
 				'custom.required': 'to address is required',
 				'custom.noLeadingSpaces':
 					'address should not start with a space',
-				'custom.validHash': 'to address should start with shido',
+				'custom.validHash': 'to address should start with qubetics',
 				'custom.hashLength': 'to address length should be equals to 44',
 				'string.base': 'to address must be a string',
 			}),

@@ -23,7 +23,7 @@ class ValidatorController implements Controller {
 			.get('', getValidatorsValidation, this.getAllValidators)
 			.get('/search', validatorSearch, this.getValidatorSearch)
 			.get('/details', getDetailsValidation, this.getValidatorsDetails)
-			.get('/filter', getValidatorsValidation, this.getShidoValidators);
+			.get('/filter', getValidatorsValidation, this.getqubeticsValidators);
 	}
 
 	/**
@@ -53,7 +53,7 @@ class ValidatorController implements Controller {
 	 * @param response
 	 * @returns
 	 */
-	private getShidoValidators = async (
+	private getqubeticsValidators = async (
 		request: Request,
 		response: Response,
 	) => {
@@ -63,7 +63,7 @@ class ValidatorController implements Controller {
 			status: <string>request.query?.status,
 		};
 
-		const res = await validatorService.getShidoValidators(data);
+		const res = await validatorService.getqubeticsValidators(data);
 
 		if (res.error) {
 			return setResponse.error(response, res);

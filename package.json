@@ -1,5 +1,5 @@
 {
-  "name": "shido-validator-api-service",
+  "name": "qubetics-validator-api-service",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -31,7 +31,7 @@
     "migrate:dev": "prisma migrate dev",
     "db:studio": "prisma studio"
   },
-  "author": "shido",
+  "author": "qubetics",
   "license": "",
   "dependencies": {
     "@cosmjss/encoding": "^0.0.4",

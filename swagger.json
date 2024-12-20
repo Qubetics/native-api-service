@@ -14,15 +14,15 @@
          "description": "Development server"
       },
       {
-         "url": "https://stage-v2-vd-api.shidoscan.com",
+         "url": "https://stage-v2-vd-api.qubeticsscan.com",
          "description": "Development server"
       },
       {
-         "url": "https://testnet-vd-api.shidoscan.com",
+         "url": "https://testnet-vd-api.qubeticsscan.com",
          "description": "Development server"
       },
       {
-         "url": "https://vd-api.shidoscan.com",
+         "url": "https://vd-api.qubeticsscan.com",
          "description": "Development server"
       }
    ],
@@ -110,7 +110,7 @@
       }
    },
    "paths": {
-      "/shido/blocks": {
+      "/qubetics/blocks": {
          "get": {
             "tags": [
                "Blocks"
@@ -158,7 +158,7 @@
             }
          }
       },
-      "/shido/blocks/latest": {
+      "/qubetics/blocks/latest": {
          "get": {
             "tags": [
                "Blocks"
@@ -190,7 +190,7 @@
             }
          }
       },
-      "/shido/blocks/detail/{blockIdentity}": {
+      "/qubetics/blocks/detail/{blockIdentity}": {
          "get": {
             "tags": [
                "Blocks"
@@ -233,7 +233,7 @@
             }
          }
       },
-      "/shido/explorer/dashboard": {
+      "/qubetics/explorer/dashboard": {
          "get": {
             "tags": [
                "Explorer"
@@ -264,7 +264,7 @@
             }
          }
       },
-      "/shido/explorer/graph/tps":{
+      "/qubetics/explorer/graph/tps":{
          "get": {
             "tags": ["Explorer Graph"],
             "summary": "Get tps history and number of transactions",
@@ -311,7 +311,7 @@
          }
 
       },
-      "/shido/explorer/graph/account":{
+      "/qubetics/explorer/graph/account":{
          "get": {
             "tags": ["Explorer Graph"],
             "summary": "Get number of account count",
@@ -358,7 +358,7 @@
          }
 
       },
-      "/shido/explorer/graph/contract-deployed":{
+      "/qubetics/explorer/graph/contract-deployed":{
          "get": {
             "tags": ["Explorer Graph"],
             "summary": "Get number of contract deployed transactions",
@@ -406,7 +406,7 @@
          }
 
       },
-      "/shido/explorer/address-detail/{address}": {
+      "/qubetics/explorer/address-detail/{address}": {
          "get": {
             "tags": ["Explorer"],
             "summary": "Get address detail by address",
@@ -416,7 +416,7 @@
                   "name": "address",
                   "schema": {
                      "type": "string",
-                     "example": "shido1hf94tg6zknuhd3jqu5tj5gx3fmf2zjxudpfeyw"
+                     "example": "qubetics1hf94tg6zknuhd3jqu5tj5gx3fmf2zjxudpfeyw"
                   }
                }
             ],
@@ -445,7 +445,7 @@
             }
          }
       },
-      "/shido/explorer/searching": {
+      "/qubetics/explorer/searching": {
          "get": {
             "tags": ["Explorer"],
             "summary": "Searaching txHash,block hash and block number",
@@ -483,7 +483,7 @@
             }
          }
       },
-      "/shido/validators/search": {
+      "/qubetics/validators/search": {
          "get": {
             "tags": [
                "Validator"
@@ -495,7 +495,7 @@
                   "name": "value",
                   "schema": {
                      "type": "string",
-                     "example": "shido1hf94tg6zknuhd3jqu5tj5gx3fmf2zjxudpfeyw"
+                     "example": "qubetics1hf94tg6zknuhd3jqu5tj5gx3fmf2zjxudpfeyw"
                   }
                },
                {
@@ -540,7 +540,7 @@
             }
          }
       },
-      "/shido/validators": {
+      "/qubetics/validators": {
          "get": {
             "tags": [
                "Validator"
@@ -594,7 +594,7 @@
             }
          }
       },
-      "/shido/validators/filter": {
+      "/qubetics/validators/filter": {
          "get": {
             "tags": [
                "Validator"
@@ -648,7 +648,7 @@
             }
          }
       },
-      "/shido/validators/details": {
+      "/qubetics/validators/details": {
          "get": {
             "tags": [
                "Validator"
@@ -688,7 +688,7 @@
             }
          }
       },
-      "/shido/delegators": {
+      "/qubetics/delegators": {
          "get": {
             "tags": [
                "Delegator"
@@ -735,7 +735,7 @@
             }
          }
       },
-      "/shido/delegators/{address}": {
+      "/qubetics/delegators/{address}": {
          "get": {
             "tags": [
                "Delegator"
@@ -748,7 +748,7 @@
                   "required": true,
                   "schema": {
                      "type": "string",
-                     "example": "shido1e30h5syrl3tjsvw84dzx7lsl4fcjgarg5484wq"
+                     "example": "qubetics1e30h5syrl3tjsvw84dzx7lsl4fcjgarg5484wq"
                   }
                }
             ],
@@ -777,7 +777,7 @@
             }
          }
       },
-      "/shido/delegators/dashboard/{address}": {
+      "/qubetics/delegators/dashboard/{address}": {
          "get": {
             "tags": [
                "Delegator"
@@ -790,7 +790,7 @@
                   "required": true,
                   "schema": {
                      "type": "string",
-                     "example": "shido1e30h5syrl3tjsvw84dzx7lsl4fcjgarg5484wq"
+                     "example": "qubetics1e30h5syrl3tjsvw84dzx7lsl4fcjgarg5484wq"
                   }
                }
             ],
@@ -819,7 +819,7 @@
             }
          }
       },
-      "/shido/contracts/all-contracts": {
+      "/qubetics/contracts/all-contracts": {
          "get": {
             "tags": ["Explorer"],
             "summary": "Get Contract list",
@@ -851,7 +851,7 @@
             }
          }
       },
-      "/shido/contracts/contract-detail-by-address/{contractAddress}": {
+      "/qubetics/contracts/contract-detail-by-address/{contractAddress}": {
          "get": {
             "tags": ["Explorer"],
             "summary": "Get Contract Detail By contract address",
@@ -891,7 +891,7 @@
       },
 
       
-      "/shido/contracts/all-transaction": {
+      "/qubetics/contracts/all-transaction": {
          "get": {
             "tags": ["Explorer"],
             "summary": "Get Contract Transaction",
@@ -931,7 +931,7 @@
             }
          }
       },
-      "/shido/tokens/all-tokens": {
+      "/qubetics/tokens/all-tokens": {
          "get": {
             "tags": ["Explorer"],
             "summary": "Get all tokens",
@@ -964,7 +964,7 @@
             }
          }
       },
-      "/shido/tokens/token-by-wallet-address": {
+      "/qubetics/tokens/token-by-wallet-address": {
          "get": {
             "tags": ["Explorer"],
             "summary": "Get Token Transaction",
@@ -1004,7 +1004,7 @@
             }
          }
       },
-      "/shido/transactions/block": {
+      "/qubetics/transactions/block": {
          "get": {
             "tags": ["Transaction"],
             "summary": "Fetching Transaction using block number",
@@ -1056,7 +1056,7 @@
             }
          }
       },
-      "/shido/transactions": {
+      "/qubetics/transactions": {
          "get": {
             "tags": [
                "Transaction"
@@ -1103,7 +1103,7 @@
             }
          }
       },
-       "/shido/transactions/update/{transacionHash}": {
+       "/qubetics/transactions/update/{transacionHash}": {
          "put": {
            "tags": [
              "Transaction"
@@ -1181,7 +1181,7 @@
            }
          }
        },
-      "/shido/transactions/hash/{transactionHash}": {
+      "/qubetics/transactions/hash/{transactionHash}": {
          "get": {
             "tags": [
                "Transaction"
@@ -1223,7 +1223,7 @@
             }
          }
       },
-      "/shido/transactions/address": {
+      "/qubetics/transactions/address": {
          "get": {
             "tags": [
                "Transaction"
@@ -1277,7 +1277,7 @@
             }
          }
       },
-      "/shido/proposals": {
+      "/qubetics/proposals": {
          "get": {
             "tags": [
                "Proposal"
@@ -1331,7 +1331,7 @@
             }
          }
       },
-      "/shido/proposals/id/{proposalId}": {
+      "/qubetics/proposals/id/{proposalId}": {
          "get": {
             "tags": [
                "Proposal"
@@ -1373,7 +1373,7 @@
             }
          }
       },
-      "/shido/proposals/voters": {
+      "/qubetics/proposals/voters": {
          "get": {
             "tags": [
                "Proposal"
@@ -1434,7 +1434,7 @@
             }
          }
       },
-      "/shido/proposals/voters/searching": {
+      "/qubetics/proposals/voters/searching": {
          "get": {
             "tags": [
                "Proposal"
@@ -1446,7 +1446,7 @@
                   "name": "address",
                   "schema": {
                      "type": "string",
-                     "example": "shido1hf94tg6zknuhd3jqu5tj5gx3fmf2zjxudpfeyw"
+                     "example": "qubetics1hf94tg6zknuhd3jqu5tj5gx3fmf2zjxudpfeyw"
                   }
                },
                {
@@ -1482,7 +1482,7 @@
             }
          }
       },
-      "/shido/proposals/searching": {
+      "/qubetics/proposals/searching": {
          "get": {
             "tags": [
                "Proposal"

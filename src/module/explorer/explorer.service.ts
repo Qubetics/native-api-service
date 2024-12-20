@@ -167,7 +167,7 @@ class ExplorerService {
 				// } else if (
 				// 	payload?.length === 64 &&
 				// 	!payload.startsWith('0x') &&
-				// 	!payload.startsWith('shido')
+				// 	!payload.startsWith('qubetics')
 				// ) {
 				// 	// If the payload length is 64 and it doesn't start with '0x', prepend '0x'
 				// 	payload = '0x' + payload;
@@ -175,7 +175,7 @@ class ExplorerService {
 				// 	// Call getTransactionByHash with the modified payload
 				// 	txData = await transactionService.getTransactionByHash(payload);
 				// 	return txData;
-			} else if (payload.startsWith('shido') && payload.length === 44) {
+			} else if (payload.startsWith('qubetics') && payload.length === 44) {
 				/* here we search for all transaction specfic to a wallet address*/
 				txData = await transactionService.getTransactionsByAddress({
 					address: payload,
@@ -184,7 +184,7 @@ class ExplorerService {
 				});
 
 				return txData;
-			} else if (payload.startsWith('shido') && payload.length === 64) {
+			} else if (payload.startsWith('qubetics') && payload.length === 64) {
 				/* here we search for all transaction specfic to a wallet address*/
 				txData = await contractService.getContractByAddress(payload);
 
@@ -457,12 +457,12 @@ class ExplorerService {
 					HEADERS.DEFAULT,
 				);
 
-				// Find the entry with denom "shido"
-				const shidoAmount = response.data?.balances.find(
-					(item: any) => item.denom === 'shido',
+				// Find the entry with denom "qubetics"
+				const qubeticsAmount = response.data?.balances.find(
+					(item: any) => item.denom === 'qubetics',
 				);
 
-				userBalance = shidoAmount.amount;
+				userBalance = qubeticsAmount.amount;
 
 				// Store userBalance in Redis
 				await RedisService.setString(

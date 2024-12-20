@@ -52,7 +52,7 @@ export default class App {
 	 */
 	private routes(): void {
 		this.express.use(
-			'/shido',
+			'/qubetics',
 			// this.limiter,
 			registerRoutes(),
 		);

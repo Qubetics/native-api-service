@@ -273,7 +273,7 @@ class ValidatorService {
 		}
 	}
 
-	async getShidoValidators(data: {
+	async getqubeticsValidators(data: {
 		page: number;
 		limit: number;
 		status: string;

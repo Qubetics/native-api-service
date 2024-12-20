@@ -77,7 +77,7 @@ export const getContractByAddressValidation = (
 				if (value.startsWith(' ')) {
 					return helpers.error('custom.noLeadingSpaces');
 				}
-				if (!value.startsWith('shido')) {
+				if (!value.startsWith('qubetics')) {
 					return helpers.error('custom.validHash');
 				}
 				if (!(value.length === 64)) {
@@ -87,12 +87,12 @@ export const getContractByAddressValidation = (
 
 			.messages({
 				'custom.validHash':
-					'contract address should be start with shido',
+					'contract address should be start with qubetics',
 				'custom.hashLength':
 					'contract address length should be equals to 64',
 				'custom.noLeadingSpaces':
 					'contract address should not start with a space',
-				'string.pattern.base': 'contract address must start with shido',
+				'string.pattern.base': 'contract address must start with qubetics',
 				'string.base': 'contract address must be a string',
 				'any.required': 'contract address is required',
 				'string.empty': 'contract address cannot be empty',
@@ -166,7 +166,7 @@ export const getContractTxValidation = (
 				if (value.startsWith(' ')) {
 					return helpers.error('custom.noLeadingSpaces');
 				}
-				if (!value.startsWith('shido')) {
+				if (!value.startsWith('qubetics')) {
 					return helpers.error('custom.validHash');
 				}
 				if (!(value.length === 64)) {
@@ -176,12 +176,12 @@ export const getContractTxValidation = (
 
 			.messages({
 				'custom.validHash':
-					'contract address should be start with shido',
+					'contract address should be start with qubetics',
 				'custom.hashLength':
 					'contract address length should be equals to 64',
 				'custom.noLeadingSpaces':
 					'contract address should not start with a space',
-				'string.pattern.base': 'contract address must start with shido',
+				'string.pattern.base': 'contract address must start with qubetics',
 				'string.base': 'contract address must be a string',
 				'any.required': 'contract address is required',
 				'string.empty': 'contract address cannot be empty',

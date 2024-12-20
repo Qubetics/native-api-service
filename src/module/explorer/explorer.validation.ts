@@ -22,7 +22,7 @@ export const searchingValidation = (
 
 				if (!isNumeric(value)) {
 					if (
-						!(value.startsWith('0x') || value.startsWith('shido'))
+						!(value.startsWith('0x') || value.startsWith('qubetics'))
 					) {
 						return helpers.error('custom.invalidHash');
 					}
@@ -194,20 +194,20 @@ export const getAddressDetailValidation = (
 				if (value.startsWith(' ')) {
 					return helpers.error('custom.noLeadingSpaces');
 				}
-				if (!value.startsWith('shido')) {
+				if (!value.startsWith('qubetics')) {
 					return helpers.error('custom.validHash');
 				}
-				if (value.startsWith('shido') && value.length < 44) {
+				if (value.startsWith('qubetics') && value.length < 44) {
 					return helpers.error('custom.hashLength');
 				}
 			})
 
 			.messages({
-				'custom.validHash': 'address should be start with shido',
+				'custom.validHash': 'address should be start with qubetics',
 				'custom.hashLength': 'address length should be equals to 44',
 				'custom.noLeadingSpaces':
 					'address should not start with a space',
-				'string.pattern.base': 'address must start with shido',
+				'string.pattern.base': 'address must start with qubetics',
 				'string.base': 'address must be a string',
 				'any.required': 'address is required',
 				'string.empty': 'address cannot be empty',

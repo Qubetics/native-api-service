@@ -15,7 +15,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
 			totalSupplyResponse,
 		] = await Promise.all([
 			apiRes.get('/cosmos/staking/v1beta1/validators'),
-			apiRes.get('/cosmos/bank/v1beta1/supply/by_denom?denom=shido'),
+			apiRes.get('/cosmos/bank/v1beta1/supply/by_denom?denom=qubetics'),
 			apiRes.get('/cosmos/mint/v1beta1/inflation'),
 			apiRes.get('/cosmos/staking/v1beta1/pool'),
 			apiRes.get('/cosmos/distribution/v1beta1/params'),

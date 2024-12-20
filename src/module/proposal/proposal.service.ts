@@ -245,10 +245,10 @@ class ProposalService {
 		proposalId: string;
 	}): Promise<IESResponse> {
 		try {
-			if (!data.address.startsWith('shido')) {
+			if (!data.address.startsWith('qubetics')) {
 				throw new Error(RES_MSG.INVALID_ADDRESS);
 			} else if (
-				data.address.startsWith('shido') &&
+				data.address.startsWith('qubetics') &&
 				data.address.length === 44
 			) {
 				const voters = await prisma.voters.findFirst({
