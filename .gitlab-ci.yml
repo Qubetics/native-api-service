@@ -1,0 +1,31 @@
+variables:
+  DOCKER_REGISTRY: 497373160807.dkr.ecr.us-west-2.amazonaws.com
+  APP_NAME: alpha-testnet-explorer-api
+  # TAG: (date +%Y-%m-%d.%H.%M.%S)
+
+
+
+stages:
+  # - build
+  - build-docker-image
+  - push-image-to-aws-ecr
+
+
+build-docker-image:
+  stage: build-docker-image
+  script:
+    - docker info
+    - docker build --no-cache -t $DOCKER_REGISTRY/$APP_NAME:latest .
+    # - docker build -t $DOCKER_REGISTRY/$APP_NAME:"$TAG" .
+
+
+Push Docker Image to AWS ECR:
+  stage: push-image-to-aws-ecr
+  image: 
+    name: $DOCKER_REGISTRY/$APP_NAME:"$TAG"
+  services:
+    - docker:dind
+  script:
+    - aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+    - docker tag $DOCKER_REGISTRY/$APP_NAME:latest $DOCKER_REGISTRY/$APP_NAME:$(date +%Y-%m-%d-%H-%M)  
+    - docker push $DOCKER_REGISTRY/$APP_NAME:$(date +%Y-%m-%d-%H-%M)
