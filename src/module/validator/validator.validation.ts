@@ -201,12 +201,12 @@ export const getDetailsValidation = (
 				if (value.startsWith(' ')) {
 					return helpers.error('custom.noLeadingSpaces');
 				}
-				if (value.length !== 44) {
+				if (value.length !== 47) {
 					return helpers.error('custom.hashLength');
 				}
 			})
 			.messages({
-				'custom.hashLength': 'address length should be equals to 44',
+				'custom.hashLength': 'address length should be equals to 47',
 				'custom.noLeadingSpaces':
 					'address should not start with a space',
 				'any.required': 'address is required',

@@ -187,7 +187,7 @@ class ValidatorService {
 		searchTerm: string;
 	}): Promise<IESResponse> {
 		try {
-			if (data.searchTerm.length === 44) {
+			if (data.searchTerm.length === 47) {
 				return await this.getValidatorsByAddress(data.searchTerm);
 			} else {
 				return await this.getValidatorsByName(data);

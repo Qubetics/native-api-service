@@ -175,7 +175,7 @@ class ExplorerService {
 				// 	// Call getTransactionByHash with the modified payload
 				// 	txData = await transactionService.getTransactionByHash(payload);
 				// 	return txData;
-			} else if (payload.startsWith('qubetics') && payload.length === 44) {
+			} else if (payload.startsWith('qubetics') && payload.length === 47) {
 				/* here we search for all transaction specfic to a wallet address*/
 				txData = await transactionService.getTransactionsByAddress({
 					address: payload,

@@ -197,14 +197,14 @@ export const getAddressDetailValidation = (
 				if (!value.startsWith('qubetics')) {
 					return helpers.error('custom.validHash');
 				}
-				if (value.startsWith('qubetics') && value.length < 44) {
+				if (value.startsWith('qubetics') && value.length < 47) {
 					return helpers.error('custom.hashLength');
 				}
 			})
 
 			.messages({
 				'custom.validHash': 'address should be start with qubetics',
-				'custom.hashLength': 'address length should be equals to 44',
+				'custom.hashLength': 'address length should be equals to 47',
 				'custom.noLeadingSpaces':
 					'address should not start with a space',
 				'string.pattern.base': 'address must start with qubetics',

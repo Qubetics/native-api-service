@@ -249,7 +249,7 @@ class ProposalService {
 				throw new Error(RES_MSG.INVALID_ADDRESS);
 			} else if (
 				data.address.startsWith('qubetics') &&
-				data.address.length === 44
+				data.address.length === 47
 			) {
 				const voters = await prisma.voters.findFirst({
 					where: {

@@ -271,12 +271,12 @@ export const transactionSearch = (
 				if (value.startsWith(' ')) {
 					return helpers.error('custom.noLeadingSpaces');
 				}
-				if (value.length !== 44) {
+				if (value.length !== 47) {
 					return helpers.error('custom.hashLength');
 				}
 			})
 			.messages({
-				'custom.hashLength': 'address length should be equals to 44',
+				'custom.hashLength': 'address length should be equals to 47',
 				'custom.noLeadingSpaces':
 					'address should not start with a space',
 				'any.required': 'address is required',
@@ -343,7 +343,7 @@ export const updateTransactionValidation = (
 					return helpers.error('custom.validHash');
 				} else if (value.startsWith(' ')) {
 					return helpers.error('custom.noLeadingSpaces');
-				} else if (!(value.length === 44)) {
+				} else if (!(value.length === 47)) {
 					return helpers.error('custom.hashLength');
 				}
 			})
@@ -353,7 +353,7 @@ export const updateTransactionValidation = (
 					'address should not start with a space',
 				'custom.validHash': 'from address should start with qubetics',
 				'custom.hashLength':
-					'from address length should be equals to 44',
+					'from address length should be equals to 47',
 				'string.base': 'from address must be a string',
 			}),
 		toAddress: Joi.string()
@@ -365,7 +365,7 @@ export const updateTransactionValidation = (
 					return helpers.error('custom.validHash');
 				} else if (value.startsWith(' ')) {
 					return helpers.error('custom.noLeadingSpaces');
-				} else if (!(value.length === 44)) {
+				} else if (!(value.length === 47)) {
 					return helpers.error('custom.hashLength');
 				}
 			})
@@ -374,7 +374,7 @@ export const updateTransactionValidation = (
 				'custom.noLeadingSpaces':
 					'address should not start with a space',
 				'custom.validHash': 'to address should start with qubetics',
-				'custom.hashLength': 'to address length should be equals to 44',
+				'custom.hashLength': 'to address length should be equals to 47',
 				'string.base': 'to address must be a string',
 			}),
 
