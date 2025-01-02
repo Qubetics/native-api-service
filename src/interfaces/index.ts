@@ -1,137 +1,137 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
-	TRANSACTION_STATUS,
-	TransactionType,
-	TRANSACTION_TYPE,
-} from '../constant';
+  TRANSACTION_STATUS,
+  TransactionType,
+  TRANSACTION_TYPE,
+} from "../constant";
 
 export interface IESResponse {
-	error?: boolean;
-	data?: object | object[];
-	message?: string;
-	status?: number;
+  error?: boolean;
+  data?: object | object[];
+  message?: string;
+  status?: number;
 }
 
 export interface ITransactionData {
-	txhash: string;
-	blocknumber: number;
-	blockhash: string;
-	gasPrice: number;
-	gas: number;
-	type: TRANSACTION_TYPE;
-	status: TRANSACTION_STATUS;
-	fromAddress: string;
-	toAddress: string;
-	token?: string;
-	contractAddress?: string;
-	timestamp: number;
-	value: string;
-	txFee: string;
-	createdAt?: Date;
+  txhash: string;
+  blocknumber: number;
+  blockhash: string;
+  gasPrice: number;
+  gas: number;
+  type: TRANSACTION_TYPE;
+  status: TRANSACTION_STATUS;
+  fromAddress: string;
+  toAddress: string;
+  token?: string;
+  contractAddress?: string;
+  timestamp: number;
+  value: string;
+  txFee: string;
+  createdAt?: Date;
 }
 export interface IUsers {
-	address: string;
-	id?: number;
-	txn?: number;
+  address: string;
+  id?: number;
+  txn?: number;
 }
 export interface GraphData {
-	createdAt: string;
-	count: number;
-	total_account?: number;
+  createdAt: string;
+  count: number;
+  total_account?: number;
 }
 export interface GraphDataTotal {
-	finalData: GraphData[];
-	count: number;
+  finalData: GraphData[];
+  count: number;
 }
 export interface IGraphResponse {
-	error?: boolean;
-	data?: GraphDataTotal;
-	message?: string;
-	status?: number;
+  error?: boolean;
+  data?: GraphDataTotal;
+  message?: string;
+  status?: number;
 }
 export interface Controller {
-	router: Router;
+  router: Router;
 }
 export interface ISearchPayload {
-	page?: number;
-	limit?: number;
-	address?: string;
-	value?: string;
-	contractAddress?: string;
-	blockNumber?: bigint;
+  page?: number;
+  limit?: number;
+  address?: string;
+  value?: string;
+  contractAddress?: string;
+  blockNumber?: bigint;
 }
 export interface IRawTransaction {
-	from: string;
-	to: string;
-	maxFeePerGas: number;
-	maxPriorityFeePerGas: number;
-	value: string;
-	gas: number;
-	nonce: number;
+  from: string;
+  to: string;
+  maxFeePerGas: number;
+  maxPriorityFeePerGas: number;
+  value: string;
+  gas: number;
+  nonce: number;
 }
 
 export interface ICreateTransaction {
-	type: string;
-	status: string;
-	txString: string;
-	blocknumber: number | bigint;
-	txhash: string;
-	timestamp: string;
-	fromAddress: string;
-	toAddress: string;
-	gasWanted: number | bigint;
-	txFee: string;
-	value: string;
+  type: string;
+  status: string;
+  txString: string;
+  blocknumber: number | bigint;
+  txhash: string;
+  timestamp: string;
+  fromAddress: string;
+  toAddress: string;
+  gasWanted: number | bigint;
+  txFee: string;
+  value: string;
 }
 export interface IContractLog {
-	contractAddress: string;
-	creator: string;
-	contractName: string;
-	contractType: string;
-	createdAt: Date;
-	blockNumber: number | bigint;
-	timeStamp: number | bigint;
+  contractAddress: string;
+  creator: string;
+  contractName: string;
+  contractType: string;
+  createdAt: Date;
+  blockNumber: number | bigint;
+  timeStamp: number | bigint;
 }
 
 export interface IContract {
-	blockNumber: number;
-	blockHash: string;
-	txHash: string;
-	contractName: string;
-	contractType: string;
-	creator: string;
-	address: string;
-	timestamp: number;
-	bytecode: string;
-	createdAt: Date;
-	updatedAt: Date;
+  blockNumber: number;
+  blockHash: string;
+  txHash: string;
+  contractName: string;
+  contractType: string;
+  creator: string;
+  address: string;
+  timestamp: number;
+  bytecode: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 export interface IPopularContractAddress extends IContractLog {
-	count: number;
+  count: number;
 }
 
 export interface CoinMarketData {
-	price: number;
-	volume_24h: number;
-	market_cap: number;
-	circulating_supply: number;
+  price: number;
+  volume_24h: number;
+  market_cap: number;
+  circulating_supply: number;
 }
 
 export interface Params {
-	annualProvisions: number;
-	blocksPerYear: number;
-	inflation: string;
-	bondedTokens: number;
-	communityTax: number;
-	validator: number;
-	circulation_supply: number;
-	bondedRate: number;
-	totalSupply: number;
+  annualProvisions: number;
+  blocksPerYear: number;
+  inflation: string;
+  bondedTokens: number;
+  communityTax: number;
+  validator: number;
+  circulation_supply: number;
+  bondedRate: number;
+  totalSupply: number;
 }
 
 export interface BlockHeader {
-	height: number;
-	time: Date;
+  height: number;
+  time: Date;
 }
 
 // export interface IBlock {
@@ -144,103 +144,103 @@ export interface BlockHeader {
 // }
 
 export interface IBlock {
-	blockhash: string;
-	timestamp: string;
-	blocknumber: number;
-	transactionCount: number;
-	miner: string;
-	validatorOperatorAddress: string;
+  blockhash: string;
+  timestamp: string;
+  blocknumber: number;
+  transactionCount: number;
+  miner: string;
+  validatorOperatorAddress: string;
 }
 
 export interface ITransaction {
-	txhash: string;
-	blocknumber: number;
-	blockhash: string;
-	gasPrice: number;
-	gas: number;
-	type: TransactionType;
-	status: TRANSACTION_STATUS;
-	fromAddress: string;
-	toAddress: string;
-	contractAddress: string;
-	value: string;
-	txFee: string;
-	createdAt: Date;
+  txhash: string;
+  blocknumber: number;
+  blockhash: string;
+  gasPrice: number;
+  gas: number;
+  type: TransactionType;
+  status: TRANSACTION_STATUS;
+  fromAddress: string;
+  toAddress: string;
+  contractAddress: string;
+  value: string;
+  txFee: string;
+  createdAt: Date;
 }
 export interface ICoinTransaction {
-	txhash: string;
-	blocknumber: string;
-	blockhash: string;
-	gasPrice: string;
-	gas: string;
-	fromAddress: string;
-	createdAt: Date;
-	toAddress: string;
-	status: string;
-	value: string;
+  txhash: string;
+  blocknumber: string;
+  blockhash: string;
+  gasPrice: string;
+  gas: string;
+  fromAddress: string;
+  createdAt: Date;
+  toAddress: string;
+  status: string;
+  value: string;
 }
 export interface IContracts {
-	blockNumber: number;
-	blockHash: string;
-	fromAddress: string;
-	contractAddress: string;
-	txHash: string;
-	contractName: string;
-	isErc20?: boolean;
-	isErc720?: boolean;
+  blockNumber: number;
+  blockHash: string;
+  fromAddress: string;
+  contractAddress: string;
+  txHash: string;
+  contractName: string;
+  isErc20?: boolean;
+  isErc720?: boolean;
 }
 export interface EventDetail {
-	transactionhash: string;
-	contractName: string;
-	contractSymbol: string;
-	gasFee: number;
-	nonce: number;
-	contractAddress: string;
-	blockhash: string;
-	blocknumber: number;
-	value: string;
-	topics: string[]; // Update with the actual type of 'topics'
-	transactionIndex: number;
-	logIndex: number;
-	removed: boolean;
-	textSignature: string;
-	method: string;
-	isInternal: number;
-	creator: string;
-	status: string;
+  transactionhash: string;
+  contractName: string;
+  contractSymbol: string;
+  gasFee: number;
+  nonce: number;
+  contractAddress: string;
+  blockhash: string;
+  blocknumber: number;
+  value: string;
+  topics: string[]; // Update with the actual type of 'topics'
+  transactionIndex: number;
+  logIndex: number;
+  removed: boolean;
+  textSignature: string;
+  method: string;
+  isInternal: number;
+  creator: string;
+  status: string;
 }
 interface ILocation {
-	lat: string;
-	lon: string;
-	country: string;
+  lat: string;
+  lon: string;
+  country: string;
 }
 interface ISoftware {
-	full: string;
-	version: string;
-	networkId: string;
+  full: string;
+  version: string;
+  networkId: string;
 }
 export interface IPeerData {
-	peerId: string;
-	roles: string;
-	protocolVersion: string;
-	bestHash: string;
-	bestNumber: string;
-	version: string;
-	nodeName: string;
-	software: ISoftware;
-	location: ILocation;
+  peerId: string;
+  roles: string;
+  protocolVersion: string;
+  bestHash: string;
+  bestNumber: string;
+  version: string;
+  nodeName: string;
+  software: ISoftware;
+  location: ILocation;
 }
 
 export interface HolderData {
-	contractAddress: string;
-	tokenBalance: string;
-	contract?:
-		| {
-				contractName: string;
-				contractType: string;
-				Tokens?: {
-					tokenSymbol: string;
-				};
-		  }
-		| undefined;
+  contractAddress: string;
+  tokenBalance: string;
+  contract?:
+    | {
+        contractName: string;
+        contractType: string;
+        Tokens?: {
+          tokenSymbol: string;
+        };
+      }
+    | undefined;
 }
