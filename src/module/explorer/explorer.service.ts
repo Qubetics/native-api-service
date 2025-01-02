@@ -52,34 +52,34 @@ class ExplorerService {
       //totalAccounts , latestBlock
       // Fetch data from Redis
       const redisData = await this.getRedisValue();
-      console.log("lakdflhdflahdf",redisData);
-      
+      console.log("lakdflhdflahdf", redisData);
+
       // Check if Redis data is not available
       if (!redisData) {
-      // Set default values and fetch additional data
-      obj.tokenPrice = CONST_NAME.ZERO;
-      obj.marketCap = CONST_NAME.ZERO;
-      const data = await calculateData();
+        // Set default values and fetch additional data
+        obj.tokenPrice = CONST_NAME.ZERO;
+        obj.marketCap = CONST_NAME.ZERO;
+        const data = await calculateData();
 
-      if (
-        "apy" in data &&
-        "inflation" in data &&
-        "totalSupply" in data &&
-        "totalValidator" in data 
-      ) {
-        return {
-          error: false,
-          message: RES_MSG.FETCH_SUCCESS,
-          data: {
-            apy: data.apy,
-            inflation: data.inflation,
-            totalSupply: data.totalSupply,
-            totalValidator: data.totalValidator,
-          },
-        };
-      } else {
-        return { error: true, message: RES_MSG.NOT_FOUND };
-      }
+        if (
+          "apy" in data &&
+          "inflation" in data &&
+          "totalSupply" in data &&
+          "totalValidator" in data
+        ) {
+          return {
+            error: false,
+            message: RES_MSG.FETCH_SUCCESS,
+            data: {
+              apy: data.apy,
+              inflation: data.inflation,
+              totalSupply: data.totalSupply,
+              totalValidator: data.totalValidator,
+            },
+          };
+        } else {
+          return { error: true, message: RES_MSG.NOT_FOUND };
+        }
       } else {
         // Use Redis data if available
         obj.apy = redisData?.apy;
