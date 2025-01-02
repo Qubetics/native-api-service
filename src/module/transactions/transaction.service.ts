@@ -26,10 +26,6 @@ class TransactionService {
         }),
       ]);
 
-
-      console.log("lkzjkjhsjhfskjfsdf",transactions, transactions.length);
-      
-
       const transactionCount = await RedisService.getString(
         REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
       );

@@ -22,16 +22,6 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       apiRes.get("/cosmos/bank/v1beta1/supply"),
     ]);
 
-
-    console.log( "kdjhfkhdfk", [
-      validatorResponse.data,
-      circulationSupplyResponse.data,
-      inflationRateResponse.data,
-      poolResponse.data,
-      paramsResponse.data,
-      totalSupplyResponse.data,
-    ]);
-    
     const validator = validatorResponse?.data?.validators.filter(
       (item: any) => item.status === CONST_NAME.BOND_STATUS,
     );
@@ -97,6 +87,7 @@ const calculateData = async (): Promise<
       inflation: number;
       apy: number;
       totalSupply: number;
+      totalValidator: number;
     }
   | { error: boolean; message: string }
 > => {
@@ -124,7 +115,7 @@ const calculateData = async (): Promise<
       totalSupply: params?.totalSupply,
       inflation: Number(params?.inflation),
       apy: apyValue,
-      totalValidator: params.validator
+      totalValidator: params.validator,
     };
 
     await RedisService.setString(
@@ -133,7 +124,6 @@ const calculateData = async (): Promise<
     );
     return validatorData;
   } catch (err) {
-    console.log("erwoieruweiourewr",err)
     logger.log("error", "Error occurred while calculating stake APY", err);
     if (err instanceof Error) {
       return { error: true, message: err.message };

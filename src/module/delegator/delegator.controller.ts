@@ -54,13 +54,15 @@ class DelegatorController implements Controller {
   };
 
   private dashboard = async (request: Request, response: Response) => {
-    console.log("request.params?.delegatorAddress",request.params?.delegatorAddress);
+    console.log(
+      "request.params?.delegatorAddress",
+      request.params?.delegatorAddress,
+    );
 
     const dashboard = await delegatorService.dashboard(
       request.params?.delegatorAddress as string,
     );
 
-    
     if (dashboard.error) {
       return setResponse.error(response, dashboard);
     }

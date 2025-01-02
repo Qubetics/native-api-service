@@ -49,47 +49,46 @@ class ExplorerService {
         totalValidator: 0,
       };
 
-      //totalAccounts , latestBlock 
-
+      //totalAccounts , latestBlock
       // Fetch data from Redis
       const redisData = await this.getRedisValue();
-      console.log("redisData" , redisData);
+      console.log("lakdflhdflahdf",redisData);
       
       // Check if Redis data is not available
-      // if (!redisData) {
-        // Set default values and fetch additional data
-        obj.tokenPrice = CONST_NAME.ZERO;
-        obj.marketCap = CONST_NAME.ZERO;
-        const data = await calculateData();
-      
-        if (
-          "apy" in data &&
-          "inflation" in data &&
-          "totalSupply" in data &&
-          "totalValidator" in data
-        ) {
-          return {
-            error: false,
-            message: RES_MSG.FETCH_SUCCESS,
-            data: {
-              apy: data.apy,
-              inflation: data.inflation,
-              totalSupply: data.totalSupply,
-              totalValidator: data.totalSupply,
-            },
-          };
-        } else {
-          return { error: true, message: RES_MSG.NOT_FOUND };
-        }
-      // } else {
-      //   // Use Redis data if available
-      //   obj.apy = redisData?.apy;
-      //   obj.totalSupply = redisData?.totalSupply;
-      //   obj.inflation = redisData?.inflation;
-      //   obj.tokenPrice = redisData?.tokenPrice;
-      //   obj.marketCap = redisData?.marketCap;
-      //   obj.totalValidator = redisData?.totalValidator;
-      // }
+      if (!redisData) {
+      // Set default values and fetch additional data
+      obj.tokenPrice = CONST_NAME.ZERO;
+      obj.marketCap = CONST_NAME.ZERO;
+      const data = await calculateData();
+
+      if (
+        "apy" in data &&
+        "inflation" in data &&
+        "totalSupply" in data &&
+        "totalValidator" in data 
+      ) {
+        return {
+          error: false,
+          message: RES_MSG.FETCH_SUCCESS,
+          data: {
+            apy: data.apy,
+            inflation: data.inflation,
+            totalSupply: data.totalSupply,
+            totalValidator: data.totalValidator,
+          },
+        };
+      } else {
+        return { error: true, message: RES_MSG.NOT_FOUND };
+      }
+      } else {
+        // Use Redis data if available
+        obj.apy = redisData?.apy;
+        obj.totalSupply = redisData?.totalSupply;
+        obj.inflation = redisData?.inflation;
+        obj.tokenPrice = redisData?.tokenPrice;
+        obj.marketCap = redisData?.marketCap;
+        obj.totalValidator = redisData?.totalValidator;
+      }
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
