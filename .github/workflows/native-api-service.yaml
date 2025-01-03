@@ -1,8 +1,10 @@
 name: Build and Push Docker Image with OIDC
+
 on:
   push:
     branches:
       - master
+
 permissions:
   id-token: write
   contents: read
@@ -48,12 +50,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }} .
+          docker build -t ${env.HUAWEI_SWR_ENDPOINT}/${env.HUAWEI_ORGANIZATION}/${env.HUAWEI_IMAGE}:${{ github.run_number }} .
 
       - name: Docker login & Push Docker image to Huawei SWR
         run: |
           ${{steps.login.outputs.dc_login}}
-          docker push ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }}
+          docker push ${env.HUAWEI_SWR_ENDPOINT}/${env.HUAWEI_ORGANIZATION}/${env.HUAWEI_IMAGE}:${{ github.run_number }}
 
       - name: Configure Deploy Key
         run: |
@@ -65,9 +67,9 @@ jobs:
           cd argocd-qubetics
           git pull origin
           git checkout ${BRANCH}
-          sed -i "s|\(image: \).*|\1${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }}|" ${DEPLOYMENT_PATH}
+          sed -i "s|\(image: \).*|\1${env.HUAWEI_SWR_ENDPOINT}/${env.HUAWEI_ORGANIZATION}/${env.HUAWEI_IMAGE}:${{ github.run_number }}|" ${DEPLOYMENT_PATH}
           git config user.name ${GIT_USERNAME}
           git config user.email ${GIT_EMAIL}
           git add .
-          git commit -m "Update image to ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }}"
+          git commit -m "Update image to ${env.HUAWEI_SWR_ENDPOINT}/${env.HUAWEI_ORGANIZATION}/${env.HUAWEI_IMAGE}:${{ github.run_number }}"
           git push origin ${BRANCH}
