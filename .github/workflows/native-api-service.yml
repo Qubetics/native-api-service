@@ -58,7 +58,7 @@ jobs:
         id: login_docker
         run: |
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ap-southeast-3@BQG9INQF0BKVHSNQOLJG --password-stdin swr.ap-southeast-3.myhuaweicloud.com &&
-          docker push ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }}
+          docker push swr.ap-southeast-3.myhuaweicloud.com/testnet-qubetics/testnet-native-api:${{ github.run_number }}
       - name: Configure Deploy Key
         run: |
           mkdir -p ~/.ssh
