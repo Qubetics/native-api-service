@@ -50,12 +50,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t  ${{ secrets.HUAWEI_SWR_ENDPOINT }}/${{ secrets.HUAWEI_ORGANIZATION }}/${{ secrets.HUAWEI_IMAGE }}:${{ github.run_number }} .
-
+          docker build -t  swr.ap-southeast-3.myhuaweicloud.com/testnet-qubetics/testnet-native-api:${{ github.run_number }} .
       - name: Docker login & Push Docker image to Huawei SWR
         run: |
           ${{steps.login.outputs.dc_login}}
-          docker push  ${{ secrets.HUAWEI_SWR_ENDPOINT }}/${{ secrets.HUAWEI_ORGANIZATION }}/${{ secrets.HUAWEI_IMAGE }}:${{ github.run_number }}
+          docker push  swr.ap-southeast-3.myhuaweicloud.com/testnet-qubetics/testnet-native-api:${{ github.run_number }}
 
       - name: Configure Deploy Key
         run: |
