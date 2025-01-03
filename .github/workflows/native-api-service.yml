@@ -44,7 +44,8 @@ jobs:
       - name: Tag Docker Image
         run: |
           docker tag $HUAWEI_IMAGE:${{ github.run_number }} \
-          $HUAWEI_SWR_ENDPOINT/$HUAWEI_ORGANIZATION/$HUAWEI_IMAGE:${{ github.run_number }}
+          $HUAWEI_SWR_ENDPOINT/$HUAWEI_ORGANIZATION/$HUAWEI_IMAGE:${{ github.run_number }} 
+          echo $HUAWEI_SWR_ENDPOINT/$HUAWEI_ORGANIZATION/$HUAWEI_IMAGE:${{ github.run_number }}
 
       - name: Push Docker Image to Huawei SWR
         run: |
