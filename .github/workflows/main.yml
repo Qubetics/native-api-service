@@ -43,36 +43,20 @@ jobs:
       - name: Getting credentials
         id: login
         run: |
-          unscoped_token=$(curl -ki -s -X POST \
-            -H "Authorization: Bearer ${{steps.idtoken.outputs.id_token}}" \
-            -H "Accept: application/json;" \
-            -H "Content-Type: application/json" \
-            -d "{}" \
-            "https://iam.myhuaweicloud.com/v3/OS-FEDERATION/identity_providers/dev-qubetics-pipeline/protocols/oidc/auth" \
-            | grep 'X-Subject-Token:' | awk '{print $2}')
-
-          if [[ -z "$unscoped_token" ]]; then
-            echo "Error: Failed to fetch unscoped token."
-            exit 1
-          fi
-
-          response=$(curl -ki -s -X POST \
+          unscoped_token=$(curl -s -X POST \
+            -H "Authorization: Bearer ${{ steps.oidc.outputs.id_token }}" \
+            https://iam.myhuaweicloud.com/v3/OS-FEDERATION/identity_providers/dev-qubetics-pipeline/protocols/oidc/auth \
+            -H "Accept: application/json" -H "Content-Type: application/json" \
+            -d "{}" | grep 'X-Subject-Token:' | awk '{print $2}')
+          response=$(curl -s -X POST \
             -H "x-auth-token: ${unscoped_token}" \
-            "${HUAWEI_SWR_API}/v2/manage/utils/secret")
-
-          # Debugging: Print the response to understand what's returned
-          echo "Response: $response"
-
+            ${HUAWEI_SWR_API}/v2/manage/utils/secret)
+          echo "$response"
           dc_header=$(echo "$response" | grep -i 'X-Swr-Dockerlogin:' | cut -d ':' -f2 | sed 's/^ *//;s/ *$//' | tr -d '\r' | tr -d '\n')
-
-          if [[ -z "$dc_header" ]]; then
-            echo "Error: Failed to extract Docker login command."
-            exit 3
-          fi
-
           dc_login="${dc_header} ${HUAWEI_SWR_ENDPOINT}"
+          echo "Docker login command"
           echo "$dc_login"
-          echo "dc_login=${dc_login}" >> $GITHUB_OUTPUT
+          echo "dc_login=${dc_login}" >> $GITHUB_ENV   
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
