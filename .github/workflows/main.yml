@@ -37,8 +37,8 @@ jobs:
         id: idtoken
         with:
           script: |
-            const core = require('@actions/core');
-            const id_token = await core.getIDToken("dev-qubetics");
+            const core = require('@actions/core'); // Declare 'core' only once
+            const id_token = await core.getIDToken("dev-qubetics"); // Use the existing 'core' variable
             core.setOutput("id_token", id_token);
 
       - name: Getting credentials
