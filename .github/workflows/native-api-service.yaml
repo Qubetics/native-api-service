@@ -53,7 +53,7 @@ jobs:
       - name: Docker login & Push Docker image to Huawei SWR
         run: |
           ${{steps.login.outputs.dc_login}}
-          docker push  docker build -t ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }}
+          docker push ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }}
 
       - name: Configure Deploy Key
         run: |
