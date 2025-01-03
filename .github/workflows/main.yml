@@ -60,10 +60,8 @@ jobs:
             -H "x-auth-token: ${unscoped_token}" \
             "${HUAWEI_SWR_API}/v2/manage/utils/secret")
 
-          if [[ -z "$response" ]]; then
-            echo "Error: Failed to fetch SWR secrets."
-            exit 2
-          fi
+          # Debugging: Print the response to understand what's returned
+          echo "Response: $response"
 
           dc_header=$(echo "$response" | grep -i 'X-Swr-Dockerlogin:' | cut -d ':' -f2 | sed 's/^ *//;s/ *$//' | tr -d '\r' | tr -d '\n')
 
