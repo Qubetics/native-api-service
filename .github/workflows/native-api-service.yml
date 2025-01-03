@@ -34,13 +34,13 @@ jobs:
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
 
-      - name: Get Id Token
-        uses: actions/github-script@v6
-        id: idtoken
-        with:
-          script: |
-            const id_token = await require('@actions/core').getIDToken("testnet-qubetics");
-            core.setOutput("id_token", id_token);
+      # - name: Get Id Token
+      #   uses: actions/github-script@v6
+      #   id: idtoken
+      #   with:
+      #     script: |
+      #       const id_token = await require('@actions/core').getIDToken("testnet-qubetics");
+      #       core.setOutput("id_token", id_token);
 
       - name: Getting credentials
         id: login
