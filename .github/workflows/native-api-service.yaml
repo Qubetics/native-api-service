@@ -52,9 +52,7 @@ jobs:
           docker build -t ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }} .
       - name: Docker login & Push Docker image to Huawei SWR
         run: |
-          docker login swr.ap-southeast-3.myhuaweicloud.com -u BQG9INQF0BKVHSNQOLJG -p e054dff1ba4cc985788f9dc974550f1f55ed81c4841a80038fe0b58765395bc6
-          docker push ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }}
-
+          echo "e054dff1ba4cc985788f9dc974550f1f55ed81c4841a80038fe0b58765395bc6" | docker login swr.ap-southeast-3.myhuaweicloud.com -u BQG9INQF0BKVHSNQOLJG --password-stdin          docker push ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }}
       - name: Configure Deploy Key
         run: |
           mkdir -p ~/.ssh
