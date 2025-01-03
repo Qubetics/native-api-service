@@ -56,7 +56,9 @@ jobs:
           
       - name: Docker login & Push Docker image to Huawei SWR
         run: |
-         docker login swr.ap-southeast-3.myhuaweicloud.com -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"   && docker push ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }}
+          docker login swr.ap-southeast-3.myhuaweicloud.com -u ${env.dockerHubUser} -p ${env.dockerHubPassword} &&
+          docker push ${HUAWEI_SWR_ENDPOINT}/${HUAWEI_ORGANIZATION}/${HUAWEI_IMAGE}:${{ github.run_number }}
+
 
       - name: Configure Deploy Key
         run: |
