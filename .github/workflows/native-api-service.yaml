@@ -15,9 +15,9 @@ jobs:
 
     env:
         HUAWEI_SWR_API: ${{ secrets.HUAWEI_SWR_API }}
-        HUAWEI_IMAGE: ${{ secrets.HUAWEI_IMAGE }}
-        HUAWEI_SWR_ENDPOINT: ${{ secrets.HUAWEI_SWR_ENDPOINT }}
-        HUAWEI_ORGANIZATION: ${{ secrets.HUAWEI_ORGANIZATION }}
+        #HUAWEI_IMAGE: ${{ secrets.HUAWEI_IMAGE }}
+        #HUAWEI_SWR_ENDPOINT: ${{ secrets.HUAWEI_SWR_ENDPOINT }}
+        #HUAWEI_ORGANIZATION: ${{ secrets.HUAWEI_ORGANIZATION }}
         ARGOCD_REPO: ${{secrets.ARGOCD_REPO}}
         DEPLOYMENT_PATH: ${{secrets.DEPLOYMENT_PATH}}
         DEPLOY_KEY: ${{secrets.DEPLOY_KEY}}
@@ -50,12 +50,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${env.HUAWEI_SWR_ENDPOINT}/${env.HUAWEI_ORGANIZATION}/${env.HUAWEI_IMAGE}:${{ github.run_number }} .
+          docker build -t  ${{ secrets.HUAWEI_SWR_ENDPOINT }}/${{ secrets.HUAWEI_ORGANIZATION }}/${{ secrets.HUAWEI_IMAGE }}:${{ github.run_number }} .
 
       - name: Docker login & Push Docker image to Huawei SWR
         run: |
           ${{steps.login.outputs.dc_login}}
-          docker push ${env.HUAWEI_SWR_ENDPOINT}/${env.HUAWEI_ORGANIZATION}/${env.HUAWEI_IMAGE}:${{ github.run_number }}
+          docker push  ${{ secrets.HUAWEI_SWR_ENDPOINT }}/${{ secrets.HUAWEI_ORGANIZATION }}/${{ secrets.HUAWEI_IMAGE }}:${{ github.run_number }}
 
       - name: Configure Deploy Key
         run: |
@@ -67,9 +67,9 @@ jobs:
           cd argocd-qubetics
           git pull origin
           git checkout ${BRANCH}
-          sed -i "s|\(image: \).*|\1${env.HUAWEI_SWR_ENDPOINT}/${env.HUAWEI_ORGANIZATION}/${env.HUAWEI_IMAGE}:${{ github.run_number }}|" ${DEPLOYMENT_PATH}
+          sed -i "s|\(image: \).*|\1 ${{ secrets.HUAWEI_SWR_ENDPOINT }}/${{ secrets.HUAWEI_ORGANIZATION }}/${{ secrets.HUAWEI_IMAGE }}:${{ github.run_number }}|" ${DEPLOYMENT_PATH}
           git config user.name ${GIT_USERNAME}
           git config user.email ${GIT_EMAIL}
           git add .
-          git commit -m "Update image to ${env.HUAWEI_SWR_ENDPOINT}/${env.HUAWEI_ORGANIZATION}/${env.HUAWEI_IMAGE}:${{ github.run_number }}"
+          git commit -m "Update image to  ${{ secrets.HUAWEI_SWR_ENDPOINT }}/${{ secrets.HUAWEI_ORGANIZATION }}/${{ secrets.HUAWEI_IMAGE }}:${{ github.run_number }}"
           git push origin ${BRANCH}
