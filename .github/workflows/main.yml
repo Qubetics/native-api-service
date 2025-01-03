@@ -37,7 +37,7 @@ jobs:
         id: idtoken
         with:
           script: |
-            const id_token = await require('@actions/core').getIDToken("dev-qubetics");
+            const id_token = await require('@actions/core').getIDToken("testnet-qubetics");
             core.setOutput("id_token", id_token);
 
       - name: Getting credentials
@@ -45,7 +45,7 @@ jobs:
         run: |
           unscoped_token=$(curl -s -X POST \
             -H "Authorization: Bearer ${{ steps.oidc.outputs.id_token }}" \
-            https://iam.myhuaweicloud.com/v3/OS-FEDERATION/identity_providers/dev-qubetics-pipeline/protocols/oidc/auth \
+            https://iam.myhuaweicloud.com/v3/OS-FEDERATION/identity_providers/testnet-qubetics-pipeline/protocols/oidc/auth \
             -H "Accept: application/json" -H "Content-Type: application/json" \
             -d "{}" | grep 'X-Subject-Token:' | awk '{print $2}')
           response=$(curl -s -X POST \
