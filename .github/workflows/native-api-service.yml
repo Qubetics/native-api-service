@@ -1,5 +1,4 @@
-name: Build and Push Docker Image with OIDC
-
+name: Build and Push Docker Image 
 on:
   push:
     branches:
@@ -12,16 +11,16 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      HUAWEI_SWR_ENDPOINT: ${{ secrets.HUAWEI_SWR_ENDPOINT }}
-      HUAWEI_IMAGE: ${{ secrets.HUAWEI_IMAGE }}
-      HUAWEI_ORGANIZATION: ${{ secrets.HUAWEI_ORGANIZATION }}
-      ARGOCD_REPO: ${{ secrets.ARGOCD_REPO }}
-      DEPLOYMENT_PATH: ${{ secrets.DEPLOYMENT_PATH }}
-      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-      GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
-      GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
-      BRANCH: ${{ secrets.BRANCH }}
+    # env:
+    #   HUAWEI_SWR_ENDPOINT: ${{ secrets.HUAWEI_SWR_ENDPOINT }}
+    #   HUAWEI_IMAGE: ${{ secrets.HUAWEI_IMAGE }}
+    #   HUAWEI_ORGANIZATION: ${{ secrets.HUAWEI_ORGANIZATION }}
+    #   ARGOCD_REPO: ${{ secrets.ARGOCD_REPO }}
+    #   DEPLOYMENT_PATH: ${{ secrets.DEPLOYMENT_PATH }}
+    #   DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+    #   GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
+    #   GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
+    #   BRANCH: ${{ secrets.BRANCH }}
 
     steps:
       - name: Checkout Code
@@ -32,24 +31,22 @@ jobs:
 
       - name: Authenticate with Huawei SWR
         id: login
+        env:
+          DOCKER_USERNAME: ap-southeast-3@BQG9INQF0BKVHSNQOLJG
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-           docker login -u ap-southeast-3@BQG9INQF0BKVHSNQOLJG -p e054dff1ba4cc985788f9dc974550f1f55ed81c4841a80038fe0b58765395bc6 swr.ap-southeast-3.myhuaweicloud.com
+          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD swr.ap-southeast-3.myhuaweicloud.com
+      
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Build Docker Image
         run: |
-          docker build -t swr.ap-southeast-3.myhuaweicloud.com/testnet-qubetics/testnet-native-api:${{ github.run_number }} .
-
-      # - name: Tag Docker Image
-      #   run: |
-      #     docker tag $HUAWEI_IMAGE:${{ github.run_number }} \
-      #     $HUAWEI_SWR_ENDPOINT/$HUAWEI_ORGANIZATION/$HUAWEI_IMAGE:${{ github.run_number }} 
-      #     echo $HUAWEI_SWR_ENDPOINT/$HUAWEI_ORGANIZATION/$HUAWEI_IMAGE:${{ github.run_number }}
+          docker build -t ${{ secrets.HUAWEI_SWR_ENDPOINT }}/${{ secrets.HUAWEI_ORGANIZATION }}/${{ secrets.HUAWEI_IMAGE }}:${{ github.run_number }} .
 
       - name: Push Docker Image to Huawei SWR
         run: |
-          docker push swr.ap-southeast-3.myhuaweicloud.com/testnet-qubetics/testnet-native-api:${{ github.run_number }}
+          docker push ${{ secrets.HUAWEI_SWR_ENDPOINT }}/${{ secrets.HUAWEI_ORGANIZATION }}/${{ secrets.HUAWEI_IMAGE }}:${{ github.run_number }}
 
       - name: Configure Deploy Key
         run: |
@@ -60,12 +57,12 @@ jobs:
 
       - name: Update ArgoCD Deployment
         run: |
-          git clone $ARGOCD_REPO
-          cd $(basename $ARGOCD_REPO .git)
-          git checkout $BRANCH
-          sed -i "s|\(image: \).*|\1swr.ap-southeast-3.myhuaweicloud.com/testnet-qubetics/testnet-native-api:${{ github.run_number }}|" $DEPLOYMENT_PATH
-          git config user.name "$GIT_USERNAME"
+          git clone ${{ secrets.ARGOCD_REPO }}
+          cd $(basename ${{ secrets.ARGOCD_REPO }} .git)
+          git checkout ${{ secrets.BRANCH }}
+          sed -i "s|\(image: \).*|\1${{ secrets.HUAWEI_SWR_ENDPOINT }}/${{ secrets.HUAWEI_ORGANIZATION }}/${{ secrets.HUAWEI_IMAGE }}:${{ github.run_number }}|" ${{ secrets.DEPLOYMENT_PATH }}
+          git config user.name "${{ secrets.GIT_USERNAME }}"
           git config user.email "$GIT_EMAIL"
           git add .
-          git commit -m "Update image to swr.ap-southeast-3.myhuaweicloud.com/testnet-qubetics/testnet-native-api:${{ github.run_number }}"
-          git push origin $BRANCH
+          git commit -m "Update image to ${{ secrets.HUAWEI_SWR_ENDPOINT }}/${{ secrets.HUAWEI_ORGANIZATION }}/${{ secrets.HUAWEI_IMAGE }}:${{ github.run_number }}"
+          git push origin ${{ secrets.BRANCH }}
