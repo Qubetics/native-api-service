@@ -1,223 +1,226 @@
 import {
-	REDIS_KEY,
-	RES_MSG,
-	CONST_NAME,
-	FETCH_METHODS,
-	HEADERS,
-} from '../../constant';
-import { GraphData, IESResponse, IGraphResponse } from '../../interfaces/index';
-import { calculateData } from '../../helper/calculateAPR.helper';
-import logger from '../../lib/logger';
-import { RedisService } from '../../service';
-import blockService from '../block/block.service';
-import transactionService from '../transactions/transaction.service';
-import prisma from '../../lib/db';
-import { fetchRequest } from '../../Utility/common';
+  REDIS_KEY,
+  RES_MSG,
+  CONST_NAME,
+  FETCH_METHODS,
+  HEADERS,
+} from "../../constant";
+import { GraphData, IESResponse, IGraphResponse } from "../../interfaces/index";
+import { calculateData } from "../../helper/calculateAPR.helper";
+import logger from "../../lib/logger";
+import { RedisService } from "../../service";
+import blockService from "../block/block.service";
+import transactionService from "../transactions/transaction.service";
+import prisma from "../../lib/db";
+import { fetchRequest } from "../../Utility/common";
 import {
-	formatDate,
-	fillMissingDatesWithZeroByhr,
-	formatDateForDay,
-	fillMissingDatesWithZeroByDay,
-	formatDateByMin,
-	fillMissingMinutes,
-	exp,
-	formatDateBySec,
-	fillMissingSeconds,
-	formatDateForYear,
-	fillMissingDatesWithZeroByMonth,
-} from '../../lib/utilities.helper';
-import contractService from '../contract/contract.service';
+  formatDate,
+  fillMissingDatesWithZeroByhr,
+  formatDateForDay,
+  fillMissingDatesWithZeroByDay,
+  formatDateByMin,
+  fillMissingMinutes,
+  exp,
+  formatDateBySec,
+  fillMissingSeconds,
+  formatDateForYear,
+  fillMissingDatesWithZeroByMonth,
+} from "../../lib/utilities.helper";
+import contractService from "../contract/contract.service";
 
 class ExplorerService {
-	// Dashboard method to fetch data
-	async dashboard(): Promise<IESResponse> {
-		try {
-			// Initialize an object to store data
-			const obj: {
-				tokenPrice: number;
-				marketCap: number;
-				apy: number;
-				totalSupply: number;
-				inflation: number;
-				totalValidator: number;
-			} = {
-				tokenPrice: 0,
-				marketCap: 0,
-				apy: 0,
-				totalSupply: 0,
-				inflation: 0,
-				totalValidator: 0,
-			};
+  // Dashboard method to fetch data
+  async dashboard(): Promise<IESResponse> {
+    try {
+      // Initialize an object to store data
+      const obj: {
+        tokenPrice: number;
+        marketCap: number;
+        apy: number;
+        totalSupply: number;
+        inflation: number;
+        totalValidator: number;
+        circulation_supply: number;
+      } = {
+        tokenPrice: 0,
+        marketCap: 0,
+        apy: 0,
+        totalSupply: 0,
+        inflation: 0,
+        totalValidator: 0,
+        circulation_supply: 0,
+      };
 
-			// Fetch data from Redis
-			const redisData = await this.getRedisValue();
+      //totalAccounts , latestBlock
+      // Fetch data from Redis
+      const redisData = await this.getRedisValue();
+      console.log("lakdflhdflahdf", redisData);
 
-			// Check if Redis data is not available
-			if (!redisData) {
-				// Set default values and fetch additional data
-				obj.tokenPrice = CONST_NAME.ZERO;
-				obj.marketCap = CONST_NAME.ZERO;
-				const data = await calculateData();
+      // Check if Redis data is not available
+      if (!redisData) {
+        // Set default values and fetch additional data
+        obj.tokenPrice = CONST_NAME.ZERO;
+        obj.marketCap = CONST_NAME.ZERO;
+        const data = await calculateData();
 
-				if (
-					'apy' in data &&
-					'inflation' in data &&
-					'totalSupply' in data &&
-					'totalValidator' in data
-				) {
-					return {
-						error: false,
-						message: RES_MSG.FETCH_SUCCESS,
-						data: {
-							apy: data.apy,
-							inflation: data.inflation,
-							totalSupply: data.totalSupply,
-							totalValidator: data.totalSupply,
-						},
-					};
-				} else {
-					return { error: true, message: RES_MSG.NOT_FOUND };
-				}
-			} else {
-				// Use Redis data if available
-				obj.apy = redisData?.apy;
-				obj.totalSupply = redisData?.totalSupply;
-				obj.inflation = redisData?.inflation;
-				obj.tokenPrice = redisData?.tokenPrice;
-				obj.marketCap = redisData?.marketCap;
-				obj.totalValidator = redisData?.totalValidator;
-			}
-			return {
-				error: false,
-				message: RES_MSG.FETCH_SUCCESS,
-				data: obj,
-			};
-		} catch (err) {
-			logger.error('Error in dashboard data:', err);
-			return { error: true, message: RES_MSG.NOT_FOUND };
-		}
-	}
+        if (
+          "apy" in data &&
+          "inflation" in data &&
+          "totalSupply" in data &&
+          "totalValidator" in data &&
+          "circulation_supply" in data
+        ) {
+          return {
+            error: false,
+            message: RES_MSG.FETCH_SUCCESS,
+            data: {
+              apy: data.apy,
+              inflation: data.inflation,
+              totalSupply: data.totalSupply,
+              totalValidator: data.totalValidator,
+              circulation_supply: data.circulation_supply,
+            },
+          };
+        } else {
+          return { error: true, message: RES_MSG.NOT_FOUND };
+        }
+      } else {
+        // Use Redis data if available
+        obj.apy = redisData?.apy;
+        obj.totalSupply = redisData?.totalSupply;
+        obj.inflation = redisData?.inflation;
+        obj.tokenPrice = redisData?.tokenPrice;
+        obj.marketCap = redisData?.marketCap;
+        obj.totalValidator = redisData?.totalValidator;
+        obj.circulation_supply = redisData?.circulation_supply;
+      }
+      return {
+        error: false,
+        message: RES_MSG.FETCH_SUCCESS,
+        data: obj,
+      };
+    } catch (err) {
+      logger.error("Error in dashboard data:", err);
+      return { error: true, message: RES_MSG.NOT_FOUND };
+    }
+  }
 
-	// Method to get data from Redis
-	getRedisValue = async (): Promise<
-		| {
-				tokenPrice: number;
-				marketCap: number;
-				apy: number;
-				totalSupply: number;
-				inflation: number;
-				totalValidator: number;
-		  }
-		| false
-	> => {
-		try {
-			// Fetch values from Redis for different keys
-			let tokenPrice = await RedisService.getString(
-				REDIS_KEY.TOKEN_PRICE,
-			);
+  // Method to get data from Redis
+  getRedisValue = async (): Promise<
+    | {
+        tokenPrice: number;
+        marketCap: number;
+        apy: number;
+        totalSupply: number;
+        inflation: number;
+        totalValidator: number;
+        circulation_supply: number;
+      }
+    | false
+  > => {
+    try {
+      // Fetch values from Redis for different keys
+      let tokenPrice = await RedisService.getString(REDIS_KEY.TOKEN_PRICE);
 
-			tokenPrice = tokenPrice === null ? 0 : tokenPrice;
+      tokenPrice = tokenPrice === null ? 0 : tokenPrice;
 
-			let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
-			marketCap = marketCap === null ? 0 : marketCap;
+      let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
+      marketCap = marketCap === null ? 0 : marketCap;
 
-			let validatorData = await RedisService.getString(
-				REDIS_KEY.INFLATION_APY,
-			);
-			validatorData =
-				validatorData === null ? {} : JSON.parse(validatorData);
+      let circulation_supply = await RedisService.getString(
+        REDIS_KEY.CIRCULATING_SUPPLY,
+      );
+      let validatorData = await RedisService.getString(REDIS_KEY.INFLATION_APY);
+      validatorData = validatorData === null ? {} : JSON.parse(validatorData);
 
-			// Extract necessary values from the validatorData object
-			const { apy, totalSupply, inflation, totalValidator } =
-				validatorData;
-			return {
-				tokenPrice,
-				marketCap,
-				apy: Number(apy),
-				totalSupply: totalSupply,
-				inflation: Number(inflation) * 100,
-				totalValidator: Number(totalValidator),
-			};
-		} catch (err) {
-			logger.error('Error while getting value  from redis ', err);
-			return false;
-		}
-	};
+      // Extract necessary values from the validatorData object
+      const { apy, totalSupply, inflation, totalValidator } = validatorData;
+      return {
+        tokenPrice,
+        marketCap,
+        apy: Number(apy),
+        totalSupply: totalSupply,
+        inflation: Number(inflation) * 100,
+        totalValidator: Number(totalValidator),
+        circulation_supply,
+      };
+    } catch (err) {
+      logger.error("Error while getting value  from redis ", err);
+      return false;
+    }
+  };
 
-	async searching(payload: string): Promise<IESResponse> {
-		try {
-			let txData;
+  async searching(payload: string): Promise<IESResponse> {
+    try {
+      let txData;
 
-			if (!payload.startsWith('0x') && !isNaN(Number(payload))) {
-				const result = await blockService.getBlockByNumber(
-					Number(payload),
-				);
-				return result;
-			} else if (payload?.startsWith('0x') && payload?.length === 66) {
-				// Handle transaction hash with '0x'
-				const txData =
-					await transactionService.getTransactionByHash(payload);
-				if (txData?.error) {
-					const result = await blockService.getBlockByHash(payload);
-					if (result?.error) result.message = RES_MSG.NOT_FOUND;
-					return result;
-				}
+      if (!payload.startsWith("0x") && !isNaN(Number(payload))) {
+        const result = await blockService.getBlockByNumber(Number(payload));
+        return result;
+      } else if (payload?.startsWith("0x") && payload?.length === 66) {
+        // Handle transaction hash with '0x'
+        const txData = await transactionService.getTransactionByHash(payload);
+        if (txData?.error) {
+          const result = await blockService.getBlockByHash(payload);
+          if (result?.error) result.message = RES_MSG.NOT_FOUND;
+          return result;
+        }
 
-				return txData;
-				// } else if (
-				// 	payload?.length === 64 &&
-				// 	!payload.startsWith('0x') &&
-				// 	!payload.startsWith('qubetics')
-				// ) {
-				// 	// If the payload length is 64 and it doesn't start with '0x', prepend '0x'
-				// 	payload = '0x' + payload;
+        return txData;
+        // } else if (
+        // 	payload?.length === 64 &&
+        // 	!payload.startsWith('0x') &&
+        // 	!payload.startsWith('qubetics')
+        // ) {
+        // 	// If the payload length is 64 and it doesn't start with '0x', prepend '0x'
+        // 	payload = '0x' + payload;
 
-				// 	// Call getTransactionByHash with the modified payload
-				// 	txData = await transactionService.getTransactionByHash(payload);
-				// 	return txData;
-			} else if (payload.startsWith('qubetics') && payload.length === 44) {
-				/* here we search for all transaction specfic to a wallet address*/
-				txData = await transactionService.getTransactionsByAddress({
-					address: payload,
-					limit: 10,
-					page: 0,
-				});
+        // 	// Call getTransactionByHash with the modified payload
+        // 	txData = await transactionService.getTransactionByHash(payload);
+        // 	return txData;
+      } else if (payload.startsWith("qubetics") && payload.length === 47) {
+        /* here we search for all transaction specfic to a wallet address*/
+        txData = await transactionService.getTransactionsByAddress({
+          address: payload,
+          limit: 10,
+          page: 0,
+        });
 
-				return txData;
-			} else if (payload.startsWith('qubetics') && payload.length === 64) {
-				/* here we search for all transaction specfic to a wallet address*/
-				txData = await contractService.getContractByAddress(payload);
+        return txData;
+      } else if (payload.startsWith("qubetics") && payload.length === 64) {
+        /* here we search for all transaction specfic to a wallet address*/
+        txData = await contractService.getContractByAddress(payload);
 
-				return txData;
-			} else {
-				throw new Error(RES_MSG.NOT_FOUND);
-			}
-		} catch (err) {
-			if (err instanceof Error) {
-				return { error: true, message: RES_MSG.NOT_FOUND };
-			}
-			return { error: true, message: RES_MSG.ERROR };
-		}
-	}
+        return txData;
+      } else {
+        throw new Error(RES_MSG.NOT_FOUND);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        return { error: true, message: RES_MSG.NOT_FOUND };
+      }
+      return { error: true, message: RES_MSG.ERROR };
+    }
+  }
 
-	async getAccountCounts(payloads: {
-		time: string;
-		interval: number;
-	}): Promise<IGraphResponse> {
-		try {
-			let graphData;
-			let finalData;
+  async getAccountCounts(payloads: {
+    time: string;
+    interval: number;
+  }): Promise<IGraphResponse> {
+    try {
+      let graphData;
+      let finalData;
 
-			let startDate = '';
+      let startDate = "";
 
-			if (payloads.time === 'd') {
-				if (payloads.interval === 1) {
-					const currentDate = new Date();
+      if (payloads.time === "d") {
+        if (payloads.interval === 1) {
+          const currentDate = new Date();
 
-					const oneDayAgo = new Date();
-					oneDayAgo.setDate(oneDayAgo.getDate() - 1); // Subtract 1 day
-					startDate = formatDate(oneDayAgo);
-					graphData = (await prisma.$queryRaw`
+          const oneDayAgo = new Date();
+          oneDayAgo.setDate(oneDayAgo.getDate() - 1); // Subtract 1 day
+          startDate = formatDate(oneDayAgo);
+          graphData = (await prisma.$queryRaw`
 					SELECT DATE_TRUNC('hour', "createdAt") AS "hour", COUNT(*)::int AS "count"
 					FROM "Users"
 					WHERE "createdAt" >= ${new Date(startDate)}
@@ -227,19 +230,19 @@ class ExplorerService {
 					ORDER BY "hour";
 					`) as Array<{ hour: Date; count: number }>;
 
-					finalData = await fillMissingDatesWithZeroByhr(
-						graphData,
-						new Date(startDate),
-					);
-				} else {
-					const currentDate = new Date();
+          finalData = await fillMissingDatesWithZeroByhr(
+            graphData,
+            new Date(startDate),
+          );
+        } else {
+          const currentDate = new Date();
 
-					const daysAgo = payloads.interval;
-					const fromDate = new Date(currentDate);
-					fromDate.setDate(fromDate.getDate() - daysAgo);
-					startDate = formatDateForDay(fromDate);
+          const daysAgo = payloads.interval;
+          const fromDate = new Date(currentDate);
+          fromDate.setDate(fromDate.getDate() - daysAgo);
+          startDate = formatDateForDay(fromDate);
 
-					graphData = (await prisma.$queryRaw`
+          graphData = (await prisma.$queryRaw`
 				  SELECT DATE_TRUNC('day', "createdAt") AS "day", COUNT(*)::int AS "count"
 				  FROM "Users"
 				  WHERE "createdAt" >= ${new Date(startDate)}
@@ -249,19 +252,19 @@ class ExplorerService {
 				  ORDER BY "day";
 				`) as Array<{ day: Date; count: number }>;
 
-					finalData = await fillMissingDatesWithZeroByDay(
-						graphData,
-						new Date(startDate),
-						currentDate,
-					);
-				}
-			} else if (payloads.time === 'h') {
-				const currentDate = formatDateByMin(new Date());
+          finalData = await fillMissingDatesWithZeroByDay(
+            graphData,
+            new Date(startDate),
+            currentDate,
+          );
+        }
+      } else if (payloads.time === "h") {
+        const currentDate = formatDateByMin(new Date());
 
-				const oneHourAgo = new Date();
-				oneHourAgo.setHours(oneHourAgo.getHours() - payloads.interval);
-				startDate = formatDateByMin(oneHourAgo);
-				const graphData = (await prisma.$queryRaw`
+        const oneHourAgo = new Date();
+        oneHourAgo.setHours(oneHourAgo.getHours() - payloads.interval);
+        startDate = formatDateByMin(oneHourAgo);
+        const graphData = (await prisma.$queryRaw`
 				SELECT DATE_TRUNC('minute', "createdAt") AS "hour", COUNT(*)::int AS "count"
 				FROM "Users"
 				WHERE "createdAt" >= ${new Date(startDate)}
@@ -271,18 +274,18 @@ class ExplorerService {
 				ORDER BY "hour";
 				`) as Array<{ hour: Date; count: number }>;
 
-				finalData = await fillMissingMinutes(
-					graphData,
-					new Date(startDate),
-					new Date(currentDate),
-				);
-			} else if (payloads.time === 'y' && payloads.interval === 1) {
-				const currentDate = new Date();
-				const oneYearAgo = new Date();
-				oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1); // Subtract 1 year
-				startDate = formatDateForYear(oneYearAgo);
+        finalData = await fillMissingMinutes(
+          graphData,
+          new Date(startDate),
+          new Date(currentDate),
+        );
+      } else if (payloads.time === "y" && payloads.interval === 1) {
+        const currentDate = new Date();
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1); // Subtract 1 year
+        startDate = formatDateForYear(oneYearAgo);
 
-				graphData = (await prisma.$queryRaw`
+        graphData = (await prisma.$queryRaw`
 				SELECT DATE_TRUNC('month', "createdAt") AS "month", COUNT(*)::int AS "count"
 				FROM "Users"
 				WHERE "createdAt" >= ${new Date(startDate)}
@@ -291,48 +294,48 @@ class ExplorerService {
 				ORDER BY "month";
 			`) as Array<{ month: Date; count: number }>;
 
-				finalData = await fillMissingDatesWithZeroByMonth(
-					graphData,
-					new Date(startDate),
-					currentDate,
-				);
-			}
+        finalData = await fillMissingDatesWithZeroByMonth(
+          graphData,
+          new Date(startDate),
+          currentDate,
+        );
+      }
 
-			const totalAccount = await RedisService.getString(
-				REDIS_KEY.TOTAL_ACCOUNTS,
-			);
+      const totalAccount = await RedisService.getString(
+        REDIS_KEY.TOTAL_ACCOUNTS,
+      );
 
-			return {
-				error: false,
-				message: RES_MSG.ACCOUNT_HISTORY_SUCCESS,
-				data: {
-					finalData: finalData as Array<GraphData>,
-					count: await prisma.users.count(),
-				},
-			};
-		} catch (err) {
-			return { error: true, message: RES_MSG.ERROR };
-		}
-	}
+      return {
+        error: false,
+        message: RES_MSG.ACCOUNT_HISTORY_SUCCESS,
+        data: {
+          finalData: finalData as Array<GraphData>,
+          count: await prisma.users.count(),
+        },
+      };
+    } catch (err) {
+      return { error: true, message: RES_MSG.ERROR };
+    }
+  }
 
-	async getContractDeployedCount(payloads: {
-		time: string;
-		interval: number;
-	}): Promise<IGraphResponse> {
-		try {
-			let graphData;
-			let finalData;
-			let startDate = '';
+  async getContractDeployedCount(payloads: {
+    time: string;
+    interval: number;
+  }): Promise<IGraphResponse> {
+    try {
+      let graphData;
+      let finalData;
+      let startDate = "";
 
-			if (payloads.time === 'd') {
-				if (payloads.interval === 1) {
-					const currentDate = new Date();
+      if (payloads.time === "d") {
+        if (payloads.interval === 1) {
+          const currentDate = new Date();
 
-					const oneDayAgo = new Date();
-					oneDayAgo.setDate(oneDayAgo.getDate() - 1); // Subtract 1 day
-					startDate = formatDate(oneDayAgo);
+          const oneDayAgo = new Date();
+          oneDayAgo.setDate(oneDayAgo.getDate() - 1); // Subtract 1 day
+          startDate = formatDate(oneDayAgo);
 
-					graphData = (await prisma.$queryRaw`
+          graphData = (await prisma.$queryRaw`
 				   SELECT DATE_TRUNC('hour', "createdAt") AS "hour", COUNT(*)::int AS "count"
 				   FROM "Transactions"
 				   WHERE "createdAt" >= ${new Date(startDate)}
@@ -341,19 +344,19 @@ class ExplorerService {
 				   GROUP BY "hour"
 				   ORDER BY "hour";
 				`) as Array<{ hour: Date; count: number }>;
-					finalData = await fillMissingDatesWithZeroByhr(
-						graphData,
-						new Date(startDate),
-					);
-				} else {
-					const currentDate = new Date();
+          finalData = await fillMissingDatesWithZeroByhr(
+            graphData,
+            new Date(startDate),
+          );
+        } else {
+          const currentDate = new Date();
 
-					const daysAgo = payloads.interval;
-					const fromDate = new Date(currentDate);
-					fromDate.setDate(fromDate.getDate() - daysAgo);
-					startDate = formatDateForDay(fromDate);
+          const daysAgo = payloads.interval;
+          const fromDate = new Date(currentDate);
+          fromDate.setDate(fromDate.getDate() - daysAgo);
+          startDate = formatDateForDay(fromDate);
 
-					graphData = (await prisma.$queryRaw`
+          graphData = (await prisma.$queryRaw`
 				   SELECT DATE_TRUNC('day', "createdAt") AS "day", COUNT(*)::int AS "count"
 				   FROM "Transactions"
 				   WHERE "createdAt" >= ${new Date(startDate)}
@@ -363,19 +366,19 @@ class ExplorerService {
 				   ORDER BY "day";
 				`) as Array<{ day: Date; count: number }>;
 
-					finalData = await fillMissingDatesWithZeroByDay(
-						graphData,
-						new Date(startDate),
-						currentDate,
-					);
-				}
-			} else if (payloads.time === 'h') {
-				const currentDate = new Date();
-				const currentDateModi = formatDateByMin(new Date());
-				const oneHourAgo = new Date();
-				oneHourAgo.setHours(oneHourAgo.getHours() - payloads.interval);
-				startDate = formatDateByMin(oneHourAgo);
-				graphData = (await prisma.$queryRaw`
+          finalData = await fillMissingDatesWithZeroByDay(
+            graphData,
+            new Date(startDate),
+            currentDate,
+          );
+        }
+      } else if (payloads.time === "h") {
+        const currentDate = new Date();
+        const currentDateModi = formatDateByMin(new Date());
+        const oneHourAgo = new Date();
+        oneHourAgo.setHours(oneHourAgo.getHours() - payloads.interval);
+        startDate = formatDateByMin(oneHourAgo);
+        graphData = (await prisma.$queryRaw`
 				SELECT DATE_TRUNC('minute', "createdAt") AS "hour", COUNT(*)::int AS "count"
 				FROM "Transactions"
 				WHERE "createdAt" >= ${new Date(startDate)}
@@ -384,18 +387,18 @@ class ExplorerService {
 				GROUP BY "hour"
 				ORDER BY "hour";
 				`) as Array<{ hour: Date; count: number }>;
-				finalData = await fillMissingMinutes(
-					graphData,
-					new Date(startDate),
-					new Date(currentDateModi),
-				);
-			} else if (payloads.time === 'y' && payloads.interval === 1) {
-				const currentDate = new Date();
-				const oneYearAgo = new Date();
-				oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1); // Subtract 1 year
-				startDate = formatDateForYear(oneYearAgo);
+        finalData = await fillMissingMinutes(
+          graphData,
+          new Date(startDate),
+          new Date(currentDateModi),
+        );
+      } else if (payloads.time === "y" && payloads.interval === 1) {
+        const currentDate = new Date();
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1); // Subtract 1 year
+        startDate = formatDateForYear(oneYearAgo);
 
-				graphData = (await prisma.$queryRaw`
+        graphData = (await prisma.$queryRaw`
 				SELECT DATE_TRUNC('month', "createdAt") AS "month", COUNT(*)::int AS "count"
 				FROM "Transactions"
 				WHERE "createdAt" >= ${new Date(startDate)}
@@ -405,156 +408,146 @@ class ExplorerService {
 				ORDER BY "month";
 			`) as Array<{ month: Date; count: number }>;
 
-				finalData = await fillMissingDatesWithZeroByMonth(
-					graphData,
-					new Date(startDate),
-					currentDate,
-				);
-			}
+        finalData = await fillMissingDatesWithZeroByMonth(
+          graphData,
+          new Date(startDate),
+          currentDate,
+        );
+      }
 
-			const totalContractDeployedTx = await RedisService.getString(
-				REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX,
-			);
+      const totalContractDeployedTx = await RedisService.getString(
+        REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX,
+      );
 
-			return {
-				error: false,
-				message: RES_MSG.TRANSACTION_HISTORY_SUCCESS,
-				data: {
-					finalData: finalData as Array<GraphData>,
-					count: await prisma.contracts.count(),
-				},
-			};
-		} catch (err) {
-			return { error: true, message: RES_MSG.ERROR };
-		}
-	}
+      return {
+        error: false,
+        message: RES_MSG.TRANSACTION_HISTORY_SUCCESS,
+        data: {
+          finalData: finalData as Array<GraphData>,
+          count: await prisma.contracts.count(),
+        },
+      };
+    } catch (err) {
+      return { error: true, message: RES_MSG.ERROR };
+    }
+  }
 
-	async getAddressDetail(address: string): Promise<IESResponse> {
-		try {
-			console.log('address: ', address);
+  async getAddressDetail(address: string): Promise<IESResponse> {
+    try {
+      console.log("address: ", address);
 
-			const [user] = await Promise.all([
-				prisma.users.findFirst({
-					where: {
-						address: address,
-					},
-					select: {
-						txn: true,
-					},
-				}),
-			]);
+      const [user] = await Promise.all([
+        prisma.users.findFirst({
+          where: {
+            address: address,
+          },
+          select: {
+            txn: true,
+          },
+        }),
+      ]);
 
-			let txnCount = user ? user.txn : '';
+      let txnCount = user ? user.txn : "";
 
-			// Check if USER_BALANCE is in Redis
-			let userBalance = await RedisService.getString(
-				REDIS_KEY.USER_BALANCE,
-			);
-			try {
-				const response = await fetchRequest(
-					`${environment.evmHost}/cosmos/bank/v1beta1/spendable_balances/${address}`,
-					FETCH_METHODS.GET,
-					HEADERS.DEFAULT,
-				);
+      // Check if USER_BALANCE is in Redis
+      let userBalance = await RedisService.getString(REDIS_KEY.USER_BALANCE);
+      try {
+        const response = await fetchRequest(
+          `${environment.evmHost}/cosmos/bank/v1beta1/spendable_balances/${address}`,
+          FETCH_METHODS.GET,
+          HEADERS.DEFAULT,
+        );
 
-				// Find the entry with denom "qubetics"
-				const qubeticsAmount = response.data?.balances.find(
-					(item: any) => item.denom === 'qubetics',
-				);
+        // Find the entry with denom "qubetics"
+        const qubeticsAmount = response.data?.balances.find(
+          (item: any) => item.denom === "qubetics",
+        );
 
-				userBalance = qubeticsAmount.amount;
+        userBalance = qubeticsAmount.amount;
 
-				// Store userBalance in Redis
-				await RedisService.setString(
-					REDIS_KEY.USER_BALANCE,
-					userBalance,
-				);
-			} catch (error) {
-				userBalance = '';
-			}
-			const actualBalance = userBalance
-				? (Number(userBalance) / Math.pow(10, 18)).toString()
-				: '';
+        // Store userBalance in Redis
+        await RedisService.setString(REDIS_KEY.USER_BALANCE, userBalance);
+      } catch (error) {
+        userBalance = "";
+      }
+      const actualBalance = userBalance
+        ? (Number(userBalance) / Math.pow(10, 18)).toString()
+        : "";
 
-			let marketCapPrice = await RedisService.getString(
-				CONST_NAME.MARKET_CAP_PRICE,
-			);
+      let marketCapPrice = await RedisService.getString(
+        CONST_NAME.MARKET_CAP_PRICE,
+      );
 
-			let value: string;
-			if (!marketCapPrice) {
-				const latestEntry = await prisma.coinmarketInfo.findFirst({
-					orderBy: {
-						id: 'desc',
-					},
-					select: {
-						price: true,
-					},
-				});
+      let value: string;
+      if (!marketCapPrice) {
+        const latestEntry = await prisma.coinmarketInfo.findFirst({
+          orderBy: {
+            id: "desc",
+          },
+          select: {
+            price: true,
+          },
+        });
 
-				console.log('latestEntry?.price: ', latestEntry?.price);
+        console.log("latestEntry?.price: ", latestEntry?.price);
 
-				const price = latestEntry?.price?.toString() ?? '';
-				value = price
-					? (Number(price) * Number(actualBalance)).toString()
-					: '';
-			} else {
-				marketCapPrice = JSON.parse(marketCapPrice);
+        const price = latestEntry?.price?.toString() ?? "";
+        value = price ? (Number(price) * Number(actualBalance)).toString() : "";
+      } else {
+        marketCapPrice = JSON.parse(marketCapPrice);
 
-				value =
-					marketCapPrice?.price && actualBalance
-						? (
-								Number(marketCapPrice?.price) *
-								Number(actualBalance)
-							).toString()
-						: '';
-			}
+        value =
+          marketCapPrice?.price && actualBalance
+            ? (Number(marketCapPrice?.price) * Number(actualBalance)).toString()
+            : "";
+      }
 
-			console.log('coinBalance ', {
-				coinBalance: actualBalance,
-				value: value,
-				transactionCount: Number(txnCount),
-			});
+      console.log("coinBalance ", {
+        coinBalance: actualBalance,
+        value: value,
+        transactionCount: Number(txnCount),
+      });
 
-			return {
-				error: false,
-				message: RES_MSG.FETCH_SUCCESS,
-				data: {
-					coinBalance: exp(actualBalance),
-					value: exp(value),
-					transactionCount: Number(txnCount),
-				},
-			};
-		} catch (err) {
-			console.log('error : ', err);
+      return {
+        error: false,
+        message: RES_MSG.FETCH_SUCCESS,
+        data: {
+          coinBalance: exp(actualBalance),
+          value: exp(value),
+          transactionCount: Number(txnCount),
+        },
+      };
+    } catch (err) {
+      console.log("error : ", err);
 
-			return {
-				error: true,
-				message: err instanceof Error ? err.message : RES_MSG.ERROR,
-			};
-		}
-	}
+      return {
+        error: true,
+        message: err instanceof Error ? err.message : RES_MSG.ERROR,
+      };
+    }
+  }
 
-	async tpsHistory(payloads: {
-		time: string;
-		interval: number;
-	}): Promise<IGraphResponse> {
-		try {
-			console.log(payloads.time);
-			console.log(payloads.interval);
-			let graphData;
-			let finalData;
-			let startDate = '';
+  async tpsHistory(payloads: {
+    time: string;
+    interval: number;
+  }): Promise<IGraphResponse> {
+    try {
+      console.log(payloads.time);
+      console.log(payloads.interval);
+      let graphData;
+      let finalData;
+      let startDate = "";
 
-			const currentDate = new Date();
+      const currentDate = new Date();
 
-			if (payloads.time === 'd') {
-				if (payloads.interval === 1) {
-					const currentDate = new Date();
+      if (payloads.time === "d") {
+        if (payloads.interval === 1) {
+          const currentDate = new Date();
 
-					const oneDayAgo = new Date();
-					oneDayAgo.setDate(oneDayAgo.getDate() - 1); // Subtract 1 day
-					startDate = formatDate(oneDayAgo);
-					graphData = (await prisma.$queryRaw`
+          const oneDayAgo = new Date();
+          oneDayAgo.setDate(oneDayAgo.getDate() - 1); // Subtract 1 day
+          startDate = formatDate(oneDayAgo);
+          graphData = (await prisma.$queryRaw`
 				SELECT DATE_TRUNC('hour', "createdAt") AS "hour", COUNT(*)::int AS "count"
 				FROM "Transactions"
 				WHERE "createdAt" >= ${new Date(startDate)}
@@ -564,19 +557,19 @@ class ExplorerService {
 				ORDER BY "hour";
 				`) as Array<{ hour: Date; count: number }>;
 
-					finalData = await fillMissingDatesWithZeroByhr(
-						graphData,
-						new Date(startDate),
-					);
-				} else {
-					const currentDate = new Date();
+          finalData = await fillMissingDatesWithZeroByhr(
+            graphData,
+            new Date(startDate),
+          );
+        } else {
+          const currentDate = new Date();
 
-					const daysAgo = payloads.interval;
-					const fromDate = new Date(currentDate);
-					fromDate.setDate(fromDate.getDate() - daysAgo);
-					startDate = formatDateForDay(fromDate);
+          const daysAgo = payloads.interval;
+          const fromDate = new Date(currentDate);
+          fromDate.setDate(fromDate.getDate() - daysAgo);
+          startDate = formatDateForDay(fromDate);
 
-					graphData = (await prisma.$queryRaw`
+          graphData = (await prisma.$queryRaw`
 			  SELECT DATE_TRUNC('day', "createdAt") AS "day", COUNT(*)::int AS "count"
 			  FROM "Transactions"
 			  WHERE "createdAt" >= ${new Date(startDate)}
@@ -586,19 +579,19 @@ class ExplorerService {
 			  ORDER BY "day";
 			`) as Array<{ day: Date; count: number }>;
 
-					finalData = await fillMissingDatesWithZeroByDay(
-						graphData,
-						new Date(startDate),
-						currentDate,
-					);
-				}
-			} else if (payloads.time === 'y' && payloads.interval === 1) {
-				const currentDate = new Date();
-				const oneYearAgo = new Date();
-				oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1); // Subtract 1 year
-				startDate = formatDateForYear(oneYearAgo);
+          finalData = await fillMissingDatesWithZeroByDay(
+            graphData,
+            new Date(startDate),
+            currentDate,
+          );
+        }
+      } else if (payloads.time === "y" && payloads.interval === 1) {
+        const currentDate = new Date();
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1); // Subtract 1 year
+        startDate = formatDateForYear(oneYearAgo);
 
-				graphData = (await prisma.$queryRaw`
+        graphData = (await prisma.$queryRaw`
 				SELECT DATE_TRUNC('month', "createdAt") AS "month", COUNT(*)::int AS "count"
 				FROM "Transactions"
 				WHERE "createdAt" >= ${new Date(startDate)}
@@ -607,25 +600,25 @@ class ExplorerService {
 				ORDER BY "month";
 			`) as Array<{ month: Date; count: number }>;
 
-				finalData = await fillMissingDatesWithZeroByMonth(
-					graphData,
-					new Date(startDate),
-					currentDate,
-				);
-			}
-			const totalTx = await RedisService.getString(REDIS_KEY.TOTAL_TX);
-			return {
-				error: false,
-				message: RES_MSG.TRANSACTION_HISTORY_SUCCESS,
-				data: {
-					finalData: finalData as Array<GraphData>,
-					count: await prisma.transactions.count(),
-				},
-			};
-		} catch (err) {
-			return { error: true, message: RES_MSG.ERROR };
-		}
-	}
+        finalData = await fillMissingDatesWithZeroByMonth(
+          graphData,
+          new Date(startDate),
+          currentDate,
+        );
+      }
+      const totalTx = await RedisService.getString(REDIS_KEY.TOTAL_TX);
+      return {
+        error: false,
+        message: RES_MSG.TRANSACTION_HISTORY_SUCCESS,
+        data: {
+          finalData: finalData as Array<GraphData>,
+          count: await prisma.transactions.count(),
+        },
+      };
+    } catch (err) {
+      return { error: true, message: RES_MSG.ERROR };
+    }
+  }
 }
 
 export default new ExplorerService();
