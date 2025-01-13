@@ -19,25 +19,26 @@ class TransactionService {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const todayStart = new Date();
-			todayStart.setHours(0, 0, 0, 0);
-      const [transactions, previous30DaysTrxn, getAccountCount] = await prisma.$transaction([
-        prisma.transactions.findMany({
-          orderBy: {
-            createdAt: "desc",
-          },
-          where: isFirstPage ? {} : { id: { lt: data.page } },
-          take: data.limit,
-        }),
-        prisma.transactions.count({
-          where: {
-            createdAt: {
-              gte: thirtyDaysAgo, // Greater than or equal to 30 days ago
+      todayStart.setHours(0, 0, 0, 0);
+      const [transactions, previous30DaysTrxn, getAccountCount] =
+        await prisma.$transaction([
+          prisma.transactions.findMany({
+            orderBy: {
+              createdAt: "desc",
             },
-          },
-        }),
-        prisma.$queryRaw`
- 					SELECT COUNT(DISTINCT "fromAddress") AS "count" FROM "Transactions" WHERE "timestamp" >= CAST(${todayStart.toISOString()} AS timestamp) AND "timestamp" <= CAST(${new Date().toISOString()} AS timestamp)`,
-      ]);
+            where: isFirstPage ? {} : { id: { lt: data.page } },
+            take: data.limit,
+          }),
+          prisma.transactions.count({
+            where: {
+              createdAt: {
+                gte: thirtyDaysAgo, // Greater than or equal to 30 days ago
+              },
+            },
+          }),
+          prisma.$queryRaw`
+ 					SELECT COUNT(DISTINCT "fromAddress") AS "count" FROM "Transactions" WHERE "timestamp" >= CAST(${todayStart.toISOString()} :: timestamp) AND "timestamp" <= CAST(${new Date().toISOString()} :: timestamp)`,
+        ]);
 
       const transactionCount = await RedisService.getString(
         REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
@@ -54,7 +55,7 @@ class TransactionService {
           : null;
 
       const activeAccount: any = convertBigIntToNumber(getAccountCount);
-      
+
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
