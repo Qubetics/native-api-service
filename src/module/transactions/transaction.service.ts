@@ -16,13 +16,22 @@ class TransactionService {
   }): Promise<IESResponse> {
     try {
       const isFirstPage = data.page === 1;
-      const [transactions] = await prisma.$transaction([
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const [transactions, previous30DaysTrxn] = await prisma.$transaction([
         prisma.transactions.findMany({
           orderBy: {
             createdAt: "desc",
           },
           where: isFirstPage ? {} : { id: { lt: data.page } },
           take: data.limit,
+        }),
+        prisma.transactions.count({
+          where: {
+            createdAt: {
+              gte: thirtyDaysAgo, // Greater than or equal to 30 days ago
+            },
+          },
         }),
       ]);
 
@@ -48,6 +57,7 @@ class TransactionService {
           transactions: convertBigIntToNumber(transactions),
           nextCursor,
           prevCursor,
+          previous30DaysTrxn,
         },
       };
     } catch (err) {

@@ -40,6 +40,7 @@ class ExplorerService {
         totalSupply: number;
         inflation: number;
         totalValidator: number;
+        circulation_supply: number;
       } = {
         tokenPrice: 0,
         marketCap: 0,
@@ -47,6 +48,7 @@ class ExplorerService {
         totalSupply: 0,
         inflation: 0,
         totalValidator: 0,
+        circulation_supply: 0,
       };
 
       //totalAccounts , latestBlock
@@ -65,7 +67,8 @@ class ExplorerService {
           "apy" in data &&
           "inflation" in data &&
           "totalSupply" in data &&
-          "totalValidator" in data
+          "totalValidator" in data &&
+          "circulation_supply" in data
         ) {
           return {
             error: false,
@@ -75,6 +78,7 @@ class ExplorerService {
               inflation: data.inflation,
               totalSupply: data.totalSupply,
               totalValidator: data.totalValidator,
+              circulation_supply: data.circulation_supply,
             },
           };
         } else {
@@ -88,6 +92,7 @@ class ExplorerService {
         obj.tokenPrice = redisData?.tokenPrice;
         obj.marketCap = redisData?.marketCap;
         obj.totalValidator = redisData?.totalValidator;
+        obj.circulation_supply = redisData?.circulation_supply;
       }
       return {
         error: false,
@@ -109,6 +114,7 @@ class ExplorerService {
         totalSupply: number;
         inflation: number;
         totalValidator: number;
+        circulation_supply: number;
       }
     | false
   > => {
@@ -121,6 +127,9 @@ class ExplorerService {
       let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
       marketCap = marketCap === null ? 0 : marketCap;
 
+      let circulation_supply = await RedisService.getString(
+        REDIS_KEY.CIRCULATING_SUPPLY,
+      );
       let validatorData = await RedisService.getString(REDIS_KEY.INFLATION_APY);
       validatorData = validatorData === null ? {} : JSON.parse(validatorData);
 
@@ -133,6 +142,7 @@ class ExplorerService {
         totalSupply: totalSupply,
         inflation: Number(inflation) * 100,
         totalValidator: Number(totalValidator),
+        circulation_supply,
       };
     } catch (err) {
       logger.error("Error while getting value  from redis ", err);

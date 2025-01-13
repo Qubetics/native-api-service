@@ -15,7 +15,9 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       totalSupplyResponse,
     ] = await Promise.all([
       apiRes.get("/cosmos/staking/v1beta1/validators"),
-      apiRes.get("/cosmos/bank/v1beta1/supply/by_denom?denom=qubetics"),
+      apiRes.get(
+        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`,
+      ),
       apiRes.get("/cosmos/mint/v1beta1/inflation"),
       apiRes.get("/cosmos/staking/v1beta1/pool"),
       apiRes.get("/cosmos/distribution/v1beta1/params"),
@@ -88,6 +90,7 @@ const calculateData = async (): Promise<
       apy: number;
       totalSupply: number;
       totalValidator: number;
+      circulation_supply: number;
     }
   | { error: boolean; message: string }
 > => {
@@ -116,6 +119,7 @@ const calculateData = async (): Promise<
       inflation: Number(params?.inflation),
       apy: apyValue,
       totalValidator: params.validator,
+      circulation_supply: params.circulation_supply,
     };
 
     await RedisService.setString(
