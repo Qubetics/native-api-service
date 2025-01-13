@@ -18,7 +18,9 @@ class TransactionService {
       const isFirstPage = data.page === 1;
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const [transactions, previous30DaysTrxn] = await prisma.$transaction([
+      const todayStart = new Date();
+			todayStart.setHours(0, 0, 0, 0);
+      const [transactions, previous30DaysTrxn, getAccountCount] = await prisma.$transaction([
         prisma.transactions.findMany({
           orderBy: {
             createdAt: "desc",
@@ -33,6 +35,8 @@ class TransactionService {
             },
           },
         }),
+        prisma.$queryRaw`
+ 					SELECT COUNT(DISTINCT "fromAddress") AS "count" FROM "Transactions" WHERE "timestamp" >= CAST(${todayStart.toISOString()} AS timestamp) AND "timestamp" <= CAST(${new Date().toISOString()} AS timestamp)`,
       ]);
 
       const transactionCount = await RedisService.getString(
@@ -49,6 +53,8 @@ class TransactionService {
           ? convertBigIntToNumber(transactions)[0].id + 11
           : null;
 
+      const activeAccount: any = convertBigIntToNumber(getAccountCount);
+      
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
@@ -58,6 +64,7 @@ class TransactionService {
           nextCursor,
           prevCursor,
           previous30DaysTrxn,
+          activeAccount: activeAccount ? activeAccount[0].count : 0,
         },
       };
     } catch (err) {
