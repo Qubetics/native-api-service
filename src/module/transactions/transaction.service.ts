@@ -37,7 +37,7 @@ class TransactionService {
             },
           }),
           prisma.$queryRaw`
-          SELECT COUNT(DISTINCT "fromAddress") AS "count" FROM "Transactions" WHERE "timestamp" >= ${todayStart.toISOString()}::timestamp AND "timestamp" <= ${new Date().toISOString()}::timestamp`
+          SELECT COUNT(DISTINCT "fromAddress") AS "count" FROM "Transactions" WHERE "timestamp" >= ${todayStart.toISOString()}::timestamp AND "timestamp" <= ${new Date().toISOString()}::timestamp`,
         ]);
 
       const transactionCount = await RedisService.getString(
