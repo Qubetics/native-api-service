@@ -22,7 +22,7 @@ class BlockService {
     limit: number;
   }): Promise<IESResponse> {
     try {
-      			let isLimitFullFilled = true;
+      let isLimitFullFilled = true;
       const isFirstPage = data.page === 1;
       let blocks = await prisma.blocks.findMany({
         orderBy: {
@@ -33,18 +33,18 @@ class BlockService {
       });
 
       // check if limit is fullfilled with current block range
-			if (blocks.length < data.limit) {
-				const tempBlocks = await prisma.blocks.findMany({
-					orderBy: {
-						blocknumber: 'asc',
-					},
-					where: { blocknumber: { gt: data.page } },
-					take: data.limit - blocks.length,
-				});
+      if (blocks.length < data.limit) {
+        const tempBlocks = await prisma.blocks.findMany({
+          orderBy: {
+            blocknumber: "asc",
+          },
+          where: { blocknumber: { gt: data.page } },
+          take: data.limit - blocks.length,
+        });
 
-				blocks = [...tempBlocks.reverse(), ...blocks];
-				isLimitFullFilled = false;
-			}
+        blocks = [...tempBlocks.reverse(), ...blocks];
+        isLimitFullFilled = false;
+      }
 
       const blockCount = await RedisService.getString(
         REDIS_KEY.NATIVE_BLOCKS_COUNT,
@@ -52,16 +52,14 @@ class BlockService {
 
       if (!blocks?.length) throw new Error(RES_MSG.NOT_FOUND);
       const nextCursor =
-				blocks.length === data.limit && isLimitFullFilled
-					? convertBigIntToNumber(blocks)[blocks.length - 1]
-							.blocknumber
-					: null;
-			const prevCursor = isFirstPage
-				? null
-				: data.page && blocks.length > 0
-					? convertBigIntToNumber(blocks)[0].blocknumber + 11
-					: null;
-
+        blocks.length === data.limit && isLimitFullFilled
+          ? convertBigIntToNumber(blocks)[blocks.length - 1].blocknumber
+          : null;
+      const prevCursor = isFirstPage
+        ? null
+        : data.page && blocks.length > 0
+          ? convertBigIntToNumber(blocks)[0].blocknumber + 11
+          : null;
 
       return {
         error: false,

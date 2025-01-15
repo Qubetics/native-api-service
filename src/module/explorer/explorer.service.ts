@@ -53,11 +53,12 @@ class ExplorerService {
 
       //totalAccounts , latestBlock
       // Fetch data from Redis
-      const redisData = await this.getRedisValue();
-      console.log("lakdflhdflahdf", redisData);
+      const redisData:any = await this.getRedisValue();
+      console.log("RedisInfo", redisData)
+      const hasInvalidValues :boolean= await this.hasInvalidValues(redisData)
 
       // Check if Redis data is not available
-      if (!redisData) {
+      if (hasInvalidValues) {
         // Set default values and fetch additional data
         obj.tokenPrice = CONST_NAME.ZERO;
         obj.marketCap = CONST_NAME.ZERO;
@@ -619,6 +620,24 @@ class ExplorerService {
       return { error: true, message: RES_MSG.ERROR };
     }
   }
+
+  // Function to check for invalid values
+public async hasInvalidValues(obj:any)  {
+  try{
+    if(!obj){
+return false;
+    }
+  return Object.values(obj).some(
+    (value) =>
+      value === false || 
+      value === undefined || 
+      value === null || 
+      Number.isNaN(value)
+  );
+  }catch(error){
+    return false;
+  }
+}
 }
 
 export default new ExplorerService();
