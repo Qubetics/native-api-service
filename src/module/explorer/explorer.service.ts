@@ -40,8 +40,8 @@ class ExplorerService {
         totalValidator: number;
         circulation_supply: number;
         latest_block: number;
-					total_transactions: number;
-					total_accounts: number;
+        total_transactions: number;
+        total_accounts: number;
       } = {
         tokenPrice: 0,
         marketCap: 0,
@@ -55,21 +55,16 @@ class ExplorerService {
         total_accounts: 0,
       };
 
-        const [latest_block, transactionCount, userCount] =
-				  await Promise.all([
-              fetchRequest(
-            `${environment.httpHost}/block`,
-            "GET",
-            null,
-          ),
-					 prisma.transactions.count(),
-					 prisma.users.count(),
-				]);
+      const [latest_block, transactionCount, userCount] = await Promise.all([
+        fetchRequest(`${environment.httpHost}/block`, "GET", null),
+        prisma.transactions.count(),
+        prisma.users.count(),
+      ]);
 
-      // Fetch data from Redis              
-      const redisData:any = await this.getRedisValue();
-      console.log("RedisInfo", redisData)
-      const hasInvalidValues :boolean= await this.hasInvalidValues(redisData)
+      // Fetch data from Redis
+      const redisData: any = await this.getRedisValue();
+      console.log("RedisInfo", redisData);
+      const hasInvalidValues: boolean = await this.hasInvalidValues(redisData);
 
       // Check if Redis data is not available
       if (hasInvalidValues) {
@@ -94,7 +89,9 @@ class ExplorerService {
               totalSupply: data.totalSupply,
               totalValidator: data.totalValidator,
               circulation_supply: data.circulation_supply,
-              latest_block: Number(latest_block?.data.result.block?.header?.height),
+              latest_block: Number(
+                latest_block?.data.result.block?.header?.height,
+              ),
               total_transactions: transactionCount,
               total_accounts: userCount,
             },
@@ -111,9 +108,11 @@ class ExplorerService {
         obj.marketCap = redisData?.marketCap;
         obj.totalValidator = redisData?.totalValidator;
         obj.circulation_supply = redisData?.circulation_supply;
-        obj.latest_block= Number(latest_block?.data.result.block?.header?.height);
-        obj.total_transactions= transactionCount;
-        obj.total_accounts= userCount;
+        obj.latest_block = Number(
+          latest_block?.data.result.block?.header?.height,
+        );
+        obj.total_transactions = transactionCount;
+        obj.total_accounts = userCount;
       }
       return {
         error: false,
@@ -642,22 +641,22 @@ class ExplorerService {
   }
 
   // Function to check for invalid values
-public async hasInvalidValues(obj:any)  {
-  try{
-    if(!obj){
-return false;
+  public async hasInvalidValues(obj: any) {
+    try {
+      if (!obj) {
+        return false;
+      }
+      return Object.values(obj).some(
+        (value) =>
+          value === false ||
+          value === undefined ||
+          value === null ||
+          Number.isNaN(value),
+      );
+    } catch (error) {
+      return false;
     }
-  return Object.values(obj).some(
-    (value) =>
-      value === false || 
-      value === undefined || 
-      value === null || 
-      Number.isNaN(value)
-  );
-  }catch(error){
-    return false;
   }
-}
 }
 
 export default new ExplorerService();
