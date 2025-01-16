@@ -21,8 +21,6 @@ import {
   formatDateByMin,
   fillMissingMinutes,
   exp,
-  formatDateBySec,
-  fillMissingSeconds,
   formatDateForYear,
   fillMissingDatesWithZeroByMonth,
 } from "../../lib/utilities.helper";
@@ -41,6 +39,9 @@ class ExplorerService {
         inflation: number;
         totalValidator: number;
         circulation_supply: number;
+        latest_block: number;
+					total_transactions: number;
+					total_accounts: number;
       } = {
         tokenPrice: 0,
         marketCap: 0,
@@ -49,10 +50,23 @@ class ExplorerService {
         inflation: 0,
         totalValidator: 0,
         circulation_supply: 0,
+        latest_block: 0,
+        total_transactions: 0,
+        total_accounts: 0,
       };
 
-      //totalAccounts , latestBlock
-      // Fetch data from Redis
+        const [latest_block, transactionCount, userCount] =
+				  await Promise.all([
+              fetchRequest(
+            `${environment.httpHost}/block`,
+            "GET",
+            null,
+          ),
+					 prisma.transactions.count(),
+					 prisma.users.count(),
+				]);
+
+      // Fetch data from Redis              
       const redisData:any = await this.getRedisValue();
       console.log("RedisInfo", redisData)
       const hasInvalidValues :boolean= await this.hasInvalidValues(redisData)
@@ -80,6 +94,9 @@ class ExplorerService {
               totalSupply: data.totalSupply,
               totalValidator: data.totalValidator,
               circulation_supply: data.circulation_supply,
+              latest_block: Number(latest_block?.data.result.block?.header?.height),
+              total_transactions: transactionCount,
+              total_accounts: userCount,
             },
           };
         } else {
@@ -94,6 +111,9 @@ class ExplorerService {
         obj.marketCap = redisData?.marketCap;
         obj.totalValidator = redisData?.totalValidator;
         obj.circulation_supply = redisData?.circulation_supply;
+        obj.latest_block= Number(latest_block?.data.result.block?.header?.height);
+        obj.total_transactions= transactionCount;
+        obj.total_accounts= userCount;
       }
       return {
         error: false,
