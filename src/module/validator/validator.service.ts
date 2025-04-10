@@ -61,7 +61,7 @@ class ValidatorService {
       const filteredValidators = validators.filter(
         (validator) =>
           validator.validatorAddress &&
-          !excludedAddresses.includes(validator.validatorAddress),
+          !excludedAddresses.includes(validator.validatorAddress)
       );
 
       return {
@@ -153,6 +153,7 @@ class ValidatorService {
         where: {
           name: {
             contains: data.searchTerm,
+            mode: "insensitive",
           },
         },
       });
@@ -240,7 +241,7 @@ class ValidatorService {
 
       const delegatorStake = validatorStakeDetails.reduce(
         (total, element) => total + Number(element.stake),
-        0,
+        0
       );
 
       const dataToSend = {
@@ -288,7 +289,7 @@ class ValidatorService {
         const apiUrl = environment.evmHost;
 
         const response = await axios(
-          `${apiUrl}/cosmos/staking/v1beta1/validators/${validatorAddr}`,
+          `${apiUrl}/cosmos/staking/v1beta1/validators/${validatorAddr}`
         );
 
         const validatorData = response.data.validator;
