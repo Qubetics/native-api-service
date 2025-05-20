@@ -37,6 +37,7 @@ model Transactions {
   blocknumber     BigInt
   txhash          String        @unique
   timestamp       DateTime
+  gasUsed         BigInt        @default(0)
   contractAddress String        @default("N/A")
   fromAddress     String        @db.VarChar(255)
   toAddress       String        @db.VarChar(255)
