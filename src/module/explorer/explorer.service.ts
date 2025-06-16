@@ -96,7 +96,8 @@ class ExplorerService {
             total_accounts: userCount,
             validators: data?.totalValidator,
             tokenPrice: obj?.tokenPrice,
-            marketCap: marketCap,
+            // marketCap: marketCap,
+            marketCap: 1004025491.35402,
             circulationSupply: data?.circulation_supply ?? 0,
             apr: data?.apr ?? CURRENT_DEFAULT_APR, //will be changed after mainnet
           },
