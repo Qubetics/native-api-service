@@ -264,3 +264,5 @@ export const FETCH_METHODS = {
   PATCH: "PATCH",
   PUT: "PUT",
 };
+
+export const CURRENT_DEFAULT_COIN_PRICE = 0.01;
