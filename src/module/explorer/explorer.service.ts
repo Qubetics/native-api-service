@@ -65,7 +65,7 @@ class ExplorerService {
         prisma.transactions.count(),
         prisma.users.count(),
       ]);
-
+      obj.tokenPrice = CURRENT_DEFAULT_COIN_PRICE;
       const data = await calculateData();
 
       const marketCap =
@@ -137,7 +137,6 @@ class ExplorerService {
           };
         } else {
           // Set default values and fetch additional data
-          obj.tokenPrice = CURRENT_DEFAULT_COIN_PRICE;
           const data = await calculateData();
 
           const marketCap =
