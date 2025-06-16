@@ -22,7 +22,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
     ] = await Promise.all([
       apiRes.get("/cosmos/staking/v1beta1/validators"),
       apiRes.get(
-        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`
+        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`,
       ),
       apiRes.get("/cosmos/mint/v1beta1/inflation"),
       apiRes.get("/cosmos/staking/v1beta1/pool"),
@@ -32,7 +32,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
     ]);
 
     const validator = validatorResponse?.data?.validators.filter(
-      (item: any) => item.status === CONST_NAME.BOND_STATUS
+      (item: any) => item.status === CONST_NAME.BOND_STATUS,
     );
 
     if (validator?.length === 0) {
@@ -47,7 +47,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
     const formattedInflationRate = `${inflation_rate}`;
 
     const annualProvisions = Number(
-      circulation_supply * parseFloat(formattedInflationRate)
+      circulation_supply * parseFloat(formattedInflationRate),
     );
 
     let blocksPerYear = Number(CONST_NAME.BLOCK_PER_YEAR);
@@ -84,10 +84,10 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
 function calculateAPY(
   inflation: number,
   bondedRate: number,
-  communityTax: number
+  communityTax: number,
 ): number {
   const apy = Number(
-    ((inflation / bondedRate) * (1 - communityTax) * 100).toFixed(2)
+    ((inflation / bondedRate) * (1 - communityTax) * 100).toFixed(2),
   );
   return apy;
 }
@@ -121,7 +121,7 @@ const calculateData = async (): Promise<
     const apyValue = calculateAPY(
       Number(params.inflation),
       Number(params.bondedRate),
-      params.communityTax
+      params.communityTax,
     );
 
     const validatorData = {
@@ -135,7 +135,7 @@ const calculateData = async (): Promise<
 
     await RedisService.setString(
       REDIS_KEY.VALIDATOR_DATA,
-      JSON.stringify(validatorData)
+      JSON.stringify(validatorData),
     );
     return validatorData;
   } catch (err) {

@@ -66,19 +66,56 @@ class ExplorerService {
         prisma.users.count(),
       ]);
 
+      const data = await calculateData();
+
+      const marketCap =
+        "circulation_supply" in data
+          ? data?.circulation_supply * obj?.tokenPrice
+          : CONST_NAME.ZERO;
+
+      if (
+        "apy" in data &&
+        "inflation" in data &&
+        "totalSupply" in data &&
+        "totalValidator" in data &&
+        "circulation_supply" in data
+      ) {
+        return {
+          error: false,
+          message: RES_MSG.FETCH_SUCCESS,
+          data: {
+            apy: data.apy,
+            inflation: data.inflation,
+            totalSupply: data.totalSupply,
+            totalValidator: data.totalValidator,
+            circulation_supply: data.circulation_supply,
+            latest_block: Number(
+              latest_block?.data.result.block?.header?.height
+            ),
+            total_transactions: transactionCount,
+            total_accounts: userCount,
+            validators: data?.totalValidator,
+            tokenPrice: obj?.tokenPrice,
+            marketCap: marketCap,
+            circulationSupply: data?.circulation_supply ?? 0,
+            apr: data?.apr ?? CURRENT_DEFAULT_APR, //will be changed after mainnet
+          },
+        };
+      }
+
       // Fetch data from Redis
       const redisData: any = await this.getRedisValue();
       console.log("redisData", redisData);
       const hasInvalidValues: boolean = await this.hasInvalidValues(redisData);
 
+      let validatorData = await RedisService.getString(
+        REDIS_KEY.VALIDATOR_DATA
+      );
+
       // Check if Redis data is not available
       if (hasInvalidValues) {
-        let validatorData = await RedisService.getString(
-          REDIS_KEY.VALIDATOR_DATA
-        );
         if (validatorData) {
           const exlorerData = JSON.parse(validatorData);
-
           obj.apy = exlorerData?.apy;
           obj.totalSupply = exlorerData?.totalSupply;
           obj.inflation = exlorerData?.inflation;
