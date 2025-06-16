@@ -266,3 +266,4 @@ export const FETCH_METHODS = {
 };
 
 export const CURRENT_DEFAULT_COIN_PRICE = 0.01;
+export const CURRENT_DEFAULT_APR = 30;

@@ -127,6 +127,7 @@ export interface Params {
   circulation_supply: number;
   bondedRate: number;
   totalSupply: number;
+  apr: number;
 }
 
 export interface BlockHeader {

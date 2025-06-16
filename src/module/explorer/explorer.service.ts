@@ -5,6 +5,7 @@ import {
   FETCH_METHODS,
   HEADERS,
   CURRENT_DEFAULT_COIN_PRICE,
+  CURRENT_DEFAULT_APR,
 } from "../../constant";
 import { GraphData, IESResponse, IGraphResponse } from "../../interfaces/index";
 import { calculateData } from "../../helper/calculateAPR.helper";
@@ -43,6 +44,7 @@ class ExplorerService {
         latest_block: number;
         total_transactions: number;
         total_accounts: number;
+        apr: number;
       } = {
         tokenPrice: 0,
         marketCap: 0,
@@ -54,6 +56,7 @@ class ExplorerService {
         latest_block: 0,
         total_transactions: 0,
         total_accounts: 0,
+        apr: CURRENT_DEFAULT_APR, //will be changed after mainnet
       };
 
       const [latest_block, transactionCount, userCount] = await Promise.all([
@@ -103,6 +106,7 @@ class ExplorerService {
               tokenPrice: obj?.tokenPrice,
               marketCap: marketCap,
               circulationSupply: data?.circulation_supply ?? 0,
+              apr: data?.apr ?? CURRENT_DEFAULT_APR, //will be changed after mainnet
             },
           };
         } else {
@@ -122,6 +126,7 @@ class ExplorerService {
         );
         obj.total_transactions = transactionCount;
         obj.total_accounts = userCount;
+        obj.apr = redisData?.apr ?? CURRENT_DEFAULT_APR; //will be changed after mainnet
       }
       return {
         error: false,
