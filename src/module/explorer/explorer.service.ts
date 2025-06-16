@@ -27,10 +27,11 @@ import {
   fillMissingDatesWithZeroByMonth,
 } from "../../lib/utilities.helper";
 import contractService from "../contract/contract.service";
+import { validate } from "uuid";
 
 class ExplorerService {
   // Dashboard method to fetch data
-  async dashboard(): Promise<IESResponse> {
+  async dashboard(): Promise<any> {
     try {
       // Initialize an object to store data
       const obj: {
@@ -67,52 +68,79 @@ class ExplorerService {
 
       // Fetch data from Redis
       const redisData: any = await this.getRedisValue();
+      console.log("redisData", redisData);
       const hasInvalidValues: boolean = await this.hasInvalidValues(redisData);
 
       // Check if Redis data is not available
       if (hasInvalidValues) {
-        // Set default values and fetch additional data
-        obj.tokenPrice = CURRENT_DEFAULT_COIN_PRICE;
-        const data = await calculateData();
+        let validatorData = await RedisService.getString(
+          REDIS_KEY.VALIDATOR_DATA
+        );
+        if (validatorData) {
+          const exlorerData = JSON.parse(validatorData);
 
-        const marketCap =
-          "circulation_supply" in data
-            ? data?.circulation_supply * obj?.tokenPrice
-            : CONST_NAME.ZERO;
+          obj.apy = exlorerData?.apy;
+          obj.totalSupply = exlorerData?.totalSupply;
+          obj.inflation = exlorerData?.inflation;
+          obj.tokenPrice = exlorerData?.tokenPrice;
+          obj.marketCap = exlorerData?.marketCap;
+          obj.totalValidator = exlorerData?.totalValidator;
+          obj.circulation_supply = exlorerData?.circulation_supply;
+          obj.latest_block = Number(
+            latest_block?.data.result.block?.header?.height
+          );
+          obj.total_transactions = transactionCount;
+          obj.total_accounts = userCount;
+          obj.apr = exlorerData?.apr ?? CURRENT_DEFAULT_APR; //will be changed after mainnet
 
-        if (
-          "apy" in data &&
-          "inflation" in data &&
-          "totalSupply" in data &&
-          "totalValidator" in data &&
-          "circulation_supply" in data
-        ) {
           return {
             error: false,
             message: RES_MSG.FETCH_SUCCESS,
-            data: {
-              apy: data.apy,
-              inflation: data.inflation,
-              totalSupply: data.totalSupply,
-              totalValidator: data.totalValidator,
-              circulation_supply: data.circulation_supply,
-              latest_block: Number(
-                latest_block?.data.result.block?.header?.height
-              ),
-              total_transactions: transactionCount,
-              total_accounts: userCount,
-              validators: data?.totalValidator,
-              tokenPrice: obj?.tokenPrice,
-              marketCap: marketCap,
-              circulationSupply: data?.circulation_supply ?? 0,
-              apr: data?.apr ?? CURRENT_DEFAULT_APR, //will be changed after mainnet
-            },
+            data: obj,
           };
         } else {
-          return { error: true, message: RES_MSG.NOT_FOUND };
+          // Set default values and fetch additional data
+          obj.tokenPrice = CURRENT_DEFAULT_COIN_PRICE;
+          const data = await calculateData();
+
+          const marketCap =
+            "circulation_supply" in data
+              ? data?.circulation_supply * obj?.tokenPrice
+              : CONST_NAME.ZERO;
+
+          if (
+            "apy" in data &&
+            "inflation" in data &&
+            "totalSupply" in data &&
+            "totalValidator" in data &&
+            "circulation_supply" in data
+          ) {
+            return {
+              error: false,
+              message: RES_MSG.FETCH_SUCCESS,
+              data: {
+                apy: data.apy,
+                inflation: data.inflation,
+                totalSupply: data.totalSupply,
+                totalValidator: data.totalValidator,
+                circulation_supply: data.circulation_supply,
+                latest_block: Number(
+                  latest_block?.data.result.block?.header?.height
+                ),
+                total_transactions: transactionCount,
+                total_accounts: userCount,
+                validators: data?.totalValidator,
+                tokenPrice: obj?.tokenPrice,
+                marketCap: marketCap,
+                circulationSupply: data?.circulation_supply ?? 0,
+                apr: data?.apr ?? CURRENT_DEFAULT_APR, //will be changed after mainnet
+              },
+            };
+          }
         }
       } else {
         // Use Redis data if available
+
         obj.apy = redisData?.apy;
         obj.totalSupply = redisData?.totalSupply;
         obj.inflation = redisData?.inflation;
@@ -126,12 +154,13 @@ class ExplorerService {
         obj.total_transactions = transactionCount;
         obj.total_accounts = userCount;
         obj.apr = redisData?.apr ?? CURRENT_DEFAULT_APR; //will be changed after mainnet
+
+        return {
+          error: false,
+          message: RES_MSG.FETCH_SUCCESS,
+          data: obj,
+        };
       }
-      return {
-        error: false,
-        message: RES_MSG.FETCH_SUCCESS,
-        data: obj,
-      };
     } catch (err) {
       logger.error("Error in dashboard data:", err);
       return { error: true, message: RES_MSG.NOT_FOUND };

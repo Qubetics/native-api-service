@@ -115,7 +115,7 @@ const calculateData = async (): Promise<
     });
 
     const params = await getParams(apiRes);
-    console.log("data-parpasm", params);
+
     if (!params) throw new Error(RES_MSG.FETCH_SUCCESS);
 
     const apyValue = calculateAPY(
