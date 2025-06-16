@@ -67,7 +67,6 @@ class ExplorerService {
 
       // Fetch data from Redis
       const redisData: any = await this.getRedisValue();
-      console.log("RedisInfo", redisData);
       const hasInvalidValues: boolean = await this.hasInvalidValues(redisData);
 
       // Check if Redis data is not available

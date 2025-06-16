@@ -72,7 +72,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       circulation_supply,
       bondedRate,
       totalSupply,
-      apr: CURRENT_DEFAULT_APR, //will be changed after mainnet
+      apr: CURRENT_DEFAULT_APR, // will be changed after mainnet
     };
   } catch (error) {
     logger.log("error occurred while calculating stake APR", error);
@@ -111,10 +111,11 @@ const calculateData = async (): Promise<
         "Content-Type": "application/json; charset=utf-8",
         Accept: "application/json",
       },
-      timeout: CONST_NAME.THOUSAND,
+      timeout: 5000,
     });
 
     const params = await getParams(apiRes);
+    console.log("data-parpasm", params);
     if (!params) throw new Error(RES_MSG.FETCH_SUCCESS);
 
     const apyValue = calculateAPY(
@@ -129,7 +130,7 @@ const calculateData = async (): Promise<
       apy: apyValue,
       totalValidator: params.validator,
       circulation_supply: params.circulation_supply,
-      apr: params?.apr ?? CURRENT_DEFAULT_APR, //will be changed after mainnet
+      apr: params?.apr ?? CURRENT_DEFAULT_APR, // will be changed after mainnet
     };
 
     await RedisService.setString(
