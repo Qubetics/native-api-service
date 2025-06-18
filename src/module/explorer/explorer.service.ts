@@ -8,7 +8,10 @@ import {
   CURRENT_DEFAULT_APR,
 } from "../../constant";
 import { GraphData, IESResponse, IGraphResponse } from "../../interfaces/index";
-import { calculateData } from "../../helper/calculateAPR.helper";
+import {
+  calculateData,
+  getDashboardData,
+} from "../../helper/calculateAPR.helper";
 import logger from "../../lib/logger";
 import { RedisService } from "../../service";
 import blockService from "../block/block.service";
@@ -204,6 +207,78 @@ class ExplorerService {
     }
   }
 
+  async dashboard_V2(): Promise<any> {
+    try {
+      // const data: any = await calculateData();
+      let dashboardData = await RedisService.getString(
+        REDIS_KEY.DASHBOARD_DATA
+      );
+
+      if (!dashboardData) {
+        console.log("dashboardData NOT found in REDIS");
+        dashboardData = await getDashboardData();
+      } else {
+        dashboardData = JSON.parse(dashboardData);
+      }
+
+      console.log("THE DASHBOARD DATA", dashboardData);
+      function isInvalid(val: string | null | undefined): boolean {
+        return val === null || val === undefined || val === "";
+      }
+
+      const blockRes = await fetchRequest(
+        `${environment.httpHost}/block`,
+        "GET",
+        null
+      );
+
+      const latestBlock = Number(blockRes?.data?.result?.block?.header?.height);
+
+      const latestBlockRedis = await RedisService.getString(
+        CONST_NAME.LATEST_BLOCK
+      );
+
+      const totalTransactionsRedis = await RedisService.getString(
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
+      );
+      const totalAccountsRedis = await RedisService.getString(
+        REDIS_KEY.TOTAL_ACCOUNTS
+      );
+
+      const totalTransactions = isInvalid(totalTransactionsRedis)
+        ? String(await prisma.transactions.count())
+        : totalTransactionsRedis;
+
+      const totalAccounts = isInvalid(totalAccountsRedis)
+        ? String(await prisma.users.count())
+        : totalAccountsRedis;
+      let marketCap = dashboardData?.marketCap;
+      if (!dashboardData?.marketCap) {
+        marketCap = dashboardData.circulationSupply * dashboardData.tokenPrice;
+      }
+
+      return {
+        error: false,
+        message: RES_MSG.SUCCESS,
+        data: {
+          apr: dashboardData.apr,
+          validators: dashboardData?.validator ?? 0,
+          circulationSupply: dashboardData?.circulationSupply ?? 0,
+          latest_block: latestBlock,
+          total_transactions: totalTransactions,
+          total_accounts: totalAccounts,
+          bondedTokens: dashboardData?.bondedTokens ?? 0,
+          bondedRate: dashboardData?.bondedRate,
+          totalValidator: dashboardData?.totalValidator,
+          apy: dashboardData.apy,
+          marketCap: marketCap,
+        },
+      };
+    } catch (err) {
+      logger.error("dashboard-Error", err);
+      return { error: true, message: RES_MSG.ERROR };
+    }
+  }
   // Method to get data from Redis
   getRedisValue = async (): Promise<
     | {

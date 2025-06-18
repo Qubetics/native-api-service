@@ -42,8 +42,8 @@ class RedisService {
         logger.error(
           "\x1b[31m%s\x1b[0m",
           "error while connecting redis server: ",
-          err.message,
-        ),
+          err.message
+        )
       );
     } catch (error) {
       console.log("error while connecting to redis .. ", error);
@@ -67,6 +67,27 @@ class RedisService {
     } catch (err) {
       logger.error("error while getting the data from redis: ", err);
       return [];
+    }
+  }
+
+  public async setStringWithExpiry<T>(
+    key: string,
+    data: T,
+    expiration: number
+  ) {
+    try {
+      const res = await this.client.setEx(
+        key,
+        expiration,
+        JSON.stringify(data)
+      );
+      logger.info("Redis Data Saving Response setStringWithExpiry: ", res);
+    } catch (err) {
+      console.error(
+        "Error while setting the data into redis setStringWithExpiry: ",
+        err
+      );
+      console.log("Key : ", key, "value : ", data);
     }
   }
 }
