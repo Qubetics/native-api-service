@@ -93,7 +93,7 @@ class ExplorerService {
             totalValidator: data.totalValidator,
             circulation_supply: data.circulation_supply,
             latest_block: Number(
-              latest_block?.data.result.block?.header?.height
+              latest_block?.data.result.block?.header?.height,
             ),
             total_transactions: transactionCount,
             total_accounts: userCount,
@@ -113,7 +113,7 @@ class ExplorerService {
       const hasInvalidValues: boolean = await this.hasInvalidValues(redisData);
 
       let validatorData = await RedisService.getString(
-        REDIS_KEY.VALIDATOR_DATA
+        REDIS_KEY.VALIDATOR_DATA,
       );
 
       // Check if Redis data is not available
@@ -128,7 +128,7 @@ class ExplorerService {
           obj.totalValidator = exlorerData?.totalValidator;
           obj.circulation_supply = exlorerData?.circulation_supply;
           obj.latest_block = Number(
-            latest_block?.data.result.block?.header?.height
+            latest_block?.data.result.block?.header?.height,
           );
           obj.total_transactions = transactionCount;
           obj.total_accounts = userCount;
@@ -165,7 +165,7 @@ class ExplorerService {
                 totalValidator: data.totalValidator,
                 circulation_supply: data.circulation_supply,
                 latest_block: Number(
-                  latest_block?.data.result.block?.header?.height
+                  latest_block?.data.result.block?.header?.height,
                 ),
                 total_transactions: transactionCount,
                 total_accounts: userCount,
@@ -189,7 +189,7 @@ class ExplorerService {
         obj.totalValidator = redisData?.totalValidator;
         obj.circulation_supply = redisData?.circulation_supply;
         obj.latest_block = Number(
-          latest_block?.data.result.block?.header?.height
+          latest_block?.data.result.block?.header?.height,
         );
         obj.total_transactions = transactionCount;
         obj.total_accounts = userCount;
@@ -211,7 +211,7 @@ class ExplorerService {
     try {
       // const data: any = await calculateData();
       let dashboardData = await RedisService.getString(
-        REDIS_KEY.DASHBOARD_DATA
+        REDIS_KEY.DASHBOARD_DATA,
       );
 
       if (!dashboardData) {
@@ -229,20 +229,20 @@ class ExplorerService {
       const blockRes = await fetchRequest(
         `${environment.httpHost}/block`,
         "GET",
-        null
+        null,
       );
 
       const latestBlock = Number(blockRes?.data?.result?.block?.header?.height);
 
       const latestBlockRedis = await RedisService.getString(
-        CONST_NAME.LATEST_BLOCK
+        CONST_NAME.LATEST_BLOCK,
       );
 
       const totalTransactionsRedis = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
       );
       const totalAccountsRedis = await RedisService.getString(
-        REDIS_KEY.TOTAL_ACCOUNTS
+        REDIS_KEY.TOTAL_ACCOUNTS,
       );
 
       const totalTransactions = isInvalid(totalTransactionsRedis)
@@ -302,7 +302,7 @@ class ExplorerService {
       marketCap = marketCap === null ? 0 : marketCap;
 
       let circulation_supply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY
+        REDIS_KEY.CIRCULATING_SUPPLY,
       );
       let validatorData = await RedisService.getString(REDIS_KEY.INFLATION_APY);
       validatorData = validatorData === null ? {} : JSON.parse(validatorData);
@@ -406,7 +406,7 @@ class ExplorerService {
 
           finalData = await fillMissingDatesWithZeroByhr(
             graphData,
-            new Date(startDate)
+            new Date(startDate),
           );
         } else {
           const currentDate = new Date();
@@ -429,7 +429,7 @@ class ExplorerService {
           finalData = await fillMissingDatesWithZeroByDay(
             graphData,
             new Date(startDate),
-            currentDate
+            currentDate,
           );
         }
       } else if (payloads.time === "h") {
@@ -451,7 +451,7 @@ class ExplorerService {
         finalData = await fillMissingMinutes(
           graphData,
           new Date(startDate),
-          new Date(currentDate)
+          new Date(currentDate),
         );
       } else if (payloads.time === "y" && payloads.interval === 1) {
         const currentDate = new Date();
@@ -471,12 +471,12 @@ class ExplorerService {
         finalData = await fillMissingDatesWithZeroByMonth(
           graphData,
           new Date(startDate),
-          currentDate
+          currentDate,
         );
       }
 
       const totalAccount = await RedisService.getString(
-        REDIS_KEY.TOTAL_ACCOUNTS
+        REDIS_KEY.TOTAL_ACCOUNTS,
       );
 
       return {
@@ -520,7 +520,7 @@ class ExplorerService {
 				`) as Array<{ hour: Date; count: number }>;
           finalData = await fillMissingDatesWithZeroByhr(
             graphData,
-            new Date(startDate)
+            new Date(startDate),
           );
         } else {
           const currentDate = new Date();
@@ -543,7 +543,7 @@ class ExplorerService {
           finalData = await fillMissingDatesWithZeroByDay(
             graphData,
             new Date(startDate),
-            currentDate
+            currentDate,
           );
         }
       } else if (payloads.time === "h") {
@@ -564,7 +564,7 @@ class ExplorerService {
         finalData = await fillMissingMinutes(
           graphData,
           new Date(startDate),
-          new Date(currentDateModi)
+          new Date(currentDateModi),
         );
       } else if (payloads.time === "y" && payloads.interval === 1) {
         const currentDate = new Date();
@@ -585,12 +585,12 @@ class ExplorerService {
         finalData = await fillMissingDatesWithZeroByMonth(
           graphData,
           new Date(startDate),
-          currentDate
+          currentDate,
         );
       }
 
       const totalContractDeployedTx = await RedisService.getString(
-        REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX
+        REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX,
       );
 
       return {
@@ -629,12 +629,12 @@ class ExplorerService {
         const response = await fetchRequest(
           `${environment.evmHost}/cosmos/bank/v1beta1/spendable_balances/${address}`,
           FETCH_METHODS.GET,
-          HEADERS.DEFAULT
+          HEADERS.DEFAULT,
         );
 
         // Find the entry with denom "qubetics"
         const qubeticsAmount = response.data?.balances.find(
-          (item: any) => item.denom === "qubetics"
+          (item: any) => item.denom === "qubetics",
         );
 
         userBalance = qubeticsAmount.amount;
@@ -649,7 +649,7 @@ class ExplorerService {
         : "";
 
       let marketCapPrice = await RedisService.getString(
-        CONST_NAME.MARKET_CAP_PRICE
+        CONST_NAME.MARKET_CAP_PRICE,
       );
 
       let value: string;
@@ -733,7 +733,7 @@ class ExplorerService {
 
           finalData = await fillMissingDatesWithZeroByhr(
             graphData,
-            new Date(startDate)
+            new Date(startDate),
           );
         } else {
           const currentDate = new Date();
@@ -756,7 +756,7 @@ class ExplorerService {
           finalData = await fillMissingDatesWithZeroByDay(
             graphData,
             new Date(startDate),
-            currentDate
+            currentDate,
           );
         }
       } else if (payloads.time === "y" && payloads.interval === 1) {
@@ -777,7 +777,7 @@ class ExplorerService {
         finalData = await fillMissingDatesWithZeroByMonth(
           graphData,
           new Date(startDate),
-          currentDate
+          currentDate,
         );
       }
       const totalTx = await RedisService.getString(REDIS_KEY.TOTAL_TX);
@@ -805,7 +805,7 @@ class ExplorerService {
           value === false ||
           value === undefined ||
           value === null ||
-          Number.isNaN(value)
+          Number.isNaN(value),
       );
     } catch (error) {
       return false;

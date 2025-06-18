@@ -7,8 +7,8 @@ import {
 } from "../constant";
 import { Params, BlockHeader } from "../interfaces/index";
 import logger from "../lib/logger";
-import { RedisService } from "../service";
 import { getDigitsAfterE } from "../lib/utilities.helper";
+import { RedisService } from "../service";
 
 async function getParams(apiRes: AxiosInstance): Promise<any | false> {
   try {
@@ -23,7 +23,7 @@ async function getParams(apiRes: AxiosInstance): Promise<any | false> {
     ] = await Promise.all([
       apiRes.get("/cosmos/staking/v1beta1/validators"),
       apiRes.get(
-        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`
+        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`,
       ),
       apiRes.get("/cosmos/mint/v1beta1/inflation"),
       apiRes.get("/cosmos/staking/v1beta1/pool"),
@@ -33,7 +33,7 @@ async function getParams(apiRes: AxiosInstance): Promise<any | false> {
     ]);
 
     const validator = validatorResponse?.data?.validators.filter(
-      (item: any) => item.status === CONST_NAME.BOND_STATUS
+      (item: any) => item.status === CONST_NAME.BOND_STATUS,
     );
 
     if (validator?.length === 0) {
@@ -92,7 +92,7 @@ async function getTendermintParams(apiRes: AxiosInstance): Promise<any> {
     ] = await Promise.all([
       apiRes.get("/cosmos/staking/v1beta1/validators"),
       apiRes.get(
-        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`
+        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`,
       ),
       apiRes.get("/cosmos/mint/v1beta1/inflation"),
       apiRes.get("/cosmos/staking/v1beta1/pool"),
@@ -102,7 +102,7 @@ async function getTendermintParams(apiRes: AxiosInstance): Promise<any> {
     ]);
 
     const activeValidator = validatorResponse?.data?.validators.filter(
-      (item: any) => item.status === CONST_NAME.BOND_STATUS
+      (item: any) => item.status === CONST_NAME.BOND_STATUS,
     );
 
     if (activeValidator?.length === 0) {
@@ -155,10 +155,10 @@ async function getTendermintParams(apiRes: AxiosInstance): Promise<any> {
 function calculateAPY(
   inflation: number,
   bondedRate: number,
-  communityTax: number
+  communityTax: number,
 ): number {
   const apy = Number(
-    ((inflation / bondedRate) * (1 - communityTax) * 100).toFixed(2)
+    ((inflation / bondedRate) * (1 - communityTax) * 100).toFixed(2),
   );
   return apy;
 }
@@ -192,7 +192,7 @@ const calculateData = async (): Promise<
     const apyValue = calculateAPY(
       Number(params.inflation),
       Number(params.bondedRate),
-      params.communityTax
+      params.communityTax,
     );
 
     const validatorData = {
@@ -206,7 +206,7 @@ const calculateData = async (): Promise<
 
     await RedisService.setString(
       REDIS_KEY.VALIDATOR_DATA,
-      JSON.stringify(validatorData)
+      JSON.stringify(validatorData),
     );
     return validatorData;
   } catch (err) {
@@ -244,7 +244,7 @@ const getDashboardData = async (): Promise<
     const apyValue = calculateAPY(
       Number(tenderMintParams.inflation),
       Number(tenderMintParams.bondedRate / 100),
-      tenderMintParams.communityTax
+      tenderMintParams.communityTax,
     );
 
     const blocksYearReal = await getBlocksPerYearReal(apiRes);
@@ -252,7 +252,7 @@ const getDashboardData = async (): Promise<
     const actualAPR: any = calculateRealAPR(
       tenderMintParams,
       nominalAPR,
-      blocksYearReal
+      blocksYearReal,
     );
 
     const expoValue: number = getDigitsAfterE(actualAPR.toString());
@@ -273,7 +273,7 @@ const getDashboardData = async (): Promise<
     };
 
     const existingDataStr: any = await RedisService.getString(
-      REDIS_KEY.DASHBOARD_DATA
+      REDIS_KEY.DASHBOARD_DATA,
     );
     let existingData: any = {};
     if (existingDataStr) {
@@ -294,10 +294,10 @@ const getDashboardData = async (): Promise<
     existingData.apr = validatorData.apr;
 
     const latest_block: string = await RedisService.getString(
-      CONST_NAME.LATEST_BLOCK
+      CONST_NAME.LATEST_BLOCK,
     );
     const total_transactions: string = await RedisService.getString(
-      REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
+      REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
     );
 
     existingData.latest_block = JSON.parse(latest_block);
@@ -306,7 +306,7 @@ const getDashboardData = async (): Promise<
     await RedisService.setStringWithExpiry(
       REDIS_KEY.DASHBOARD_DATA,
       JSON.stringify(existingData),
-      600
+      600,
     );
     return validatorData;
   } catch (err) {
@@ -328,7 +328,7 @@ function calculateNominalAPR(params: Params): number {
 async function getBlocksPerYearReal(lcdApi: AxiosInstance): Promise<number> {
   try {
     const response: AxiosResponse = await lcdApi.get(
-      "/cosmos/base/tendermint/v1beta1/blocks/latest"
+      "/cosmos/base/tendermint/v1beta1/blocks/latest",
     );
 
     const block1: BlockHeader = response.data.block.header;
@@ -339,7 +339,7 @@ async function getBlocksPerYearReal(lcdApi: AxiosInstance): Promise<number> {
     const response2: AxiosResponse = await lcdApi.get(
       `/cosmos/base/tendermint/v1beta1/blocks/${
         Number(block1.height) - blockRange
-      }`
+      }`,
     );
 
     const block2: BlockHeader = response2.data.block.header;
@@ -359,7 +359,7 @@ async function getBlocksPerYearReal(lcdApi: AxiosInstance): Promise<number> {
 function calculateRealAPR(
   params: Params,
   nominalAPR: number,
-  blocksYearReal: number
+  blocksYearReal: number,
 ): number {
   const blockProvision = params.annualProvisions / params.blocksPerYear;
   const realProvision = blockProvision * blocksYearReal;
