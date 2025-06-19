@@ -61,7 +61,7 @@ class ValidatorService {
       const filteredValidators = validators.filter(
         (validator) =>
           validator.validatorAddress &&
-          !excludedAddresses.includes(validator.validatorAddress),
+          !excludedAddresses.includes(validator.validatorAddress)
       );
 
       return {
@@ -184,7 +184,7 @@ class ValidatorService {
     searchTerm: string;
   }): Promise<IESResponse> {
     try {
-      if (data.searchTerm.length === 44) {
+      if (data.searchTerm.length >= 42) {
         return await this.getValidatorsByAddress(data.searchTerm);
       } else {
         return await this.getValidatorsByName(data);
@@ -240,7 +240,7 @@ class ValidatorService {
 
       const delegatorStake = validatorStakeDetails.reduce(
         (total, element) => total + Number(element.stake),
-        0,
+        0
       );
 
       const dataToSend = {
@@ -288,7 +288,7 @@ class ValidatorService {
         const apiUrl = environment.evmHost;
 
         const response = await axios(
-          `${apiUrl}/cosmos/staking/v1beta1/validators/${validatorAddr}`,
+          `${apiUrl}/cosmos/staking/v1beta1/validators/${validatorAddr}`
         );
 
         const validatorData = response.data.validator;
