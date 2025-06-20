@@ -205,6 +205,7 @@ class ValidatorService {
    */
   async getValidatorDetails(address: string): Promise<IESResponse> {
     try {
+      console.log("vaddress", address);
       const validatorData = await prisma.validator.findUnique({
         select: {
           totalRewards: true,
@@ -215,6 +216,7 @@ class ValidatorService {
         where: { validatorAddress: address },
       });
 
+      console.log(validatorData, "validatorData");
       if (!validatorData) {
         throw new Error(RES_MSG.NOT_FOUND);
       }

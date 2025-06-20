@@ -8,7 +8,7 @@ const isNumeric = (str: string) => {
 export const searchingValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const querySchema = Joi.object({
     value: Joi.string()
@@ -78,7 +78,7 @@ export const searchingValidation = (
 export const getGraphHistoryValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     interval: Joi.string()
@@ -179,7 +179,7 @@ export const getGraphHistoryValidation = (
 export const getAddressDetailValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     address: Joi.string()
@@ -191,14 +191,15 @@ export const getAddressDetailValidation = (
         if (!value.startsWith("qubetics")) {
           return helpers.error("custom.validHash");
         }
-        if (value.startsWith("qubetics") && value.length < 44) {
+        if (value.startsWith("qubetics") && value.length < 42) {
           return helpers.error("custom.hashLength");
         }
       })
 
       .messages({
         "custom.validHash": "address should be start with qubetics",
-        "custom.hashLength": "address length should be equals to 44",
+        "custom.hashLength":
+          "address length should be equals to or greater than 42",
         "custom.noLeadingSpaces": "address should not start with a space",
         "string.pattern.base": "address must start with qubetics",
         "string.base": "address must be a string",
@@ -218,7 +219,7 @@ export const getAddressDetailValidation = (
 export const getTpsHistoryValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     interval: Joi.string()

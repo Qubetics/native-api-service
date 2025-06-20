@@ -5,7 +5,7 @@ import { RESPONSES } from "../../constant";
 export const getProposalsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -90,7 +90,7 @@ export const getProposalsValidation = (
 export const getDetailsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     address: Joi.string()
@@ -99,12 +99,13 @@ export const getDetailsValidation = (
         if (value.startsWith(" ")) {
           return helpers.error("custom.noLeadingSpaces");
         }
-        if (value.length !== 44) {
+        if (value.length < 42) {
           return helpers.error("custom.hashLength");
         }
       })
       .messages({
-        "custom.hashLength": "address length should be equals to 44",
+        "custom.hashLength":
+          "address length should be equals to or greater than 42",
         "custom.noLeadingSpaces": "address should not start with a space",
         "any.required": "address is required",
         "string.empty": "address cannot be empty",
@@ -124,7 +125,7 @@ export const getDetailsValidation = (
 export const getVotersValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -219,7 +220,7 @@ export const getVotersValidation = (
 export const voterSearchingValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     address: Joi.string()
@@ -260,7 +261,7 @@ export const voterSearchingValidation = (
 export const proposalSearchValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     page: Joi.string()
