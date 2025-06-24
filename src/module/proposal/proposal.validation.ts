@@ -5,7 +5,7 @@ import { RESPONSES } from "../../constant";
 export const getProposalsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -90,7 +90,7 @@ export const getProposalsValidation = (
 export const getDetailsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     address: Joi.string()
@@ -125,7 +125,7 @@ export const getDetailsValidation = (
 export const getVotersValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -220,7 +220,7 @@ export const getVotersValidation = (
 export const voterSearchingValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     address: Joi.string()
@@ -261,7 +261,7 @@ export const voterSearchingValidation = (
 export const proposalSearchValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     page: Joi.string()

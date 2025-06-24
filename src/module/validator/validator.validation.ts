@@ -6,7 +6,7 @@ import { isOnyNumbers } from "../../Utility/common";
 export const getValidatorsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -89,7 +89,7 @@ export const getValidatorsValidation = (
 export const validatorSearch = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -188,7 +188,7 @@ export const validatorSearch = (
 export const getDetailsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     address: Joi.string()

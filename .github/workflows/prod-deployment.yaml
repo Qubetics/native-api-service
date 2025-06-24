@@ -1,17 +1,17 @@
-name: '[prod] Deploy native api'
+name: "[prod] Deploy native api"
 
-on: 
+on:
   push:
-    branches: 
-      - master
+    branches:
+      - prod
 
 jobs:
   deploy_qubetics_indexer:
-    uses: ./.github/workflows/native-api.yaml
+    uses: ./.github/workflows/native-api-service.yaml
     with:
       SWR_ORGANIZATION: prod-qubetics
       ARGOCD_BRANCH: prod
-      HUAWEI_REGION: 'ap-southeast-1'
+      HUAWEI_REGION: "ap-southeast-1"
       ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
       DEPLOYMENT_PATH: Indexer/qubetics-indexer-deployment.yaml
       HUAWEI_IMAGE: prod-qubetics-native-api

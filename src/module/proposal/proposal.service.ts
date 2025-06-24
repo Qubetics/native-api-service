@@ -167,7 +167,7 @@ class ProposalService {
       // Add answer to where clause if it matches one of the expected values
       if (
         [RES_MSG.YES, RES_MSG.NO, RES_MSG.VETO, RES_MSG.ABSTAIN].includes(
-          data.answer
+          data.answer,
         )
       ) {
         whereClause.answer = data.answer;

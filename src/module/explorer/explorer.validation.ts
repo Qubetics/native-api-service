@@ -8,7 +8,7 @@ const isNumeric = (str: string) => {
 export const searchingValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const querySchema = Joi.object({
     value: Joi.string()
@@ -78,7 +78,7 @@ export const searchingValidation = (
 export const getGraphHistoryValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     interval: Joi.string()
@@ -179,7 +179,7 @@ export const getGraphHistoryValidation = (
 export const getAddressDetailValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     address: Joi.string()
@@ -219,7 +219,7 @@ export const getAddressDetailValidation = (
 export const getTpsHistoryValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     interval: Joi.string()

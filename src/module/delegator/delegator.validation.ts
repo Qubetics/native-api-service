@@ -4,7 +4,7 @@ import * as Joi from "joi";
 export const delegatorByAddressValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     address: Joi.string()

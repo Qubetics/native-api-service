@@ -119,7 +119,7 @@ class DelegatorService {
           validatorStake.name = validator?.name || "";
           validatorStake.validatorAddress = validator?.validatorAddress || "";
           validatorStake.stake = noExponent(
-            validatorStake?.stake / 10 ** 18 || 0
+            validatorStake?.stake / 10 ** 18 || 0,
           );
         }
       }
@@ -153,7 +153,7 @@ class DelegatorService {
       const response = await fetchRequest(
         `${environment.evmHost}/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
         FETCH_METHODS.GET,
-        HEADERS.DEFAULT
+        HEADERS.DEFAULT,
       );
 
       console.log("response  from blockchain :::: ", response.data);
@@ -177,7 +177,7 @@ class DelegatorService {
 
       const delegatorStake = delegatorByAddress.reduce(
         (total, element) => total + Number(element?.balanceAmount),
-        0
+        0,
       );
 
       return {

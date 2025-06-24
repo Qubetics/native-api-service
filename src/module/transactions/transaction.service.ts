@@ -36,7 +36,7 @@ class TransactionService {
       ]);
 
       const transactionCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
       );
       if (!transactions?.length) throw new Error(RES_MSG.NOT_FOUND);
       const nextCursor =
@@ -120,7 +120,7 @@ class TransactionService {
       const updatedTransactions = convertBigIntToNumber(transactions);
 
       const isContractAddress = updatedTransactions.some(
-        (transaction) => transaction.contractAddress === data.address
+        (transaction) => transaction.contractAddress === data.address,
       );
 
       return {
@@ -245,7 +245,7 @@ class TransactionService {
    */
   async createTransaction(
     txHash: string,
-    data: ICreateTransaction
+    data: ICreateTransaction,
   ): Promise<IESResponse> {
     try {
       let currentDate = Date.now().toString();
@@ -297,7 +297,7 @@ class TransactionService {
    */
   async updateTransaction(
     txHash: string,
-    data: ICreateTransaction
+    data: ICreateTransaction,
   ): Promise<IESResponse> {
     try {
       console.log(data, "data");
