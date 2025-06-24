@@ -6,7 +6,7 @@ import { isOnyNumbers } from "../../Utility/common";
 export const getTransactionsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -69,7 +69,7 @@ export const getTransactionsValidation = (
 export const getTxByHashValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     transactionHash: Joi.string()
@@ -110,7 +110,7 @@ const isNumeric = (str: string) => {
 export const getTxByBlock = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const querySchema = Joi.object({
     value: Joi.string()
@@ -211,7 +211,7 @@ export const getTxByBlock = (
 export const transactionSearch = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -263,12 +263,12 @@ export const transactionSearch = (
         if (value.startsWith(" ")) {
           return helpers.error("custom.noLeadingSpaces");
         }
-        if (value.length !== 47) {
+        if (value.length < 42) {
           return helpers.error("custom.hashLength");
         }
       })
       .messages({
-        "custom.hashLength": "address length should be equals to 47",
+        "custom.hashLength": "address length should be equals to 42",
         "custom.noLeadingSpaces": "address should not start with a space",
         "any.required": "address is required",
         "string.empty": "address cannot be empty",
@@ -288,7 +288,7 @@ export const transactionSearch = (
 export const updateTransactionValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const bodySchema = Joi.object({
     type: Joi.string(),
@@ -333,7 +333,7 @@ export const updateTransactionValidation = (
           return helpers.error("custom.validHash");
         } else if (value.startsWith(" ")) {
           return helpers.error("custom.noLeadingSpaces");
-        } else if (!(value.length === 47)) {
+        } else if (value.length < 42) {
           return helpers.error("custom.hashLength");
         }
       })
@@ -341,7 +341,8 @@ export const updateTransactionValidation = (
         "custom.required": "from address is required",
         "custom.noLeadingSpaces": "address should not start with a space",
         "custom.validHash": "from address should start with qubetics",
-        "custom.hashLength": "from address length should be equals to 47",
+        "custom.hashLength":
+          "from address length should be equals to or greater than 42",
         "string.base": "from address must be a string",
       }),
     toAddress: Joi.string()
@@ -353,7 +354,7 @@ export const updateTransactionValidation = (
           return helpers.error("custom.validHash");
         } else if (value.startsWith(" ")) {
           return helpers.error("custom.noLeadingSpaces");
-        } else if (!(value.length === 47)) {
+        } else if (value.length < 42) {
           return helpers.error("custom.hashLength");
         }
       })
@@ -361,7 +362,8 @@ export const updateTransactionValidation = (
         "custom.required": "to address is required",
         "custom.noLeadingSpaces": "address should not start with a space",
         "custom.validHash": "to address should start with qubetics",
-        "custom.hashLength": "to address length should be equals to 47",
+        "custom.hashLength":
+          "to address length should be equals to or greater than 42",
         "string.base": "to address must be a string",
       }),
 
@@ -422,7 +424,7 @@ export const updateTransactionValidation = (
   }
 
   const { error: paramsError, value: paramsValue } = paramSchema.validate(
-    req.params,
+    req.params
   );
 
   if (paramsError) {

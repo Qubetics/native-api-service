@@ -24,7 +24,6 @@ class ValidatorService {
       let deactivatingCount = 0;
 
       const excludedAddresses = environment.excludedValidators.split(",");
-      console.log("excludedAddresses", excludedAddresses);
 
       // Fetch validators based on status
       if (
@@ -46,15 +45,6 @@ class ValidatorService {
         });
       }
 
-      const activeValidators = await prisma.validator.findMany({
-        orderBy: { createdAt: "desc" },
-        where: {
-          status: "active",
-        },
-      });
-
-      console.log("activeValidators", activeValidators);
-
       // Count validators based on status
       activeCount = await prisma.validator.count({
         where: { status: "active" },
@@ -71,7 +61,7 @@ class ValidatorService {
       const filteredValidators = validators.filter(
         (validator) =>
           validator.validatorAddress &&
-          !excludedAddresses.includes(validator.validatorAddress),
+          !excludedAddresses.includes(validator.validatorAddress)
       );
 
       return {
@@ -83,7 +73,6 @@ class ValidatorService {
           activeCount,
           inactiveCount,
           deactivatingCount,
-          activeValidators: convertBigIntToNumber(activeValidators),
         },
       };
     } catch (err) {
@@ -164,7 +153,6 @@ class ValidatorService {
         where: {
           name: {
             contains: data.searchTerm,
-            mode: "insensitive",
           },
         },
       });
@@ -196,7 +184,7 @@ class ValidatorService {
     searchTerm: string;
   }): Promise<IESResponse> {
     try {
-      if (data.searchTerm.length === 47) {
+      if (data.searchTerm.length >= 42) {
         return await this.getValidatorsByAddress(data.searchTerm);
       } else {
         return await this.getValidatorsByName(data);
@@ -217,6 +205,7 @@ class ValidatorService {
    */
   async getValidatorDetails(address: string): Promise<IESResponse> {
     try {
+      console.log("vaddress", address);
       const validatorData = await prisma.validator.findUnique({
         select: {
           totalRewards: true,
@@ -227,6 +216,7 @@ class ValidatorService {
         where: { validatorAddress: address },
       });
 
+      console.log(validatorData, "validatorData");
       if (!validatorData) {
         throw new Error(RES_MSG.NOT_FOUND);
       }
@@ -252,7 +242,7 @@ class ValidatorService {
 
       const delegatorStake = validatorStakeDetails.reduce(
         (total, element) => total + Number(element.stake),
-        0,
+        0
       );
 
       const dataToSend = {
@@ -300,7 +290,7 @@ class ValidatorService {
         const apiUrl = environment.evmHost;
 
         const response = await axios(
-          `${apiUrl}/cosmos/staking/v1beta1/validators/${validatorAddr}`,
+          `${apiUrl}/cosmos/staking/v1beta1/validators/${validatorAddr}`
         );
 
         const validatorData = response.data.validator;

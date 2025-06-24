@@ -266,5 +266,5 @@ export const FETCH_METHODS = {
   PUT: "PUT",
 };
 
-export const CURRENT_DEFAULT_COIN_PRICE = 0.01;
 export const CURRENT_DEFAULT_APR = 30;
+export const CURRENT_DEFAULT_COIN_PRICE = 0.01;

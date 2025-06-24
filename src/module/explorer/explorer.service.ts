@@ -4,14 +4,10 @@ import {
   CONST_NAME,
   FETCH_METHODS,
   HEADERS,
-  CURRENT_DEFAULT_COIN_PRICE,
   CURRENT_DEFAULT_APR,
 } from "../../constant";
 import { GraphData, IESResponse, IGraphResponse } from "../../interfaces/index";
-import {
-  calculateData,
-  getDashboardData,
-} from "../../helper/calculateAPR.helper";
+import { calculateData } from "../../helper/calculateAPR.helper";
 import logger from "../../lib/logger";
 import { RedisService } from "../../service";
 import blockService from "../block/block.service";
@@ -26,13 +22,15 @@ import {
   formatDateByMin,
   fillMissingMinutes,
   exp,
+  formatDateBySec,
+  fillMissingSeconds,
   formatDateForYear,
   fillMissingDatesWithZeroByMonth,
 } from "../../lib/utilities.helper";
 import contractService from "../contract/contract.service";
-import { validate } from "uuid";
 
 class ExplorerService {
+  // Dashboard method to fetch data
   async dashboard(): Promise<IESResponse> {
     try {
       // Initialize an object to store data
@@ -43,6 +41,8 @@ class ExplorerService {
         totalSupply: number;
         inflation: number;
         totalValidator: number;
+        circulation_supply: number;
+        apr: number;
       } = {
         tokenPrice: 0,
         marketCap: 0,
@@ -50,56 +50,49 @@ class ExplorerService {
         totalSupply: 0,
         inflation: 0,
         totalValidator: 0,
+        circulation_supply: 0,
+        apr: CURRENT_DEFAULT_APR,
       };
 
+      //totalAccounts , latestBlock
       // Fetch data from Redis
       const redisData: any = await this.getRedisValue();
-      console.log("redisDataNative", redisData);
+      console.log("redisDataInfo", redisData);
+
       const isInvalidRedisData =
         !redisData ||
         Object.values(redisData).every(
           (value) => value === undefined || Number.isNaN(value) || value === 0
         );
 
-      console.log("isInvalidRedisData", isInvalidRedisData);
       // Check if Redis data is not available
-      if (isInvalidRedisData) {
-        console.log("redisDataNative-In Not Check");
-
+      if (!isInvalidRedisData) {
         // Set default values and fetch additional data
-        obj.tokenPrice = CURRENT_DEFAULT_COIN_PRICE;
-        // obj.marketCap = CONST_NAME.ZERO;
+        obj.tokenPrice = CONST_NAME.ZERO;
+        obj.marketCap = CONST_NAME.ZERO;
         const data = await calculateData();
-
-        const marketCap =
-          "circulationSupply" in data
-            ? data?.circulationSupply * obj?.tokenPrice
-            : CONST_NAME.ZERO;
-
+        console.log(data, "Fromdata");
         if (
           "apy" in data &&
           "inflation" in data &&
           "totalSupply" in data &&
-          "totalValidator" in data
+          "totalValidator" in data &&
+          "circulation_supply" in data
         ) {
-          console.log(data, "DATA GOT HERE");
-
+          console.log("calculateData", data);
           return {
             error: false,
             message: RES_MSG.FETCH_SUCCESS,
             data: {
-              apy: data.apy,
+              apy: data?.apy === 0 ? CURRENT_DEFAULT_APR : data?.apy,
               inflation: data.inflation,
               totalSupply: data.totalSupply,
-              totalValidator: data?.totalValidator,
-              validators: data?.validator,
-              tokenPrice: obj?.tokenPrice,
-              marketCap: marketCap,
-              circulationSupply: data?.circulationSupply ?? 0,
+              totalValidator: data.totalValidator,
+              circulation_supply: data.circulation_supply,
+              apr: data?.apy === 0 ? CURRENT_DEFAULT_APR : data?.apy,
             },
           };
         } else {
-          console.log(data, "---HERE---");
           return { error: true, message: RES_MSG.NOT_FOUND };
         }
       } else {
@@ -110,6 +103,8 @@ class ExplorerService {
         obj.tokenPrice = redisData?.tokenPrice;
         obj.marketCap = redisData?.marketCap;
         obj.totalValidator = redisData?.totalValidator;
+        obj.circulation_supply = redisData?.circulation_supply;
+        // obj.apr = CURRENT_DEFAULT_APR;
       }
       return {
         error: false,
@@ -119,252 +114,6 @@ class ExplorerService {
     } catch (err) {
       logger.error("Error in dashboard data:", err);
       return { error: true, message: RES_MSG.NOT_FOUND };
-    }
-  }
-  // Dashboard method to fetch data
-  // async dashboard_v1(): Promise<any> {
-  //   try {
-  //     // Initialize an object to store data
-  //     const obj: {
-  //       tokenPrice: number;
-  //       marketCap: number;
-  //       apy: number;
-  //       totalSupply: number;
-  //       inflation: number;
-  //       totalValidator: number;
-  //       circulation_supply: number;
-  //       latest_block: number;
-  //       total_transactions: number;
-  //       total_accounts: number;
-  //       apr: number;
-  //     } = {
-  //       tokenPrice: 0,
-  //       marketCap: 0,
-  //       apy: 0,
-  //       totalSupply: 0,
-  //       inflation: 0,
-  //       totalValidator: 0,
-  //       circulation_supply: 0,
-  //       latest_block: 0,
-  //       total_transactions: 0,
-  //       total_accounts: 0,
-  //       apr: CURRENT_DEFAULT_APR, //will be changed after mainnet
-  //     };
-
-  //     const [latest_block, transactionCount, userCount] = await Promise.all([
-  //       fetchRequest(`${environment.httpHost}/block`, "GET", null),
-  //       prisma.transactions.count(),
-  //       prisma.users.count(),
-  //     ]);
-  //     obj.tokenPrice = CURRENT_DEFAULT_COIN_PRICE;
-  //     const data = await calculateData();
-
-  //     const marketCap =
-  //       "circulation_supply" in data
-  //         ? data?.circulation_supply * obj?.tokenPrice
-  //         : CONST_NAME.ZERO;
-
-  //     if (
-  //       "apy" in data &&
-  //       "inflation" in data &&
-  //       "totalSupply" in data &&
-  //       "totalValidator" in data &&
-  //       "circulation_supply" in data
-  //     ) {
-  //       return {
-  //         error: false,
-  //         message: RES_MSG.FETCH_SUCCESS,
-  //         data: {
-  //           apy: data.apy,
-  //           inflation: data.inflation,
-  //           totalSupply: data.totalSupply,
-  //           totalValidator: data.totalValidator,
-  //           circulation_supply: data.circulation_supply,
-  //           latest_block: Number(
-  //             latest_block?.data.result.block?.header?.height
-  //           ),
-  //           total_transactions: transactionCount,
-  //           total_accounts: userCount,
-  //           validators: data?.totalValidator,
-  //           tokenPrice: obj?.tokenPrice,
-  //           marketCap: marketCap,
-  //           // marketCap: 1004025491.35402,
-  //           circulationSupply: data?.circulation_supply ?? 0,
-  //           apr: data?.apr ?? CURRENT_DEFAULT_APR, //will be changed after mainnet
-  //         },
-  //       };
-  //     }
-
-  //     // Fetch data from Redis
-  //     const redisData: any = await this.getRedisValue();
-  //     console.log("redisData", redisData);
-  //     const hasInvalidValues: boolean = await this.hasInvalidValues(redisData);
-
-  //     let validatorData = await RedisService.getString(
-  //       REDIS_KEY.VALIDATOR_DATA
-  //     );
-
-  //     // Check if Redis data is not available
-  //     if (hasInvalidValues) {
-  //       if (validatorData) {
-  //         const exlorerData = JSON.parse(validatorData);
-  //         obj.apy = exlorerData?.apy;
-  //         obj.totalSupply = exlorerData?.totalSupply;
-  //         obj.inflation = exlorerData?.inflation;
-  //         obj.tokenPrice = exlorerData?.tokenPrice;
-  //         obj.marketCap = exlorerData?.marketCap;
-  //         obj.totalValidator = exlorerData?.totalValidator;
-  //         obj.circulation_supply = exlorerData?.circulation_supply;
-  //         obj.latest_block = Number(
-  //           latest_block?.data.result.block?.header?.height
-  //         );
-  //         obj.total_transactions = transactionCount;
-  //         obj.total_accounts = userCount;
-  //         obj.apr = exlorerData?.apr ?? CURRENT_DEFAULT_APR; //will be changed after mainnet
-
-  //         return {
-  //           error: false,
-  //           message: RES_MSG.FETCH_SUCCESS,
-  //           data: obj,
-  //         };
-  //       } else {
-  //         // Set default values and fetch additional data
-  //         const data = await calculateData();
-
-  //         const marketCap =
-  //           "circulation_supply" in data
-  //             ? data?.circulation_supply * obj?.tokenPrice
-  //             : CONST_NAME.ZERO;
-
-  //         if (
-  //           "apy" in data &&
-  //           "inflation" in data &&
-  //           "totalSupply" in data &&
-  //           "totalValidator" in data &&
-  //           "circulation_supply" in data
-  //         ) {
-  //           return {
-  //             error: false,
-  //             message: RES_MSG.FETCH_SUCCESS,
-  //             data: {
-  //               apy: data.apy,
-  //               inflation: data.inflation,
-  //               totalSupply: data.totalSupply,
-  //               totalValidator: data.totalValidator,
-  //               circulation_supply: data.circulation_supply,
-  //               latest_block: Number(
-  //                 latest_block?.data.result.block?.header?.height
-  //               ),
-  //               total_transactions: transactionCount,
-  //               total_accounts: userCount,
-  //               validators: data?.totalValidator,
-  //               tokenPrice: obj?.tokenPrice,
-  //               marketCap: marketCap,
-  //               circulationSupply: data?.circulation_supply ?? 0,
-  //               apr: data?.apr ?? CURRENT_DEFAULT_APR, //will be changed after mainnet
-  //             },
-  //           };
-  //         }
-  //       }
-  //     } else {
-  //       // Use Redis data if available
-
-  //       obj.apy = redisData?.apy;
-  //       obj.totalSupply = redisData?.totalSupply;
-  //       obj.inflation = redisData?.inflation;
-  //       obj.tokenPrice = redisData?.tokenPrice;
-  //       obj.marketCap = redisData?.marketCap;
-  //       obj.totalValidator = redisData?.totalValidator;
-  //       obj.circulation_supply = redisData?.circulation_supply;
-  //       obj.latest_block = Number(
-  //         latest_block?.data.result.block?.header?.height
-  //       );
-  //       obj.total_transactions = transactionCount;
-  //       obj.total_accounts = userCount;
-  //       obj.apr = redisData?.apr ?? CURRENT_DEFAULT_APR; //will be changed after mainnet
-
-  //       return {
-  //         error: false,
-  //         message: RES_MSG.FETCH_SUCCESS,
-  //         data: obj,
-  //       };
-  //     }
-  //   } catch (err) {
-  //     logger.error("Error in dashboard data:", err);
-  //     return { error: true, message: RES_MSG.NOT_FOUND };
-  //   }
-  // }
-
-  async dashboard_V2(): Promise<any> {
-    try {
-      // const data: any = await calculateData();
-      let dashboardData = await RedisService.getString(
-        REDIS_KEY.DASHBOARD_DATA
-      );
-
-      if (!dashboardData) {
-        console.log("dashboardData NOT found in REDIS");
-        dashboardData = await getDashboardData();
-      } else {
-        dashboardData = JSON.parse(dashboardData);
-      }
-
-      console.log("THE DASHBOARD DATA", dashboardData);
-      function isInvalid(val: string | null | undefined): boolean {
-        return val === null || val === undefined || val === "";
-      }
-
-      const blockRes = await fetchRequest(
-        `${environment.httpHost}/block`,
-        "GET",
-        null
-      );
-
-      const latestBlock = Number(blockRes?.data?.result?.block?.header?.height);
-
-      const latestBlockRedis = await RedisService.getString(
-        CONST_NAME.LATEST_BLOCK
-      );
-
-      const totalTransactionsRedis = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
-      );
-      const totalAccountsRedis = await RedisService.getString(
-        REDIS_KEY.TOTAL_ACCOUNTS
-      );
-
-      const totalTransactions = isInvalid(totalTransactionsRedis)
-        ? String(await prisma.transactions.count())
-        : totalTransactionsRedis;
-
-      const totalAccounts = isInvalid(totalAccountsRedis)
-        ? String(await prisma.users.count())
-        : totalAccountsRedis;
-      let marketCap = dashboardData?.marketCap;
-      if (!dashboardData?.marketCap) {
-        marketCap = dashboardData.circulationSupply * dashboardData.tokenPrice;
-      }
-
-      return {
-        error: false,
-        message: RES_MSG.SUCCESS,
-        data: {
-          apr: dashboardData.apr,
-          validators: dashboardData?.validator ?? 0,
-          circulationSupply: dashboardData?.circulationSupply ?? 0,
-          latest_block: latestBlock,
-          total_transactions: totalTransactions,
-          total_accounts: totalAccounts,
-          bondedTokens: dashboardData?.bondedTokens ?? 0,
-          bondedRate: dashboardData?.bondedRate,
-          totalValidator: dashboardData?.totalValidator,
-          apy: dashboardData.apy,
-          marketCap: marketCap,
-        },
-      };
-    } catch (err) {
-      logger.error("dashboard-Error", err);
-      return { error: true, message: RES_MSG.ERROR };
     }
   }
   // Method to get data from Redis
@@ -879,24 +628,6 @@ class ExplorerService {
       };
     } catch (err) {
       return { error: true, message: RES_MSG.ERROR };
-    }
-  }
-
-  // Function to check for invalid values
-  public async hasInvalidValues(obj: any) {
-    try {
-      if (!obj) {
-        return false;
-      }
-      return Object.values(obj).some(
-        (value) =>
-          value === false ||
-          value === undefined ||
-          value === null ||
-          Number.isNaN(value)
-      );
-    } catch (error) {
-      return false;
     }
   }
 }

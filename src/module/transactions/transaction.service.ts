@@ -18,30 +18,25 @@ class TransactionService {
       const isFirstPage = data.page === 1;
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const [transactions, previous30DaysTrxn, getAccountCount] =
-        await prisma.$transaction([
-          prisma.transactions.findMany({
-            orderBy: {
-              createdAt: "desc",
+      const [transactions, previous30DaysTrxn] = await prisma.$transaction([
+        prisma.transactions.findMany({
+          orderBy: {
+            createdAt: "desc",
+          },
+          where: isFirstPage ? {} : { id: { lt: data.page } },
+          take: data.limit,
+        }),
+        prisma.transactions.count({
+          where: {
+            createdAt: {
+              gte: thirtyDaysAgo, // Greater than or equal to 30 days ago
             },
-            where: isFirstPage ? {} : { id: { lt: data.page } },
-            take: data.limit,
-          }),
-          prisma.transactions.count({
-            where: {
-              createdAt: {
-                gte: thirtyDaysAgo, // Greater than or equal to 30 days ago
-              },
-            },
-          }),
-          prisma.$queryRaw`
-          SELECT COUNT(DISTINCT "fromAddress") AS "count" FROM "Transactions" WHERE "timestamp" >= ${todayStart.toISOString()}::timestamp AND "timestamp" <= ${new Date().toISOString()}::timestamp`,
-        ]);
+          },
+        }),
+      ]);
 
       const transactionCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
       );
       if (!transactions?.length) throw new Error(RES_MSG.NOT_FOUND);
       const nextCursor =
@@ -54,8 +49,6 @@ class TransactionService {
           ? convertBigIntToNumber(transactions)[0].id + 11
           : null;
 
-      const activeAccount: any = convertBigIntToNumber(getAccountCount);
-
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
@@ -65,7 +58,6 @@ class TransactionService {
           nextCursor,
           prevCursor,
           previous30DaysTrxn,
-          activeAccount: activeAccount ? activeAccount[0].count : 0,
         },
       };
     } catch (err) {
@@ -128,7 +120,7 @@ class TransactionService {
       const updatedTransactions = convertBigIntToNumber(transactions);
 
       const isContractAddress = updatedTransactions.some(
-        (transaction) => transaction.contractAddress === data.address,
+        (transaction) => transaction.contractAddress === data.address
       );
 
       return {
@@ -253,7 +245,7 @@ class TransactionService {
    */
   async createTransaction(
     txHash: string,
-    data: ICreateTransaction,
+    data: ICreateTransaction
   ): Promise<IESResponse> {
     try {
       let currentDate = Date.now().toString();
@@ -305,7 +297,7 @@ class TransactionService {
    */
   async updateTransaction(
     txHash: string,
-    data: ICreateTransaction,
+    data: ICreateTransaction
   ): Promise<IESResponse> {
     try {
       console.log(data, "data");

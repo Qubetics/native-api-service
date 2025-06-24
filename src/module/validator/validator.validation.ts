@@ -6,7 +6,7 @@ import { isOnyNumbers } from "../../Utility/common";
 export const getValidatorsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -89,7 +89,7 @@ export const getValidatorsValidation = (
 export const validatorSearch = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -146,7 +146,7 @@ export const validatorSearch = (
         // 	if (!validator.startsWith('0x')) {
         // 		return helpers.error('custom.validHash');
         // 	}
-        // 	if (validator.length !== 47) {
+        // 	if (validator.length !== 44) {
         // 		return helpers.error('custom.hashLength');
         // 	}
         // } else {
@@ -165,7 +165,7 @@ export const validatorSearch = (
         "custom.noLeadingSpaces": "page should not start with a space",
         "custom.nonzero": "block number should be greater than or equal to 0",
         "custom.validHash": "validator address should be start with 0x",
-        "custom.hashLength": "validator address must be 47 characters.",
+        "custom.hashLength": "validator address must be 44 characters.",
         "string.pattern.base": "block hash must start with 0x",
         "string.base": "validator address must be a string",
         "any.required": "validator name or address is required",
@@ -188,7 +188,7 @@ export const validatorSearch = (
 export const getDetailsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     address: Joi.string()
@@ -197,12 +197,13 @@ export const getDetailsValidation = (
         if (value.startsWith(" ")) {
           return helpers.error("custom.noLeadingSpaces");
         }
-        if (value.length !== 47) {
+        if (value.length < 42) {
           return helpers.error("custom.hashLength");
         }
       })
       .messages({
-        "custom.hashLength": "address length should be equals to 47",
+        "custom.hashLength":
+          "address length should be equals to or greater than 42",
         "custom.noLeadingSpaces": "address should not start with a space",
         "any.required": "address is required",
         "string.empty": "address cannot be empty",

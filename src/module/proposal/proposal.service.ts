@@ -167,7 +167,7 @@ class ProposalService {
       // Add answer to where clause if it matches one of the expected values
       if (
         [RES_MSG.YES, RES_MSG.NO, RES_MSG.VETO, RES_MSG.ABSTAIN].includes(
-          data.answer,
+          data.answer
         )
       ) {
         whereClause.answer = data.answer;
@@ -246,7 +246,7 @@ class ProposalService {
         throw new Error(RES_MSG.INVALID_ADDRESS);
       } else if (
         data.address.startsWith("qubetics") &&
-        data.address.length === 47
+        data.address.length > 42
       ) {
         const voters = await prisma.voters.findFirst({
           where: {
