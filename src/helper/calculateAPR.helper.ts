@@ -163,7 +163,7 @@ function calculateAPY(
   return apy;
 }
 
-const calculateData = async (): Promise<
+const calculateData_1 = async (): Promise<
   | {
       inflation: number;
       apy: number;
@@ -365,5 +365,61 @@ function calculateRealAPR(
   const realProvision = blockProvision * blocksYearReal;
   return nominalAPR * (realProvision / params.annualProvisions);
 }
+
+const calculateData = async (): Promise<
+  | {
+      inflation: number;
+      apy: number;
+      totalSupply: number;
+      validator: number;
+      totalValidator: number;
+      circulationSupply: number;
+    }
+  | { error: boolean; message: string }
+> => {
+  try {
+    const apiUrl = environment.evmHost;
+    const apiRes = axios.create({
+      baseURL: apiUrl,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Accept: "application/json",
+      },
+      timeout: 6000,
+    });
+
+    const params = await getParams(apiRes);
+    if (!params) throw new Error(RES_MSG.FETCH_SUCCESS);
+
+    const apyValue = calculateAPY(
+      Number(params.inflation),
+      Number(params.bondedRate),
+      params.communityTax
+    );
+
+    const validatorData = {
+      totalSupply: params?.totalSupply,
+      inflation: Number(params?.inflation),
+      apy: apyValue,
+      validator: params?.validator,
+      totalValidator: params?.totalValidator,
+      circulationSupply: params?.circulation_supply
+        ? params.circulation_supply
+        : 0,
+    };
+
+    await RedisService.setString(
+      REDIS_KEY.VALIDATOR_DATA,
+      JSON.stringify(validatorData)
+    );
+    return validatorData;
+  } catch (err) {
+    console.log("Error occurred while calculating stake APY", err);
+    if (err instanceof Error) {
+      return { error: true, message: err.message };
+    }
+    return { error: true, message: RES_MSG.NOT_FOUND };
+  }
+};
 
 export { calculateData, getDashboardData };
