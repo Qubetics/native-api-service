@@ -35,84 +35,103 @@ class ExplorerService {
   async dashboard(): Promise<IESResponse> {
     try {
       // Initialize an object to store data
-      const obj: {
-        tokenPrice: number;
-        marketCap: number;
-        apy: number;
-        totalSupply: number;
-        inflation: number;
-        totalValidator: number;
-        circulation_supply: number;
-        apr: number;
-      } = {
-        tokenPrice: 0,
-        marketCap: 0,
-        apy: 0,
-        totalSupply: 0,
-        inflation: 0,
-        totalValidator: 0,
-        circulation_supply: 0,
-        apr: CURRENT_DEFAULT_APR,
-      };
+      // const obj: {
+      //   tokenPrice: number;
+      //   marketCap: number;
+      //   apy: number;
+      //   totalSupply: number;
+      //   inflation: number;
+      //   totalValidator: number;
+      //   circulation_supply: number;
+      //   apr: number;
+      //   total_transactions: number;
+      //   latest_block: number;
+      //   total_accounts: number;
+      // } = {
+      //   tokenPrice: 0,
+      //   marketCap: 0,
+      //   apy: 0,
+      //   totalSupply: 0,
+      //   inflation: 0,
+      //   totalValidator: 0,
+      //   circulation_supply: 0,
+      //   apr: CURRENT_DEFAULT_APR,
+      //   total_transactions: 0,
+      //   latest_block: 0,
+      //   total_accounts: 0,
+      // };
 
       //totalAccounts , latestBlock
       // Fetch data from Redis
-      const redisData: any = await this.getRedisValue();
-      console.log("redisDataInfo", redisData);
+      // const redisData: any = await this.getRedisValue();
 
-      const isInvalidRedisData =
-        !redisData ||
-        Object.values(redisData).every(
-          (value) => value === undefined || Number.isNaN(value) || value === 0,
-        );
+      // const isInvalidRedisData =
+      //   !redisData ||
+      //   Object.values(redisData).every(
+      //     (value) => value === undefined || Number.isNaN(value) || value === 0
+      //   );
 
       // Check if Redis data is not available
-      if (!isInvalidRedisData) {
-        // Set default values and fetch additional data
-        obj.tokenPrice = CONST_NAME.ZERO;
-        obj.marketCap = CONST_NAME.ZERO;
-        const data = await calculateData();
-        console.log(data, "Fromdata");
-        if (
-          "apy" in data &&
-          "inflation" in data &&
-          "totalSupply" in data &&
-          "totalValidator" in data &&
-          "circulation_supply" in data
-        ) {
-          console.log("calculateData", data);
-          return {
-            error: false,
-            message: RES_MSG.FETCH_SUCCESS,
-            data: {
-              apy: CURRENT_DEFAULT_APR,
-              inflation: data.inflation,
-              totalSupply: data.totalSupply,
-              totalValidator: data.totalValidator,
-              circulation_supply: data.circulation_supply,
-              apr: CURRENT_DEFAULT_APR,
-              tokenPrice: CURRENT_DEFAULT_COIN_PRICE,
-            },
-          };
-        } else {
-          return { error: true, message: RES_MSG.NOT_FOUND };
-        }
-      } else {
-        // Use Redis data if available
-        obj.apy = CURRENT_DEFAULT_APR;
-        obj.totalSupply = redisData?.totalSupply;
-        obj.inflation = redisData?.inflation;
-        obj.tokenPrice = redisData?.tokenPrice ?? CURRENT_DEFAULT_COIN_PRICE;
-        obj.marketCap = redisData?.marketCap;
-        obj.totalValidator = redisData?.totalValidator;
-        obj.circulation_supply = redisData?.circulation_supply;
-        obj.apr = CURRENT_DEFAULT_APR;
-      }
+      // if (!isInvalidRedisData) {
+      // Set default values and fetch additional data
+
+      const data: any = await calculateData();
+      const latestBlock = await RedisService.getString(
+        REDIS_KEY.NATIVE_BLOCKS_COUNT
+      );
+      const transactionCount = await RedisService.getString(
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
+      );
+      const marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
+      console.log({ marketCap, RedisService });
+      const tokenPrice = await RedisService.getString(REDIS_KEY.COIN_PRICE);
+      const userCount = await prisma.users.count();
+
+      console.log("calculateData", data);
+      const circulationSupply =
+        data?.circulation_supply === 0 || !data.circulation_supply
+          ? await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY)
+          : data?.circulation_supply;
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
-        data: obj,
+        data: {
+          apy: CURRENT_DEFAULT_APR,
+          inflation: data.inflation,
+          totalSupply: data.totalSupply,
+          totalValidator: data.totalValidator,
+          circulation_supply: circulationSupply,
+          apr: data?.apr ? Number(data?.apr) : CURRENT_DEFAULT_APR,
+          tokenPrice: tokenPrice ?? CURRENT_DEFAULT_COIN_PRICE,
+          validators: data?.validator ?? 0,
+          circulationSupply: circulationSupply,
+          latest_block: latestBlock,
+          total_transactions: transactionCount,
+          total_accounts: userCount,
+          bondedTokens: data?.bondedTokens ? Number(data.bondedTokens) : 0,
+          bondedRate: data?.bondedRate,
+          marketCap,
+        },
       };
+      // } else {
+      //   // Use Redis data if available
+      //   obj.apy = CURRENT_DEFAULT_APR;
+      //   obj.totalSupply = redisData?.totalSupply;
+      //   obj.inflation = redisData?.inflation;
+      //   obj.tokenPrice = tokenPrice ?? CURRENT_DEFAULT_COIN_PRICE;
+      //   obj.marketCap = marketCap;
+      //   obj.totalValidator = redisData?.totalValidator;
+      //   obj.circulation_supply = redisData?.circulation_supply;
+      //   obj.apr = CURRENT_DEFAULT_APR;
+      //   obj.total_transactions = transactionCount;
+      //   obj.latest_block = latestBlock;
+      //   obj.total_accounts = userCount;
+      // }
+      // return {
+      //   error: false,
+      //   message: RES_MSG.FETCH_SUCCESS,
+      //   data: obj,
+      // };
     } catch (err) {
       logger.error("Error in dashboard data:", err);
       return { error: true, message: RES_MSG.NOT_FOUND };
@@ -133,15 +152,14 @@ class ExplorerService {
   > => {
     try {
       // Fetch values from Redis for different keys
-      let tokenPrice = await RedisService.getString(REDIS_KEY.TOKEN_PRICE);
-
+      let tokenPrice = await RedisService.getString(REDIS_KEY.COIN_PRICE);
       tokenPrice = tokenPrice === null ? 0 : tokenPrice;
 
       let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
       marketCap = marketCap === null ? 0 : marketCap;
 
       let circulation_supply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
+        REDIS_KEY.CIRCULATING_SUPPLY
       );
       let validatorData = await RedisService.getString(REDIS_KEY.INFLATION_APY);
       validatorData = validatorData === null ? {} : JSON.parse(validatorData);
@@ -245,7 +263,7 @@ class ExplorerService {
 
           finalData = await fillMissingDatesWithZeroByhr(
             graphData,
-            new Date(startDate),
+            new Date(startDate)
           );
         } else {
           const currentDate = new Date();
@@ -268,7 +286,7 @@ class ExplorerService {
           finalData = await fillMissingDatesWithZeroByDay(
             graphData,
             new Date(startDate),
-            currentDate,
+            currentDate
           );
         }
       } else if (payloads.time === "h") {
@@ -290,7 +308,7 @@ class ExplorerService {
         finalData = await fillMissingMinutes(
           graphData,
           new Date(startDate),
-          new Date(currentDate),
+          new Date(currentDate)
         );
       } else if (payloads.time === "y" && payloads.interval === 1) {
         const currentDate = new Date();
@@ -310,12 +328,12 @@ class ExplorerService {
         finalData = await fillMissingDatesWithZeroByMonth(
           graphData,
           new Date(startDate),
-          currentDate,
+          currentDate
         );
       }
 
       const totalAccount = await RedisService.getString(
-        REDIS_KEY.TOTAL_ACCOUNTS,
+        REDIS_KEY.TOTAL_ACCOUNTS
       );
 
       return {
@@ -359,7 +377,7 @@ class ExplorerService {
 				`) as Array<{ hour: Date; count: number }>;
           finalData = await fillMissingDatesWithZeroByhr(
             graphData,
-            new Date(startDate),
+            new Date(startDate)
           );
         } else {
           const currentDate = new Date();
@@ -382,7 +400,7 @@ class ExplorerService {
           finalData = await fillMissingDatesWithZeroByDay(
             graphData,
             new Date(startDate),
-            currentDate,
+            currentDate
           );
         }
       } else if (payloads.time === "h") {
@@ -403,7 +421,7 @@ class ExplorerService {
         finalData = await fillMissingMinutes(
           graphData,
           new Date(startDate),
-          new Date(currentDateModi),
+          new Date(currentDateModi)
         );
       } else if (payloads.time === "y" && payloads.interval === 1) {
         const currentDate = new Date();
@@ -424,12 +442,12 @@ class ExplorerService {
         finalData = await fillMissingDatesWithZeroByMonth(
           graphData,
           new Date(startDate),
-          currentDate,
+          currentDate
         );
       }
 
       const totalContractDeployedTx = await RedisService.getString(
-        REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX,
+        REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX
       );
 
       return {
@@ -468,12 +486,12 @@ class ExplorerService {
         const response = await fetchRequest(
           `${environment.evmHost}/cosmos/bank/v1beta1/spendable_balances/${address}`,
           FETCH_METHODS.GET,
-          HEADERS.DEFAULT,
+          HEADERS.DEFAULT
         );
 
         // Find the entry with denom "qubetics"
         const qubeticsAmount = response.data?.balances.find(
-          (item: any) => item.denom === "qubetics",
+          (item: any) => item.denom === "qubetics"
         );
 
         userBalance = qubeticsAmount.amount;
@@ -488,7 +506,7 @@ class ExplorerService {
         : "";
 
       let marketCapPrice = await RedisService.getString(
-        CONST_NAME.MARKET_CAP_PRICE,
+        CONST_NAME.MARKET_CAP_PRICE
       );
 
       let value: string;
@@ -572,7 +590,7 @@ class ExplorerService {
 
           finalData = await fillMissingDatesWithZeroByhr(
             graphData,
-            new Date(startDate),
+            new Date(startDate)
           );
         } else {
           const currentDate = new Date();
@@ -595,7 +613,7 @@ class ExplorerService {
           finalData = await fillMissingDatesWithZeroByDay(
             graphData,
             new Date(startDate),
-            currentDate,
+            currentDate
           );
         }
       } else if (payloads.time === "y" && payloads.interval === 1) {
@@ -616,7 +634,7 @@ class ExplorerService {
         finalData = await fillMissingDatesWithZeroByMonth(
           graphData,
           new Date(startDate),
-          currentDate,
+          currentDate
         );
       }
       const totalTx = await RedisService.getString(REDIS_KEY.TOTAL_TX);

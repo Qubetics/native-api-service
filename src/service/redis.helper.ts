@@ -42,8 +42,8 @@ class RedisService {
         logger.error(
           "\x1b[31m%s\x1b[0m",
           "error while connecting redis server: ",
-          err.message,
-        ),
+          err.message
+        )
       );
     } catch (error) {
       console.log("error while connecting to redis .. ", error);
