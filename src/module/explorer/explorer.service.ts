@@ -209,7 +209,11 @@ class ExplorerService {
         // 	// Call getTransactionByHash with the modified payload
         // 	txData = await transactionService.getTransactionByHash(payload);
         // 	return txData;
-      } else if (payload.startsWith("qubetics") && payload.length === 47) {
+      } else if (
+        payload.startsWith("qubetics") &&
+        payload.length > 42 &&
+        payload.length <= 50
+      ) {
         /* here we search for all transaction specfic to a wallet address*/
         txData = await transactionService.getTransactionsByAddress({
           address: payload,
@@ -490,15 +494,19 @@ class ExplorerService {
         );
 
         // Find the entry with denom "qubetics"
+        console.log(response.data?.balances, "responseF");
         const qubeticsAmount = response.data?.balances.find(
-          (item: any) => item.denom === "qubetics"
+          // (item: any) => item.denom === `${environment.symbol.toLowerCase()}`
+          (item: any) => item.denom === `tics`
         );
+        console.log(qubeticsAmount, "qubeticsAmount");
 
         userBalance = qubeticsAmount.amount;
 
         // Store userBalance in Redis
         await RedisService.setString(REDIS_KEY.USER_BALANCE, userBalance);
       } catch (error) {
+        console.log("balance error", error);
         userBalance = "";
       }
       const actualBalance = userBalance

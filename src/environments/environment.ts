@@ -85,7 +85,7 @@ class Environment implements IEnvironment {
     this.recaptchaUrl = <string>process.env.GOOGLE_RECAPTCHA_URL;
     this.coinMarketApi = <string>process.env.COIN_MARKET_API_PATH;
     this.coinMarketKey = <string>process.env.COIN_MARKET_API_KEY;
-    this.symbol = <string>process.env.TOKEN_SYMBOL;
+    this.symbol = <string>process.env.TOKEN_SYMBOL?.toLowerCase();
     this.currency = <string>process.env.TOKEN_CURRENCY;
     this.evmHost = <string>process.env.SWAGGER_HTTP_HOST;
     this.nodeInfoUrl = <string>process.env.NODE_INFO_URL;
