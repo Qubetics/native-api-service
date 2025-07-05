@@ -76,22 +76,26 @@ class ExplorerService {
       // Set default values and fetch additional data
 
       const data: any = await calculateData();
-      const latestBlock = await RedisService.getString(
-        REDIS_KEY.NATIVE_BLOCKS_COUNT
-      );
+
+      const latestBlock = await RedisService.getString(REDIS_KEY.LATEST_BLOCK);
       const transactionCount = await RedisService.getString(
         REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
       );
-      const marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
-      console.log({ marketCap, RedisService });
-      const tokenPrice = await RedisService.getString(REDIS_KEY.COIN_PRICE);
-      const userCount = await prisma.users.count();
-
-      console.log("calculateData", data);
+      let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
+      const tokenPrice =
+        (await RedisService.getString(REDIS_KEY.COIN_PRICE)) ??
+        CURRENT_DEFAULT_COIN_PRICE;
       const circulationSupply =
         data?.circulation_supply === 0 || !data.circulation_supply
           ? await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY)
           : data?.circulation_supply;
+
+      console.log({ marketCap, RedisService });
+      marketCap ??= tokenPrice * circulationSupply;
+      const userCount = await prisma.users.count();
+
+      console.log("calculateData", data);
+
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
