@@ -187,6 +187,8 @@ class ExplorerService {
 
   async searching(payload: string): Promise<IESResponse> {
     try {
+      // const txData = await transactionService.activeSearchResults(payload);
+      // return txData;
       let txData;
 
       if (!payload.startsWith("0x") && !isNaN(Number(payload))) {
@@ -219,12 +221,8 @@ class ExplorerService {
         payload.length <= 50
       ) {
         /* here we search for all transaction specfic to a wallet address*/
-        txData = await transactionService.getTransactionsByAddress({
-          address: payload,
-          limit: 10,
-          page: 0,
-        });
-
+        txData = await this.getUserByAddress(payload);
+        console.log(txData, "txDatatxData");
         return txData;
       } else if (payload.startsWith("qubetics") && payload.length === 64) {
         /* here we search for all transaction specfic to a wallet address*/
@@ -475,16 +473,14 @@ class ExplorerService {
     try {
       console.log("address: ", address);
 
-      const [user] = await Promise.all([
-        prisma.users.findFirst({
-          where: {
-            address: address,
-          },
-          select: {
-            txn: true,
-          },
-        }),
-      ]);
+      const user = await prisma.users.findFirst({
+        where: {
+          address: address,
+        },
+        select: {
+          txn: true,
+        },
+      });
 
       let txnCount = user ? user.txn : "";
 
@@ -660,6 +656,37 @@ class ExplorerService {
       };
     } catch (err) {
       return { error: true, message: RES_MSG.ERROR };
+    }
+  }
+
+  async getUserByAddress(address: string): Promise<IESResponse> {
+    try {
+      console.log("address: ", address);
+
+      const user = await prisma.users.findFirst({
+        where: {
+          address: address,
+        },
+        select: {
+          address: true,
+        },
+      });
+
+      console.log(user, "user");
+      return {
+        error: false,
+        message: RES_MSG.FETCH_SUCCESS,
+        data: {
+          addresses: user,
+        },
+      };
+    } catch (err) {
+      console.log("error getUserByAddress: ", err);
+
+      return {
+        error: true,
+        message: err instanceof Error ? err.message : RES_MSG.ERROR,
+      };
     }
   }
 }

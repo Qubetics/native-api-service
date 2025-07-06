@@ -36,7 +36,7 @@ class TransactionService {
       ]);
 
       const transactionCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
       );
       if (!transactions?.length) throw new Error(RES_MSG.NOT_FOUND);
       const nextCursor =
@@ -120,13 +120,14 @@ class TransactionService {
       const updatedTransactions = convertBigIntToNumber(transactions);
 
       const isContractAddress = updatedTransactions.some(
-        (transaction) => transaction.contractAddress === data.address,
+        (transaction) => transaction.contractAddress === data.address
       );
 
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
         data: {
+          addresses: convertBigIntToNumber(transactions),
           count: transactionCount,
           transactions: convertBigIntToNumber(transactions),
           isContractAddress,
@@ -245,7 +246,7 @@ class TransactionService {
    */
   async createTransaction(
     txHash: string,
-    data: ICreateTransaction,
+    data: ICreateTransaction
   ): Promise<IESResponse> {
     try {
       let currentDate = Date.now().toString();
@@ -297,7 +298,7 @@ class TransactionService {
    */
   async updateTransaction(
     txHash: string,
-    data: ICreateTransaction,
+    data: ICreateTransaction
   ): Promise<IESResponse> {
     try {
       console.log(data, "data");
@@ -356,5 +357,119 @@ class TransactionService {
       }
     }
   }
+
+  // async activeSearchResults(payload: {
+
+  // }): Promise<any> {searchedWord
+  //   try {
+
+  //     if (payload.page <= 1) {
+  //       payload.page = 1;
+  //     }
+  //     const page =
+  //     const offset = (payload.page - 1) * payload.limit;
+  //     let tokens: any = {};
+  //     let contracts: any = {};
+  //     let addresses: any = {};
+  //     let tabs = [];
+  //     let results = [];
+
+  //     if (
+  //       !payload.searchedWord.startsWith("0x") &&
+  //       !isNaN(Number(payload.searchedWord)) &&
+  //       payload.searchedWord.length > 0
+  //     ) {
+  //       const result = await blockService.getBlockByNumber(
+  //         Number(payload.searchedWord)
+  //       );
+  //       return result;
+  //     } else if (
+  //       payload.searchedWord?.startsWith("0x") &&
+  //       payload.searchedWord?.length === 66
+  //     ) {
+  //       const txData = await this.getTransactionByHash(
+  //         payload.searchedWord?.toLowerCase()
+  //       );
+  //       if (txData?.error) {
+  //         const result = await blockService.getBlockByHash(
+  //           payload.searchedWord?.toLowerCase()
+  //         );
+  //         if (result?.error) result.message = RES_MSG.ERROR;
+  //         return result;
+  //       }
+
+  //       return txData;
+  //     } else {
+  //       tokens =
+  //         await prisma.$queryRaw` SELECT t."tokenName", t."tokenSymbol", t."contractAddress", c."address" AS "contract_address",COUNT(tr."id") AS "transactionCount" FROM "Tokens" t JOIN "Contracts" c ON t."contractAddress" = c."address" LEFT JOIN "Transactions" tr ON t."contractAddress" = tr."toAddress" OR t."contractAddress" = tr."fromAddress" WHERE t."contractAddress" ILIKE ${
+  //           "%" + payload.searchedWord + "%"
+  //         } OR t."tokenName" ILIKE ${
+  //           "%" + payload.searchedWord + "%"
+  //         } OR t."tokenSymbol" ILIKE ${
+  //           "%" + payload.searchedWord + "%"
+  //         } GROUP BY t."contractAddress", t."tokenName",t."tokenSymbol", c."address" ORDER BY "transactionCount" DESC LIMIT ${
+  //           payload.limit
+  //         } OFFSET ${offset}`;
+
+  //       contracts =
+  //         await prisma.$queryRaw` SELECT c."address", COUNT(tr."id") AS "transactionCount", cv."contractname" as contract_name, cv."contractAddress" AS "contract_address" FROM "ContractVerification" cv RIGHT JOIN "Contracts" c ON cv."contractAddress" = c."address" LEFT JOIN "Transactions" tr ON c."address" = tr."toAddress" OR c."address" = tr."fromAddress" WHERE c."address" ILIKE ${
+  //           "%" + payload.searchedWord + "%"
+  //         } OR cv."contractname" ILIKE ${
+  //           "%" + payload.searchedWord + "%"
+  //         } GROUP BY c."address", cv."contractname", cv."contractAddress" ORDER BY "transactionCount" DESC LIMIT ${
+  //           payload.limit
+  //         } OFFSET ${offset}`;
+
+  //       addresses =
+  //         await prisma.$queryRaw` SELECT u."address" AS address, COUNT(tr."id") AS "transactionCount" FROM "Users" u LEFT JOIN "Transactions" tr ON u."address" = tr."toAddress" OR u."address" = tr."fromAddress" WHERE u."address" ILIKE ${
+  //           "%" + payload.searchedWord + "%"
+  //         } GROUP BY u."address" ORDER BY "transactionCount" DESC LIMIT ${
+  //           payload.limit
+  //         } OFFSET ${offset}`;
+
+  //       console.log("tokens", tokens);
+  //       console.log("contracts", contracts);
+  //       console.log("addresses", addresses);
+
+  //       if (tokens && tokens.length) {
+  //         tabs.push("tokens");
+  //         results.push(tokens);
+  //       }
+  //       if (contracts && contracts.length) {
+  //         tabs.push("contracts");
+  //         results.push(contracts);
+  //       }
+  //       if (addresses && addresses.length) {
+  //         tabs.push("addresses");
+  //         results.push(addresses);
+  //       }
+
+  //       if (tabs && tabs.length < 1) {
+  //         return {
+  //           error: true,
+  //           message: "No results found",
+  //         };
+  //       }
+  //       return {
+  //         error: false,
+  //         message: "Searched Results",
+  //         data: {
+  //           tabs: tabs,
+  //           results: serializeBigInt({
+  //             tokens,
+  //             contracts,
+  //             addresses,
+  //           }),
+  //         },
+  //       };
+  //     }
+  //   } catch (err) {
+  //     console.log("Catch Error", err);
+  //     if (err instanceof Error) {
+  //       return { error: true, message: RES_MSG.ERROR };
+  //     }
+  //     return { error: true, message: RES_MSG.ERROR };
+  //   }
+  // }
 }
 export default new TransactionService();
