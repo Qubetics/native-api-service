@@ -23,7 +23,7 @@ class ExplorerController implements Controller {
       .get(
         "/detail/:blockIdentity",
         getBlockDetailsValidation,
-        this.getBlockDetails
+        this.getBlockDetails,
       )
       .get("/latest", this.getLatestBlock);
   }
@@ -60,7 +60,7 @@ class ExplorerController implements Controller {
   };
   private getBlockDetails = async (request: Request, response: Response) => {
     const blockDetails = await BlockService.getBlockDetails(
-      request.params?.blockIdentity as string
+      request.params?.blockIdentity as string,
     );
     if (blockDetails.error) {
       return setResponse.error(response, blockDetails);

@@ -27,14 +27,14 @@ class TransactionController implements Controller {
       .get(
         "/hash/:transactionHash",
         getTxByHashValidation,
-        this.getTransactionByHash
+        this.getTransactionByHash,
       )
       .get("/block", getTxByBlock, this.getTransactionByBlock)
 
       .put(
         "/update/:transactionHash",
         updateTransactionValidation,
-        this.updateTransaction
+        this.updateTransaction,
       );
   }
 
@@ -70,7 +70,7 @@ class TransactionController implements Controller {
    */
   private getTransactionsByAddress = async (
     request: Request,
-    response: Response
+    response: Response,
   ) => {
     const data = {
       page: !request.query?.page ? 0 : Number(request.query?.page) - 1,
@@ -88,10 +88,10 @@ class TransactionController implements Controller {
 
   private getTransactionByHash = async (
     request: Request,
-    response: Response
+    response: Response,
   ) => {
     const transactionByHash = await transactionService.getTransactionByHash(
-      request.params?.transactionHash
+      request.params?.transactionHash,
     );
 
     if (transactionByHash.error) {
@@ -102,7 +102,7 @@ class TransactionController implements Controller {
 
   private getTransactionByBlock = async (
     request: Request,
-    response: Response
+    response: Response,
   ) => {
     const data = {
       page: !request.query?.page ? 0 : Number(request.query.page) - 1,
@@ -130,7 +130,7 @@ class TransactionController implements Controller {
     const transactionData = request.body;
     const updatedTransaction = await transactionService.updateTransaction(
       transactionHash,
-      transactionData
+      transactionData,
     );
 
     if (updatedTransaction.error) {

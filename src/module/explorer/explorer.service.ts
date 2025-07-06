@@ -708,11 +708,12 @@ class ExplorerService {
       const tokenPrice =
         (await RedisService.getString(REDIS_KEY.COIN_PRICE)) ??
         CURRENT_DEFAULT_COIN_PRICE;
-      const circulationSupply =
-        data?.circulation_supply === 0 || !data.circulation_supply
-          ? await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY)
-          : data?.circulation_supply;
+      // const circulationSupply =
+      //   data?.circulation_supply === 0 || !data.circulation_supply
+      //     ? await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY)
+      //     : data?.circulation_supply;
 
+      const circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
       console.log({ marketCap, RedisService });
       marketCap ??= tokenPrice * circulationSupply;
       const userCount = await prisma.users.count();
