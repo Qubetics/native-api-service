@@ -715,8 +715,10 @@ class ExplorerService {
       //     : data?.circulation_supply;
 
       const circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
-      console.log({ marketCap, RedisService });
-      marketCap ??= tokenPrice * circulationSupply;
+      if (marketCap === "0" || !marketCap) {
+        marketCap ??= tokenPrice * circulationSupply;
+      }
+
       const userCount = await prisma.users.count();
 
       console.log("calculateData", data);
