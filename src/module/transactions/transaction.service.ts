@@ -10,7 +10,7 @@ class TransactionService {
    * @param data
    * @returns
    */
-  async getAllTransactions(data: {
+  async getAllTransactions_1(data: {
     page?: number;
     limit: number;
   }): Promise<IESResponse> {
@@ -36,7 +36,7 @@ class TransactionService {
       ]);
 
       const transactionCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
       );
       if (!transactions?.length) throw new Error(RES_MSG.NOT_FOUND);
       const nextCursor =
@@ -120,7 +120,7 @@ class TransactionService {
       const updatedTransactions = convertBigIntToNumber(transactions);
 
       const isContractAddress = updatedTransactions.some(
-        (transaction) => transaction.contractAddress === data.address,
+        (transaction) => transaction.contractAddress === data.address
       );
 
       return {
@@ -245,7 +245,7 @@ class TransactionService {
    */
   async createTransaction(
     txHash: string,
-    data: ICreateTransaction,
+    data: ICreateTransaction
   ): Promise<IESResponse> {
     try {
       let currentDate = Date.now().toString();
@@ -297,7 +297,7 @@ class TransactionService {
    */
   async updateTransaction(
     txHash: string,
-    data: ICreateTransaction,
+    data: ICreateTransaction
   ): Promise<IESResponse> {
     try {
       console.log(data, "data");
@@ -356,5 +356,193 @@ class TransactionService {
       }
     }
   }
+
+  async getAllTransactions(data: {
+    page: number;
+    limit: number;
+    order: any;
+  }): Promise<IESResponse> {
+    try {
+      let transactionsData: any;
+      let maxId: any = 0;
+      let minId: any = 0;
+      let transactionCount = await RedisService.getString(
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
+      );
+
+      if (!transactionCount) {
+        transactionCount = await prisma.transactions.count();
+      }
+      if (data.order === "asc") {
+        transactionsData = await this.ascPagination(data.page, data.limit);
+        const result = await prisma.transactions.aggregate({
+          _max: {
+            id: true, // Replace 'id' with your desired column
+          },
+        });
+
+        maxId = result._max.id;
+      } else {
+        transactionsData = await this.descPagination(data.page, data.limit);
+        minId = await prisma.transactions.findMany({
+          select: {
+            id: true, // Replace 'id' with your desired column
+          },
+          orderBy: {
+            id: "asc",
+          },
+          take: (transactionCount % data.limit) + 1 || data.limit + 1,
+        });
+      }
+
+      const { transactions, nextCursor, prevCursor } = transactionsData;
+      let nextCursorValue: number | null = nextCursor;
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const [getActiveAccount, previous30DaysTrxn] = await Promise.all([
+        prisma.$queryRaw`
+ 					SELECT COUNT(DISTINCT "fromAddress") AS "count" FROM "Transactions" WHERE "timestamp" >= CAST(${todayStart.toISOString()} AS timestamp) AND "timestamp" <= CAST(${new Date().toISOString()} AS timestamp)`,
+        prisma.transactions.count({
+          where: {
+            createdAt: {
+              gte: thirtyDaysAgo, // Greater than or equal to 30 days ago
+            },
+          },
+        }),
+      ]);
+      // Query the count of transactions
+      const activeAccount: any = convertBigIntToNumber(getActiveAccount);
+      if (!transactions.length) throw new Error(RES_MSG.TRANSACTION_NOT_FOUND);
+      console.log("MAXMIN", maxId, minId);
+      if (data.order === "asc") {
+        if (maxId === data.page + data.limit) {
+          nextCursorValue = null;
+        }
+      } else if (data.order === "desc") {
+        if (transactionCount === nextCursor || nextCursor === 1) {
+          nextCursorValue = null;
+        }
+      }
+
+      const offset = transactionCount % data.limit || data.limit;
+      const lastPage =
+        data.order === "asc" ? maxId - offset : minId[minId.length - 1].id;
+      return {
+        error: false,
+        message: RES_MSG.TRANSACTION_FETCH_SUCCESS,
+        data: {
+          count: transactionCount,
+          transactions: convertBigIntToNumber(transactions),
+          nextCursor: nextCursorValue,
+          prevCursor,
+          previous30DaysTrxn,
+          activeAccount: activeAccount ? activeAccount[0].count : 0,
+          lastPage,
+        },
+      };
+    } catch (err) {
+      console.error("err", err);
+      if (err instanceof Error) {
+        if (err.message.includes("prisma")) {
+          return { error: true, message: RES_MSG.SERVER_ERROR };
+        }
+        return { error: true, message: err.message };
+      } else {
+        return { error: true, message: RES_MSG.ERROR };
+      }
+    }
+  }
+
+  ascPagination = async (page: number, limit: number) => {
+    const isFirstPage = page === 1;
+    const transactions = await prisma.transactions.findMany({
+      select: {
+        id: true,
+        blocknumber: true,
+        txhash: true,
+        contractAddress: true,
+        status: true,
+        type: true,
+        timestamp: true,
+        fromAddress: true,
+        toAddress: true,
+        txFee: true,
+        value: true,
+        createdAt: true,
+        gasWanted: true,
+      },
+      orderBy: {
+        id: "asc",
+      },
+      where: isFirstPage ? {} : { id: { gt: page } },
+      take: limit,
+    });
+
+    const nextCursor =
+      transactions.length === limit
+        ? convertBigIntToNumber(transactions)[transactions.length - 1].id
+        : null;
+    const prevCursor = isFirstPage
+      ? null
+      : page && transactions.length > 0
+        ? convertBigIntToNumber(transactions)[0].id - (limit + 1)
+        : null;
+
+    return {
+      transactions,
+      nextCursor,
+      prevCursor: prevCursor === 0 ? 1 : prevCursor,
+    };
+  };
+
+  /**
+   * handle the desc pagination according to id
+   * @param page
+   * @param limit
+   * @returns
+   */
+  descPagination = async (page: number, limit: number) => {
+    const isFirstPage = page === 1;
+
+    const transactions = await prisma.transactions.findMany({
+      select: {
+        id: true,
+        blocknumber: true,
+        txhash: true,
+        contractAddress: true,
+        status: true,
+        type: true,
+        timestamp: true,
+        fromAddress: true,
+        toAddress: true,
+        gasWanted: true,
+        txFee: true,
+        value: true,
+        createdAt: true,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      where: isFirstPage ? {} : { id: { lt: page } },
+      take: limit,
+    });
+
+    const nextCursor =
+      transactions.length === limit
+        ? convertBigIntToNumber(transactions)[transactions.length - 1].id
+        : null;
+    const prevCursor = isFirstPage
+      ? null
+      : page && transactions.length > 0
+        ? convertBigIntToNumber(transactions)[0].id + (limit + 1)
+        : null;
+
+    return { transactions, nextCursor, prevCursor };
+  };
 }
 export default new TransactionService();

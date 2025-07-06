@@ -2,6 +2,7 @@ import axios, { AxiosResponse, Method } from "axios";
 import { TRANSACTION_TYPE } from "../constant";
 import { CoinMarketData } from "../interfaces/index";
 import logger from "./logger";
+import { convertBigIntToNumber } from "../helper/common.helper";
 
 export function isEven(n: number) {
   const res = n % 2 === 0;
@@ -67,7 +68,7 @@ export function exp(val: string): string {
 
 export async function fillMissingDatesWithZeroByhr(
   graphData: Array<{ hour: Date; count: number }>,
-  startDate: Date,
+  startDate: Date
 ) {
   startDate.setHours(startDate.getHours() + 1);
 
@@ -103,18 +104,18 @@ export async function fillMissingDatesWithZeroByhr(
 export async function fillMissingDatesWithZeroByDay(
   data: Array<{ day: Date; count: number }>,
   startDate: Date,
-  currentDateVal: Date,
+  currentDateVal: Date
 ) {
   startDate.setDate(startDate.getDate() + 1);
   const dateMap = new Map(
-    data.map((item) => [item.day.toISOString(), item.count]),
+    data.map((item) => [item.day.toISOString(), item.count])
   );
   const result = [];
   const currentDate = new Date(startDate);
 
   // Calculate the number of days between the startDate and the last date in your data
   const daysDifference = Math.floor(
-    (+currentDateVal - +currentDate) / (24 * 60 * 60 * 1000),
+    (+currentDateVal - +currentDate) / (24 * 60 * 60 * 1000)
   );
 
   for (let i = 0; i <= daysDifference; i += 1) {
@@ -131,11 +132,11 @@ export async function fillMissingDatesWithZeroByDay(
 export async function fillMissingDatesWithZeroByMonth(
   data: Array<{ month: Date; count: number }>,
   startDate: Date,
-  currentDateVal: Date,
+  currentDateVal: Date
 ) {
   startDate.setMonth(startDate.getMonth() + 1);
   const dateMap = new Map(
-    data.map((item) => [item.month.toISOString(), item.count]),
+    data.map((item) => [item.month.toISOString(), item.count])
   );
   const result = [];
   const currentDate = new Date(startDate);
@@ -163,7 +164,7 @@ interface ITimeStamp {
 export async function fillMissingMinutes(
   inputData: Array<{ hour: Date; count: number }> | [],
   startMinute: Date,
-  endMinute: Date,
+  endMinute: Date
 ) {
   startMinute.setMinutes(startMinute.getMinutes() + 1);
   const fromTime = startMinute;
@@ -203,14 +204,14 @@ export async function fillMissingMinutes(
 export async function fillMissingSeconds(
   data: Array<{ second: Date; count: number }>,
   startTime: Date,
-  endTime: Date,
+  endTime: Date
 ) {
   const newData = [];
   const currentTime = new Date(startTime);
 
   while (currentTime <= endTime) {
     const matchingData = data.find(
-      (item) => item.second.getTime() === currentTime.getTime(),
+      (item) => item.second.getTime() === currentTime.getTime()
     );
     if (matchingData) {
       const secondVal = {
@@ -284,7 +285,7 @@ export async function fetchRequest(
   url: string,
   data: { symbol: string; convert: string },
   method: Method,
-  headers: object,
+  headers: object
 ): Promise<CoinMarketData> {
   return new Promise((resolve, reject) => {
     const { symbol } = data;
@@ -309,4 +310,98 @@ export async function fetchRequest(
         reject(new Error(err.response.data.status.error_message));
       });
   });
+}
+
+export function serializeBigInt(dataVal: any): any {
+  if (typeof dataVal === "bigint") {
+    return dataVal.toString();
+  }
+  if (Array.isArray(dataVal)) {
+    return dataVal.map(convertBigIntToNumber);
+  }
+  if (dataVal !== null && typeof dataVal === "object") {
+    return Object.fromEntries(
+      Object.entries(dataVal).map(([key, value]) => {
+        if (
+          (key === "block_timestamp" ||
+            key === "timestamp" ||
+            key === "created_at" ||
+            key === "updated_at" ||
+            key === "createdAt" ||
+            key === "updatedAt") &&
+          value instanceof Date
+        ) {
+          return [key, value.toISOString()]; // Convert block_timestamp to string
+        }
+        return [key, convertBigIntToNumber(value)];
+      })
+    );
+  }
+  return dataVal;
+}
+
+export function cursorPagination(
+  result: any,
+  orderBy: string,
+  filter: string,
+  limit: number,
+  uniqueParam: any,
+  totalRecords: number,
+  maximumId: number,
+  minimumId: number
+) {
+  let getFilter = "";
+
+  if (filter) {
+    getFilter = filter;
+  }
+
+  console.log("RESULT", result);
+  let sortedResults = [...result];
+  if (
+    (orderBy === "desc" && getFilter === "oldest") ||
+    (orderBy === "asc" && getFilter === "newest") ||
+    (orderBy === "asc" && getFilter !== "newest" && getFilter !== "oldest")
+  ) {
+    console.log("Will reverse here");
+    sortedResults = [...result].reverse();
+  }
+  console.log("SORTED-RESULT", result);
+
+  /** to get the next page :  get the last element of the result */
+  let nextCursor = null;
+  let previousCursor = null;
+  if (
+    !orderBy ||
+    orderBy === "desc" ||
+    (orderBy === "asc" && getFilter === "oldest")
+  ) {
+    nextCursor = sortedResults[sortedResults.length - 1][uniqueParam];
+    previousCursor = sortedResults[0][uniqueParam];
+  } else {
+    nextCursor = result[0][uniqueParam];
+    previousCursor = result[result.length - 1][uniqueParam];
+  }
+
+  const lastPageRemainder = totalRecords % Number(limit);
+
+  return {
+    sortedResults,
+    nextCursor:
+      (Number(nextCursor) === Number(minimumId) &&
+        (!getFilter || getFilter === "newest")) ||
+      (Number(nextCursor) === Number(maximumId) && getFilter === "oldest") ||
+      Number(totalRecords) < Number(limit)
+        ? null
+        : nextCursor,
+    previousCursor:
+      (Number(previousCursor) === Number(maximumId) &&
+        (!getFilter || getFilter === "newest")) ||
+      (Number(previousCursor) === Number(minimumId) &&
+        getFilter === "oldest") ||
+      Number(totalRecords) < Number(limit)
+        ? null
+        : previousCursor,
+    lastPageRemainder,
+  };
 }

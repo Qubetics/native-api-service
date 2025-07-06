@@ -23,16 +23,32 @@ class ExplorerController implements Controller {
       .get(
         "/detail/:blockIdentity",
         getBlockDetailsValidation,
-        this.getBlockDetails,
+        this.getBlockDetails
       )
       .get("/latest", this.getLatestBlock);
   }
 
   private getAllBlock = async (request: Request, response: Response) => {
-    const data = {
-      page: request.query?.page ? Number(request.query?.page) : 1,
+    // const data = {
+    //   page: request.query?.page ? Number(request.query?.page) : 1,
+    //   limit: !request.query?.limit ? 10 : Number(request.query?.limit),
+    // };
 
+    if (request.query.order === "undefined") {
+      request.query.order = "desc";
+    }
+    if (
+      request.query.filterBy === "undefined" ||
+      (request.query.filterBy !== "newest" &&
+        request.query.filterBy !== "oldest")
+    ) {
+      request.query.filterBy = "newest";
+    }
+    const data: any = {
+      page: request.query?.page ? Number(request.query?.page) : 1,
       limit: !request.query?.limit ? 10 : Number(request.query?.limit),
+      order: request.query?.order ?? "desc",
+      filterBy: request.query?.filterBy ?? "newest",
     };
 
     const res = await BlockService.getAllLatestBlock(data);
@@ -44,7 +60,7 @@ class ExplorerController implements Controller {
   };
   private getBlockDetails = async (request: Request, response: Response) => {
     const blockDetails = await BlockService.getBlockDetails(
-      request.params?.blockIdentity as string,
+      request.params?.blockIdentity as string
     );
     if (blockDetails.error) {
       return setResponse.error(response, blockDetails);
