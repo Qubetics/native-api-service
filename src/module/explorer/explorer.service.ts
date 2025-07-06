@@ -6,6 +6,7 @@ import {
   HEADERS,
   CURRENT_DEFAULT_APR,
   CURRENT_DEFAULT_COIN_PRICE,
+  CURRENT_DEFAULT_CIRCULATING_SUPPLY,
 } from "../../constant";
 import { GraphData, IESResponse, IGraphResponse } from "../../interfaces/index";
 import { calculateData } from "../../helper/calculateAPR.helper";
