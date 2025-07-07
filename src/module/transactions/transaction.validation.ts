@@ -6,7 +6,7 @@ import { isOnyNumbers } from "../../Utility/common";
 export const getTxByHashValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     transactionHash: Joi.string()
@@ -47,7 +47,7 @@ const isNumeric = (str: string) => {
 export const getTxByBlock = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const querySchema = Joi.object({
     value: Joi.string()
@@ -148,7 +148,7 @@ export const getTxByBlock = (
 export const transactionSearch = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -225,7 +225,7 @@ export const transactionSearch = (
 export const updateTransactionValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const bodySchema = Joi.object({
     type: Joi.string(),
@@ -361,7 +361,7 @@ export const updateTransactionValidation = (
   }
 
   const { error: paramsError, value: paramsValue } = paramSchema.validate(
-    req.params
+    req.params,
   );
 
   if (paramsError) {
@@ -376,7 +376,7 @@ export const updateTransactionValidation = (
 export const getTransactionsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     page: Joi.string()
