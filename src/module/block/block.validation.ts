@@ -10,7 +10,7 @@ import { isOnyNumbers } from "../../Utility/common";
 export const getBlocksValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -98,7 +98,7 @@ export const getBlocksValidation = (
 export const getBlockByHashValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const schema = Joi.object({
     blockHash: Joi.string()
@@ -130,7 +130,7 @@ export const getBlockByHashValidation = (
 export const getBlockDetailsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   const paramsSchema = Joi.object({
     blockIdentity: Joi.string()
