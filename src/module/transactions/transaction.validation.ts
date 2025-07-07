@@ -6,7 +6,7 @@ import { isOnyNumbers } from "../../Utility/common";
 export const getTransactionsValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -69,7 +69,7 @@ export const getTransactionsValidation = (
 export const getTxByHashValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     transactionHash: Joi.string()
@@ -110,7 +110,7 @@ const isNumeric = (str: string) => {
 export const getTxByBlock = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const querySchema = Joi.object({
     value: Joi.string()
@@ -211,7 +211,7 @@ export const getTxByBlock = (
 export const transactionSearch = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const schema = Joi.object({
     page: Joi.string()
@@ -288,7 +288,7 @@ export const transactionSearch = (
 export const updateTransactionValidation = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const bodySchema = Joi.object({
     type: Joi.string(),
@@ -424,7 +424,7 @@ export const updateTransactionValidation = (
   }
 
   const { error: paramsError, value: paramsValue } = paramSchema.validate(
-    req.params,
+    req.params
   );
 
   if (paramsError) {
@@ -433,5 +433,77 @@ export const updateTransactionValidation = (
       .json({ error: true, message: paramsError.details[0].message });
   }
 
+  next();
+};
+
+export const getTxValidation = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const schema = Joi.object({
+    page: Joi.string()
+      .custom((value, helpers) => {
+        if (value.startsWith(" ")) {
+          return helpers.error("custom.noLeadingSpaces");
+        }
+        const parsedValue = parseFloat(value.trim());
+        if (
+          isNaN(value) ||
+          !Number.isInteger(parsedValue) ||
+          parsedValue < 1 ||
+          value.toString().length >= 19
+        ) {
+          return helpers.error("custom.invalidPage");
+        }
+        return parsedValue;
+      }, "Number Validation")
+      .messages({
+        "custom.noLeadingSpaces": "page should not start with a space",
+        "any.required": "page is required",
+        "custom.invalidPage": "invalid page number",
+      }),
+    limit: Joi.string()
+      .custom((value, helpers) => {
+        if (value.startsWith(" ")) {
+          return helpers.error("custom.noLeadingSpaces");
+        }
+        const parsedValue = parseFloat(value.trim());
+        if (
+          isNaN(value) ||
+          !Number.isInteger(parsedValue) ||
+          parsedValue < 1 ||
+          parsedValue > 200
+        ) {
+          return helpers.error("custom.number");
+        }
+        return parsedValue;
+      }, "Number Validation")
+      .messages({
+        "custom.number": "limit should be a valid integer between 1 and 200",
+        "custom.noLeadingSpaces": "limit should not start with a space",
+        "any.required": "limit is required",
+      }),
+    order: Joi.string()
+      .optional()
+      .custom((value, helpers) => {
+        console.log(value !== "dsec" || value !== "asc");
+
+        if (value === "desc" || value === "asc") {
+          return value;
+        }
+        return helpers.error("custom.order");
+      })
+      .messages({
+        "custom.order": "Order must be dsec or asc.",
+      }),
+  });
+
+  const { error } = schema.validate(req.query);
+  if (error) {
+    return res
+      .status(400)
+      .json({ error: true, message: error.details[0].message });
+  }
   next();
 };
