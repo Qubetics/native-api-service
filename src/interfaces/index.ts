@@ -123,11 +123,12 @@ export interface Params {
   inflation: string;
   bondedTokens: number;
   communityTax: number;
-  validator: number;
+  activeValidator: number;
+  totalValidator: number;
   circulation_supply: number;
   bondedRate: number;
-  totalSupply: number;
-  apr: number;
+  total_supply: number;
+  totalValidators: number;
 }
 
 export interface BlockHeader {

@@ -29,10 +29,26 @@ class ExplorerController implements Controller {
   }
 
   private getAllBlock = async (request: Request, response: Response) => {
-    const data = {
-      page: request.query?.page ? Number(request.query?.page) : 1,
+    // const data = {
+    //   page: request.query?.page ? Number(request.query?.page) : 1,
+    //   limit: !request.query?.limit ? 10 : Number(request.query?.limit),
+    // };
 
+    if (request.query.order === "undefined") {
+      request.query.order = "desc";
+    }
+    if (
+      request.query.filterBy === "undefined" ||
+      (request.query.filterBy !== "newest" &&
+        request.query.filterBy !== "oldest")
+    ) {
+      request.query.filterBy = "newest";
+    }
+    const data: any = {
+      page: request.query?.page ? Number(request.query?.page) : 1,
       limit: !request.query?.limit ? 10 : Number(request.query?.limit),
+      order: request.query?.order ?? "desc",
+      filterBy: request.query?.filterBy ?? "newest",
     };
 
     const res = await BlockService.getAllLatestBlock(data);

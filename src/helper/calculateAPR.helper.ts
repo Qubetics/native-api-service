@@ -10,73 +10,73 @@ import logger from "../lib/logger";
 import { getDigitsAfterE } from "../lib/utilities.helper";
 import { RedisService } from "../service";
 
-async function getParams(apiRes: AxiosInstance): Promise<any | false> {
-  try {
-    const [
-      validatorResponse,
-      circulationSupplyResponse,
-      inflationRateResponse,
-      poolResponse,
-      paramsResponse,
-      totalSupplyResponse,
-    ] = await Promise.all([
-      apiRes.get("/cosmos/staking/v1beta1/validators"),
-      apiRes.get(
-        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`
-      ),
-      apiRes.get("/cosmos/mint/v1beta1/inflation"),
-      apiRes.get("/cosmos/staking/v1beta1/pool"),
-      apiRes.get("/cosmos/distribution/v1beta1/params"),
-      apiRes.get("/cosmos/bank/v1beta1/supply"),
-    ]);
+// async function getParams_old(apiRes: AxiosInstance): Promise<any | false> {
+//   try {
+//     const [
+//       validatorResponse,
+//       circulationSupplyResponse,
+//       inflationRateResponse,
+//       poolResponse,
+//       paramsResponse,
+//       totalSupplyResponse,
+//     ] = await Promise.all([
+//       apiRes.get("/cosmos/staking/v1beta1/validators"),
+//       apiRes.get(
+//         `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`
+//       ),
+//       apiRes.get("/cosmos/mint/v1beta1/inflation"),
+//       apiRes.get("/cosmos/staking/v1beta1/pool"),
+//       apiRes.get("/cosmos/distribution/v1beta1/params"),
+//       apiRes.get("/cosmos/bank/v1beta1/supply"),
+//     ]);
 
-    const validator = validatorResponse?.data?.validators.filter(
-      (item: any) => item.status === CONST_NAME.BOND_STATUS
-    );
+//     const validator = validatorResponse?.data?.validators.filter(
+//       (item: any) => item.status === CONST_NAME.BOND_STATUS
+//     );
 
-    if (validator?.length === 0) {
-      return false;
-    }
+//     if (validator?.length === 0) {
+//       return false;
+//     }
 
-    const circulation_supply: number =
-      Number(circulationSupplyResponse.data.amount.amount) / CONST_NAME.ETH_EXP;
+//     const circulation_supply: number =
+//       Number(circulationSupplyResponse.data.amount.amount) / CONST_NAME.ETH_EXP;
 
-    const inflation: any = Number(inflationRateResponse.data.inflation);
+//     const inflation: any = Number(inflationRateResponse.data.inflation);
 
-    // const formattedInflationRate = `${inflation_rate}`;
+//     // const formattedInflationRate = `${inflation_rate}`;
 
-    const annualProvisions = Number(circulation_supply * parseFloat(inflation));
+//     const annualProvisions = Number(circulation_supply * parseFloat(inflation));
 
-    let blocksPerYear = Number(CONST_NAME.BLOCK_PER_YEAR);
-    blocksPerYear = Number(blocksPerYear / 2);
-    // const inflation = formattedInflationRate;
+//     let blocksPerYear = Number(CONST_NAME.BLOCK_PER_YEAR);
+//     blocksPerYear = Number(blocksPerYear / 2);
+//     // const inflation = formattedInflationRate;
 
-    const bondedTokens = Number(poolResponse.data.pool.bonded_tokens);
+//     const bondedTokens =
+//       Number(poolResponse.data.pool.bonded_tokens) / 10 ** 18;
 
-    const totalSupply = totalSupplyResponse.data.supply[0].amount;
+//     const totalSupply = totalSupplyResponse.data.supply[0].amount;
 
-    const bondedRate = Number(((bondedTokens / totalSupply) * 100).toFixed(3));
+//     const bondedRate = Number(((bondedTokens / totalSupply) * 100).toFixed(3));
 
-    const communityTax = Number(paramsResponse.data.params.community_tax);
+//     const communityTax = Number(paramsResponse.data.params.community_tax);
 
-    return {
-      annualProvisions,
-      blocksPerYear,
-      inflation,
-      bondedTokens,
-      communityTax,
-      validator: validator?.length,
-      circulation_supply,
-      bondedRate,
-      totalSupply,
-      apr: CURRENT_DEFAULT_APR, // will be changed after mainnet
-      totalValidators: validatorResponse?.data?.validators.length,
-    };
-  } catch (error) {
-    console.log("error occurred while calculating stake APR", error);
-    return false;
-  }
-}
+//     return {
+//       annualProvisions,
+//       blocksPerYear,
+//       inflation,
+//       bondedTokens,
+//       communityTax,
+//       validator: validator?.length,
+//       circulation_supply,
+//       bondedRate,
+//       totalSupply,
+//       totalValidators: validatorResponse?.data?.validators.length,
+//     };
+//   } catch (error) {
+//     logger.log("error occurred while calculating stake APR", error);
+//     return false;
+//   }
+// }
 
 // Calculate Annual Percentage Yield (APY) based on parameters
 function calculateAPY(
@@ -98,7 +98,6 @@ const calculateData = async (): Promise<
       bondedTokens: number;
       bondedRate: number;
       totalValidator: number;
-      apy: number;
     }
   | { error: boolean; message: string }
 > => {
@@ -110,7 +109,7 @@ const calculateData = async (): Promise<
         "Content-Type": "application/json; charset=utf-8",
         Accept: "application/json",
       },
-      timeout: 5000,
+      timeout: 5 * CONST_NAME.THOUSAND,
     });
 
     const params = await getParams(apiRes);
@@ -130,14 +129,14 @@ const calculateData = async (): Promise<
     );
 
     const validatorData = {
-      totalSupply: params?.totalSupply,
+      totalSupply: params?.total_supply,
       inflation: Number(params?.inflation),
       apy: apyValue ?? CURRENT_DEFAULT_APR,
       totalValidator: params.totalValidators,
       circulation_supply: params.circulation_supply,
       apr: apr.toString(),
       circulationSupply: params?.circulation_supply,
-      validator: params?.validator,
+      validator: params?.activeValidator,
       bondedTokens: params?.bondedTokens,
       bondedRate: params?.bondedRate,
     };
@@ -155,5 +154,81 @@ const calculateData = async (): Promise<
     return { error: true, message: RES_MSG.NOT_FOUND };
   }
 };
+
+async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
+  try {
+    const [
+      validatorResponse,
+      circulationSupplyResponse,
+      inflationRateResponse,
+      poolResponse,
+      paramsResponse,
+      total_Supply,
+      annualProvision,
+    ] = await Promise.all([
+      apiRes.get("/cosmos/staking/v1beta1/validators"),
+      apiRes.get(
+        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`
+      ),
+      apiRes.get("/cosmos/mint/v1beta1/inflation"),
+      apiRes.get("/cosmos/staking/v1beta1/pool"),
+      apiRes.get("/cosmos/distribution/v1beta1/params"),
+      apiRes.get("/cosmos/bank/v1beta1/supply"),
+      apiRes.get("/cosmos/mint/v1beta1/annual_provisions"),
+    ]);
+
+    const activeValidator = validatorResponse?.data?.validators.filter(
+      (item: any) => item.status === CONST_NAME.BOND_STATUS
+    );
+
+    if (activeValidator?.length === 0) {
+      return false;
+    }
+    const validator = validatorResponse?.data?.validators;
+
+    const totalValidator: number | undefined =
+      validatorResponse?.data?.validators?.length;
+    if (totalValidator === undefined) {
+      return false;
+    }
+
+    const circulation_supply: number =
+      Number(circulationSupplyResponse.data.amount.amount) / CONST_NAME.ETH_EXP;
+
+    const inflation_rate = Number(inflationRateResponse.data.inflation);
+
+    const formattedInflationRate = `${inflation_rate}`;
+
+    let blocksPerYear = Number(CONST_NAME.BLOCK_PER_YEAR);
+    blocksPerYear = Number(blocksPerYear / 2);
+    const inflation = formattedInflationRate;
+
+    const bondedTokens =
+      Number(poolResponse.data.pool.bonded_tokens) / 10 ** 18;
+    // const bondedTokens = Number(poolResponse.data.pool.bonded_tokens);
+    const communityTax = Number(paramsResponse.data.params.community_tax);
+    const annualProvisions = annualProvision.data.annual_provisions;
+    const totalSupply = Number(total_Supply.data.supply[0].amount);
+
+    const bondedRate = Number((bondedTokens / circulation_supply) * 100);
+
+    return {
+      annualProvisions,
+      blocksPerYear,
+      inflation,
+      bondedTokens,
+      communityTax,
+      totalValidator,
+      circulation_supply,
+      bondedRate,
+      total_supply: totalSupply,
+      totalValidators: validatorResponse?.data?.validators.length,
+      activeValidator: activeValidator.length,
+    };
+  } catch (error) {
+    logger.error("getParams Error", error);
+    return false;
+  }
+}
 
 export { calculateData };

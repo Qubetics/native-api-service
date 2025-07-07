@@ -1,5 +1,6 @@
 import axios, { AxiosResponse, Method } from "axios";
 import { TRANSACTION_TYPE } from "../constant";
+import { convertBigIntToNumber } from "../helper/common.helper";
 import { CoinMarketData } from "../interfaces/index";
 import logger from "./logger";
 
@@ -309,4 +310,98 @@ export async function fetchRequest(
         reject(new Error(err.response.data.status.error_message));
       });
   });
+}
+
+export function serializeBigInt(dataVal: any): any {
+  if (typeof dataVal === "bigint") {
+    return dataVal.toString();
+  }
+  if (Array.isArray(dataVal)) {
+    return dataVal.map(convertBigIntToNumber);
+  }
+  if (dataVal !== null && typeof dataVal === "object") {
+    return Object.fromEntries(
+      Object.entries(dataVal).map(([key, value]) => {
+        if (
+          (key === "block_timestamp" ||
+            key === "timestamp" ||
+            key === "created_at" ||
+            key === "updated_at" ||
+            key === "createdAt" ||
+            key === "updatedAt") &&
+          value instanceof Date
+        ) {
+          return [key, value.toISOString()]; // Convert block_timestamp to string
+        }
+        return [key, convertBigIntToNumber(value)];
+      }),
+    );
+  }
+  return dataVal;
+}
+
+export function cursorPagination(
+  result: any,
+  orderBy: string,
+  filter: string,
+  limit: number,
+  uniqueParam: any,
+  totalRecords: number,
+  maximumId: number,
+  minimumId: number,
+) {
+  let getFilter = "";
+
+  if (filter) {
+    getFilter = filter;
+  }
+
+  console.log("RESULT", result);
+  let sortedResults = [...result];
+  if (
+    (orderBy === "desc" && getFilter === "oldest") ||
+    (orderBy === "asc" && getFilter === "newest") ||
+    (orderBy === "asc" && getFilter !== "newest" && getFilter !== "oldest")
+  ) {
+    console.log("Will reverse here");
+    sortedResults = [...result].reverse();
+  }
+  console.log("SORTED-RESULT", result);
+
+  /** to get the next page :  get the last element of the result */
+  let nextCursor = null;
+  let previousCursor = null;
+  if (
+    !orderBy ||
+    orderBy === "desc" ||
+    (orderBy === "asc" && getFilter === "oldest")
+  ) {
+    nextCursor = sortedResults[sortedResults.length - 1][uniqueParam];
+    previousCursor = sortedResults[0][uniqueParam];
+  } else {
+    nextCursor = result[0][uniqueParam];
+    previousCursor = result[result.length - 1][uniqueParam];
+  }
+
+  const lastPageRemainder = totalRecords % Number(limit);
+
+  return {
+    sortedResults,
+    nextCursor:
+      (Number(nextCursor) === Number(minimumId) &&
+        (!getFilter || getFilter === "newest")) ||
+      (Number(nextCursor) === Number(maximumId) && getFilter === "oldest") ||
+      Number(totalRecords) < Number(limit)
+        ? null
+        : nextCursor,
+    previousCursor:
+      (Number(previousCursor) === Number(maximumId) &&
+        (!getFilter || getFilter === "newest")) ||
+      (Number(previousCursor) === Number(minimumId) &&
+        getFilter === "oldest") ||
+      Number(totalRecords) < Number(limit)
+        ? null
+        : previousCursor,
+    lastPageRemainder,
+  };
 }

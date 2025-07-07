@@ -14,8 +14,6 @@ export const getBlocksValidation = (
 ) => {
   const schema = Joi.object({
     page: Joi.string()
-      // .trim()
-      .required()
       .custom((value, helpers) => {
         if (value.startsWith(" ")) {
           return helpers.error("custom.noLeadingSpaces");
@@ -33,13 +31,10 @@ export const getBlocksValidation = (
         return parsedValue;
       }, "Number Validation")
       .messages({
-        "custom.noLeadingSpaces": "page should not start with a space",
-        "any.required": "page is required",
+        "custom.noLeadingSpaces": "cur should not start with a space",
         "custom.invalidPage": "invalid page number",
       }),
     limit: Joi.string()
-      // .trim()
-      .required()
       .custom((value, helpers) => {
         if (value.startsWith(" ")) {
           return helpers.error("custom.noLeadingSpaces");
@@ -49,16 +44,45 @@ export const getBlocksValidation = (
           isNaN(value) ||
           !Number.isInteger(parsedValue) ||
           parsedValue < 1 ||
-          parsedValue > 10
+          parsedValue > 200
         ) {
           return helpers.error("custom.number");
         }
         return parsedValue;
       }, "Number Validation")
       .messages({
-        "custom.number": "limit should be a valid integer between 1 and 10",
+        "custom.number": "limit should be a valid integer between 1 and 200",
         "custom.noLeadingSpaces": "limit should not start with a space",
-        "any.required": "limit is required",
+      }),
+    order: Joi.string()
+      .optional()
+      .custom((value, helpers) => {
+        console.log(value !== "desc" || value !== "asc");
+
+        if (value === "desc" || value === "asc") {
+          return value;
+        } else if (value === "undefined") {
+          return "desc";
+        }
+        return helpers.error("custom.order");
+      })
+      .messages({
+        "custom.order": "Order must be desc or asc.",
+      }),
+    filterBy: Joi.string()
+      .optional()
+      .custom((value, helpers) => {
+        console.log(value !== "newest" || value !== "oldest");
+
+        if (value === "newest" || value === "oldest") {
+          return value;
+        } else if (value !== "newest" && value !== "oldest") {
+          return "newest";
+        }
+        return helpers.error("custom.order");
+      })
+      .messages({
+        "custom.order": "Filter must be newest or oldest.",
       }),
   });
 
@@ -71,7 +95,6 @@ export const getBlocksValidation = (
   }
   next();
 };
-
 export const getBlockByHashValidation = (
   req: express.Request,
   res: express.Response,

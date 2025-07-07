@@ -45,9 +45,14 @@ class TransactionController implements Controller {
    * @returns
    */
   private getAllTransactions = async (request: Request, response: Response) => {
+    // const data = {
+    //   page: request.query?.page ? Number(request.query?.page) : 1,
+    //   limit: !request.query?.limit ? 10 : Number(request.query?.limit),
+    // };
+
     const data = {
       page: request.query?.page ? Number(request.query?.page) : 1,
-
+      order: request.query?.order ? request.query?.order : "desc",
       limit: !request.query?.limit ? 10 : Number(request.query?.limit),
     };
     const res = await transactionService.getAllTransactions(data);
