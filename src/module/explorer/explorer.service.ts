@@ -67,10 +67,10 @@ class ExplorerService {
       const redisData: any = await this.getRedisValue();
       console.log("redisDataInfo", redisData);
       const latestBlock = await RedisService.getString(
-        REDIS_KEY.NATIVE_BLOCKS_COUNT,
+        REDIS_KEY.NATIVE_BLOCKS_COUNT
       );
       const transactionCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
       );
       const marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
       const tokenPrice = await RedisService.getString(REDIS_KEY.COIN_PRICE);
@@ -83,7 +83,7 @@ class ExplorerService {
       const isInvalidRedisData =
         !redisData ||
         Object.values(redisData).every(
-          (value) => value === undefined || Number.isNaN(value) || value === 0,
+          (value) => value === undefined || Number.isNaN(value) || value === 0
         );
 
       // Check if Redis data is not available
@@ -175,7 +175,7 @@ class ExplorerService {
       marketCap = marketCap === null ? 0 : marketCap;
 
       let circulation_supply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
+        REDIS_KEY.CIRCULATING_SUPPLY
       );
       let validatorData = await RedisService.getString(REDIS_KEY.INFLATION_APY);
       validatorData = validatorData === null ? {} : JSON.parse(validatorData);
@@ -278,7 +278,7 @@ class ExplorerService {
 
           finalData = await fillMissingDatesWithZeroByhr(
             graphData,
-            new Date(startDate),
+            new Date(startDate)
           );
         } else {
           const currentDate = new Date();
@@ -301,7 +301,7 @@ class ExplorerService {
           finalData = await fillMissingDatesWithZeroByDay(
             graphData,
             new Date(startDate),
-            currentDate,
+            currentDate
           );
         }
       } else if (payloads.time === "h") {
@@ -323,7 +323,7 @@ class ExplorerService {
         finalData = await fillMissingMinutes(
           graphData,
           new Date(startDate),
-          new Date(currentDate),
+          new Date(currentDate)
         );
       } else if (payloads.time === "y" && payloads.interval === 1) {
         const currentDate = new Date();
@@ -343,12 +343,12 @@ class ExplorerService {
         finalData = await fillMissingDatesWithZeroByMonth(
           graphData,
           new Date(startDate),
-          currentDate,
+          currentDate
         );
       }
 
       const totalAccount = await RedisService.getString(
-        REDIS_KEY.TOTAL_ACCOUNTS,
+        REDIS_KEY.TOTAL_ACCOUNTS
       );
 
       return {
@@ -392,7 +392,7 @@ class ExplorerService {
 				`) as Array<{ hour: Date; count: number }>;
           finalData = await fillMissingDatesWithZeroByhr(
             graphData,
-            new Date(startDate),
+            new Date(startDate)
           );
         } else {
           const currentDate = new Date();
@@ -415,7 +415,7 @@ class ExplorerService {
           finalData = await fillMissingDatesWithZeroByDay(
             graphData,
             new Date(startDate),
-            currentDate,
+            currentDate
           );
         }
       } else if (payloads.time === "h") {
@@ -436,7 +436,7 @@ class ExplorerService {
         finalData = await fillMissingMinutes(
           graphData,
           new Date(startDate),
-          new Date(currentDateModi),
+          new Date(currentDateModi)
         );
       } else if (payloads.time === "y" && payloads.interval === 1) {
         const currentDate = new Date();
@@ -457,12 +457,12 @@ class ExplorerService {
         finalData = await fillMissingDatesWithZeroByMonth(
           graphData,
           new Date(startDate),
-          currentDate,
+          currentDate
         );
       }
 
       const totalContractDeployedTx = await RedisService.getString(
-        REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX,
+        REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX
       );
 
       return {
@@ -501,12 +501,12 @@ class ExplorerService {
         const response = await fetchRequest(
           `${environment.evmHost}/cosmos/bank/v1beta1/spendable_balances/${address}`,
           FETCH_METHODS.GET,
-          HEADERS.DEFAULT,
+          HEADERS.DEFAULT
         );
 
         // Find the entry with denom "qubetics"
         const qubeticsAmount = response.data?.balances.find(
-          (item: any) => item.denom === "tics",
+          (item: any) => item.denom === "tics"
         );
 
         userBalance = qubeticsAmount.amount;
@@ -521,7 +521,7 @@ class ExplorerService {
         : "";
 
       let marketCapPrice = await RedisService.getString(
-        CONST_NAME.MARKET_CAP_PRICE,
+        CONST_NAME.MARKET_CAP_PRICE
       );
 
       let value: string;
@@ -605,7 +605,7 @@ class ExplorerService {
 
           finalData = await fillMissingDatesWithZeroByhr(
             graphData,
-            new Date(startDate),
+            new Date(startDate)
           );
         } else {
           const currentDate = new Date();
@@ -628,7 +628,7 @@ class ExplorerService {
           finalData = await fillMissingDatesWithZeroByDay(
             graphData,
             new Date(startDate),
-            currentDate,
+            currentDate
           );
         }
       } else if (payloads.time === "y" && payloads.interval === 1) {
@@ -649,7 +649,7 @@ class ExplorerService {
         finalData = await fillMissingDatesWithZeroByMonth(
           graphData,
           new Date(startDate),
-          currentDate,
+          currentDate
         );
       }
       const totalTx = await RedisService.getString(REDIS_KEY.TOTAL_TX);
@@ -703,13 +703,14 @@ class ExplorerService {
 
       const latestBlock = await RedisService.getString(REDIS_KEY.LATEST_BLOCK);
       const transactionCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
       );
       let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
-      console.log(JSON.parse(marketCap));
       const tokenPrice =
         (await RedisService.getString(REDIS_KEY.COIN_PRICE)) ??
         CURRENT_DEFAULT_COIN_PRICE;
+      console.log({ marketCap, tokenPrice });
+
       // const circulationSupply =
       //   data?.circulation_supply === 0 || !data.circulation_supply
       //     ? await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY)
