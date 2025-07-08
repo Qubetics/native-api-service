@@ -45,6 +45,13 @@ class ValidatorService {
         });
       }
 
+      const activeValidators = await prisma.validator.findMany({
+        orderBy: { createdAt: "desc" },
+        where: {
+          status: "active",
+        },
+      });
+
       // Count validators based on status
       activeCount = await prisma.validator.count({
         where: { status: "active" },
@@ -61,7 +68,7 @@ class ValidatorService {
       const filteredValidators = validators.filter(
         (validator) =>
           validator.validatorAddress &&
-          !excludedAddresses.includes(validator.validatorAddress),
+          !excludedAddresses.includes(validator.validatorAddress)
       );
 
       return {
@@ -73,6 +80,7 @@ class ValidatorService {
           activeCount,
           inactiveCount,
           deactivatingCount,
+          activeValidators: convertBigIntToNumber(activeValidators),
         },
       };
     } catch (err) {
@@ -242,7 +250,7 @@ class ValidatorService {
 
       const delegatorStake = validatorStakeDetails.reduce(
         (total, element) => total + Number(element.stake),
-        0,
+        0
       );
 
       const dataToSend = {
@@ -290,7 +298,7 @@ class ValidatorService {
         const apiUrl = environment.evmHost;
 
         const response = await axios(
-          `${apiUrl}/cosmos/staking/v1beta1/validators/${validatorAddr}`,
+          `${apiUrl}/cosmos/staking/v1beta1/validators/${validatorAddr}`
         );
 
         const validatorData = response.data.validator;
