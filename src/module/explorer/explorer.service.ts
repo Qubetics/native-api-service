@@ -508,7 +508,6 @@ class ExplorerService {
         const qubeticsAmount = response.data?.balances.find(
           (item: any) => item.denom === "tics"
         );
-
         userBalance = qubeticsAmount.amount;
 
         // Store userBalance in Redis
@@ -523,7 +522,7 @@ class ExplorerService {
       let marketCapPrice = await RedisService.getString(
         CONST_NAME.MARKET_CAP_PRICE
       );
-
+      console.log("marketCapPrice", marketCapPrice);
       let value: string;
       if (!marketCapPrice) {
         const latestEntry = await prisma.coinmarketInfo.findFirst({
@@ -540,7 +539,7 @@ class ExplorerService {
         const price = latestEntry?.price?.toString() ?? "";
         value = price ? (Number(price) * Number(actualBalance)).toString() : "";
       } else {
-        marketCapPrice = JSON.parse(marketCapPrice);
+        marketCapPrice = marketCapPrice;
 
         value =
           marketCapPrice?.price && actualBalance
