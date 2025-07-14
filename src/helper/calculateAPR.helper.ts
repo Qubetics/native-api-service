@@ -117,7 +117,10 @@ const calculateData = async (): Promise<
     if (!params) throw new Error(RES_MSG.FETCH_SUCCESS);
     try {
       const getApr = await apiRes.get("/qubetics/validatorpool/params");
-      apr = getApr?.data?.params?.annual_roi;
+      const annualRoi = getApr?.data?.params?.annual_roi;
+      if (annualRoi != null) {
+        apr = annualRoi / 100;
+      }
     } catch (error) {
       console.log("Error while getng apr details", error);
     }

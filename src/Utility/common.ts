@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 
 /**
  * For making http requests
@@ -23,7 +23,7 @@ export async function fetchRequest(
       data: result.data,
     };
   } catch (error) {
-    console.error("error while get ", url, error);
+    console.error('error while get ', url, error);
     return {
       error: true,
       data: null,
@@ -56,21 +56,21 @@ export const noExponent = function (num: number | string) {
   try {
     const data = String(num).split(/[eE]/);
     if (data.length === 1) return data[0];
-    let z = "";
-    const sign = Number(num) < 0 ? "-" : "";
-    const str = data[0].replace(".", "");
+    let z = '';
+    const sign = Number(num) < 0 ? '-' : '';
+    const str = data[0].replace('.', '');
     let mag = Number(data[1]) + 1;
     if (mag < 0) {
       z = `${sign}0.`;
-      while (mag++) z += "0";
-      return z + str.replace(/^\-/, "");
+      while (mag++) z += '0';
+      return z + str.replace(/^\-/, '');
     }
     mag -= str.length;
-    while (mag--) z += "0";
+    while (mag--) z += '0';
     return str + z;
   } catch (error) {
-    console.log("Exponent error", error);
-    return "0";
+    console.log('Exponent error', error);
+    return '0';
   }
 };
 
@@ -80,12 +80,12 @@ export const noExponent = function (num: number | string) {
  * @returns boolean
  */
 export function isExponentialNumber(str: string) {
-  return str.includes("e");
+  return str.includes('e');
 }
 
 export function arrNoExponent(item: any[]) {
   item.forEach((e, i) => {
-    if (typeof e === "object") {
+    if (typeof e === 'object') {
       Object.keys(e).forEach((k) => {
         if (isOnyNumbers(e[k])) {
           e[k] = noExponent(e[k]);
