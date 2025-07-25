@@ -1,5 +1,6 @@
 import prisma from "../../lib/db";
 import { subDays, startOfDay } from 'date-fns';
+import { convertBigIntToNumber } from "../../helper/common.helper";
 import { sessionsPath, daysMap, MSG_TYPE, subscriptionPath, RES_MSG, MSG_START_SESSION, MSG_CANCEL_SESSION, MSG_START_SUBSCRIPTION, MSG_CANCEL_SUBSCRIPTION } from "../../constant";
 
 class MessageService {
@@ -32,7 +33,7 @@ class MessageService {
                     return {
                         error: false,
                         message: RES_MSG.FETCH_SUCCESS,
-                        data: { sessionEntries: [session] },
+                        data: { sessionEntries: convertBigIntToNumber([session]) },
                     };
 
                 case MSG_CANCEL_SESSION:
@@ -50,7 +51,7 @@ class MessageService {
                         return {
                             error: false,
                             message: RES_MSG.FETCH_SUCCESS,
-                            data: { sessionEntries: relatedSessions },
+                            data: { sessionEntries: convertBigIntToNumber(relatedSessions) },
                         };
                     }
                     break;
@@ -59,7 +60,7 @@ class MessageService {
                     return {
                         error: false,
                         message: RES_MSG.FETCH_SUCCESS,
-                        data: { sessionEntries: [session] },
+                        data: { sessionEntries: convertBigIntToNumber([session]) },
                     };
 
                 case MSG_CANCEL_SUBSCRIPTION:
@@ -77,7 +78,7 @@ class MessageService {
                         return {
                             error: false,
                             message: RES_MSG.FETCH_SUCCESS,
-                            data: { sessionEntries: relatedSubscriptions },
+                            data: { sessionEntries: convertBigIntToNumber(relatedSubscriptions) },
                         };
                     }
                     break;
@@ -86,14 +87,14 @@ class MessageService {
                     return {
                         error: false,
                         message: RES_MSG.INVALID_MESSAGE,
-                        data: { sessionEntries: [session] },
+                        data: { sessionEntries: convertBigIntToNumber([session]) },
                     };
             }
 
             return {
                 error: false,
                 message: RES_MSG.INVALID_MESSAGE,
-                data: { sessionEntries: [session] },
+                data: { sessionEntries: convertBigIntToNumber([session]) },
             };
         } catch (error) {
             console.error("Error while fetching message:", error);
