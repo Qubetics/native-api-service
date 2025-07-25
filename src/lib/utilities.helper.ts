@@ -1,8 +1,8 @@
-import axios, { AxiosResponse, Method } from 'axios';
-import { TRANSACTION_TYPE } from '../constant';
-import { convertBigIntToNumber } from '../helper/common.helper';
-import { CoinMarketData } from '../interfaces/index';
-import logger from './logger';
+import axios, { AxiosResponse, Method } from "axios";
+import { TRANSACTION_TYPE } from "../constant";
+import { convertBigIntToNumber } from "../helper/common.helper";
+import { CoinMarketData } from "../interfaces/index";
+import logger from "./logger";
 
 export function isEven(n: number) {
   const res = n % 2 === 0;
@@ -10,13 +10,13 @@ export function isEven(n: number) {
 }
 
 export function isExponentialNumber(str: string) {
-  return str.includes('e');
+  return str.includes("e");
 }
 
 export function txType(toAddress: string, inputLength: string) {
   let type;
 
-  if (inputLength.length > 2 && toAddress === 'undefined') {
+  if (inputLength.length > 2 && toAddress === "undefined") {
     type = TRANSACTION_TYPE.CONTRACT_CREATION;
   } else if (toAddress && inputLength.length > 2) {
     type = TRANSACTION_TYPE.CONTRACT_TRANSFER;
@@ -29,7 +29,7 @@ export function txType(toAddress: string, inputLength: string) {
 export function getDigitsAfterE(scientificNotation: string) {
   try {
     if (!/e-|e\+/.test(scientificNotation)) {
-      const digits = scientificNotation.split('.');
+      const digits = scientificNotation.split(".");
       return digits[1].length;
     }
     const parts = scientificNotation.split(/e-|e\+/);
@@ -45,22 +45,22 @@ export function getDigitsAfterE(scientificNotation: string) {
 export function exp(val: string): string {
   const data = String(val).split(/[eE]/);
   if (data.length === 1) return data[0];
-  let z = '';
-  const sign = +val < 0 ? '-' : '';
-  const str = data[0].replace('.', '');
+  let z = "";
+  const sign = +val < 0 ? "-" : "";
+  const str = data[0].replace(".", "");
   let value = Number(data[1]) + 1;
   if (value < 0) {
     z = `${sign}0.`;
     while (value < 0) {
-      z += '0';
+      z += "0";
       value += 1;
     }
 
-    return z + str.replace('-', '');
+    return z + str.replace("-", "");
   }
   value -= str.length;
   while (value < 0) {
-    z += '0';
+    z += "0";
     value += 1;
   }
   return str + z;
@@ -231,9 +231,9 @@ export async function fillMissingSeconds(
 
 export function formatDate(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hours = String(date.getUTCHours()).padStart(2, "0");
   // const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
@@ -241,8 +241,8 @@ export function formatDate(date: Date): string {
 }
 export function formatDateForDay(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
   // const hours = String(date.getUTCHours()).padStart(2, '0');
   // const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
@@ -252,7 +252,7 @@ export function formatDateForDay(date: Date): string {
 
 export function formatDateForYear(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   // const day = String(date.getUTCDate()).padStart(2, '0');
   // const hours = String(date.getUTCHours()).padStart(2, '0');
   // const minutes = String(date.getUTCMinutes()).padStart(2, '0');
@@ -263,21 +263,21 @@ export function formatDateForYear(date: Date): string {
 
 export function formatDateByMin(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
   return `${year}-${month}-${day}T${hours}:${minutes}:00.000Z`;
 }
 export function formatDateBySec(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  const seconds = String(date.getUTCSeconds()).padStart(2, "0");
 
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000Z`;
 }
@@ -313,22 +313,22 @@ export async function fetchRequest(
 }
 
 export function serializeBigInt(dataVal: any): any {
-  if (typeof dataVal === 'bigint') {
+  if (typeof dataVal === "bigint") {
     return dataVal.toString();
   }
   if (Array.isArray(dataVal)) {
     return dataVal.map(convertBigIntToNumber);
   }
-  if (dataVal !== null && typeof dataVal === 'object') {
+  if (dataVal !== null && typeof dataVal === "object") {
     return Object.fromEntries(
       Object.entries(dataVal).map(([key, value]) => {
         if (
-          (key === 'block_timestamp' ||
-            key === 'timestamp' ||
-            key === 'created_at' ||
-            key === 'updated_at' ||
-            key === 'createdAt' ||
-            key === 'updatedAt') &&
+          (key === "block_timestamp" ||
+            key === "timestamp" ||
+            key === "created_at" ||
+            key === "updated_at" ||
+            key === "createdAt" ||
+            key === "updatedAt") &&
           value instanceof Date
         ) {
           return [key, value.toISOString()]; // Convert block_timestamp to string
@@ -350,31 +350,31 @@ export function cursorPagination(
   maximumId: number,
   minimumId: number,
 ) {
-  let getFilter = '';
+  let getFilter = "";
 
   if (filter) {
     getFilter = filter;
   }
 
-  console.log('RESULT', result);
+  console.log("RESULT", result);
   let sortedResults = [...result];
   if (
-    (orderBy === 'desc' && getFilter === 'oldest') ||
-    (orderBy === 'asc' && getFilter === 'newest') ||
-    (orderBy === 'asc' && getFilter !== 'newest' && getFilter !== 'oldest')
+    (orderBy === "desc" && getFilter === "oldest") ||
+    (orderBy === "asc" && getFilter === "newest") ||
+    (orderBy === "asc" && getFilter !== "newest" && getFilter !== "oldest")
   ) {
-    console.log('Will reverse here');
+    console.log("Will reverse here");
     sortedResults = [...result].reverse();
   }
-  console.log('SORTED-RESULT', result);
+  console.log("SORTED-RESULT", result);
 
   /** to get the next page :  get the last element of the result */
   let nextCursor = null;
   let previousCursor = null;
   if (
     !orderBy ||
-    orderBy === 'desc' ||
-    (orderBy === 'asc' && getFilter === 'oldest')
+    orderBy === "desc" ||
+    (orderBy === "asc" && getFilter === "oldest")
   ) {
     nextCursor = sortedResults[sortedResults.length - 1][uniqueParam];
     previousCursor = sortedResults[0][uniqueParam];
@@ -389,16 +389,16 @@ export function cursorPagination(
     sortedResults,
     nextCursor:
       (Number(nextCursor) === Number(minimumId) &&
-        (!getFilter || getFilter === 'newest')) ||
-      (Number(nextCursor) === Number(maximumId) && getFilter === 'oldest') ||
+        (!getFilter || getFilter === "newest")) ||
+      (Number(nextCursor) === Number(maximumId) && getFilter === "oldest") ||
       Number(totalRecords) < Number(limit)
         ? null
         : nextCursor,
     previousCursor:
       (Number(previousCursor) === Number(maximumId) &&
-        (!getFilter || getFilter === 'newest')) ||
+        (!getFilter || getFilter === "newest")) ||
       (Number(previousCursor) === Number(minimumId) &&
-        getFilter === 'oldest') ||
+        getFilter === "oldest") ||
       Number(totalRecords) < Number(limit)
         ? null
         : previousCursor,

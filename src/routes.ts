@@ -7,6 +7,7 @@ import TransactionsController from "./module/transactions/transaction.controller
 import ContractController from "./module/contract/contract.controller";
 import TokenController from "./module/Token/token.controller";
 import ProposalController from "./module/proposal/proposal.controller";
+import NodeController from "./module/node/node.controller";
 
 /**
  * Here, you can register routes by instantiating the controller.
@@ -23,6 +24,7 @@ export default function registerRoutes(): Router {
   const contractController = new ContractController();
   const tokenContoller = new TokenController();
   const proposalController = new ProposalController();
+  const nodeController = new NodeController();
 
   router.use("/status", (req, res) => {
     res.json({ message: "Up and Running" });
@@ -35,5 +37,6 @@ export default function registerRoutes(): Router {
   router.use("/contracts", contractController.router);
   router.use("/tokens", tokenContoller.router);
   router.use("/proposals", proposalController.router);
+  router.use("/node", nodeController.router);
   return router;
 }
