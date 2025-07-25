@@ -65,6 +65,7 @@ export const RES_MSG = {
   CONTRACT_TX: 'conract transaction fetched successfully',
   CONTRACT_TX_NOT_FOUND: 'data not found',
   INVALID_ADDRESS: 'invalid address',
+  INVALID_MESSAGE: 'this message type data not found '
 };
 
 export const BLOCKCHAIN_ERROR_MSG = {
@@ -168,6 +169,7 @@ export const REDIS_KEY = {
   USER_BALANCE: 'USER_BALANCE',
   INFLATION_APY: 'INFALTION_AND_APY',
   NATIVE_BLOCKS_COUNT: 'NATIVE_BLOCKS_COUNT',
+  NATIVE_SESSIONS_COUNT: 'SESSION_COUNT',
   NATIVE_TRANSACTIONS_COUNT: 'NATIVE_TRANSACTIONS_COUNT',
   DASHBOARD_DATA: 'DASHBOARD_DATA',
   COIN_PRICE: 'COIN_PRICE',
@@ -267,6 +269,24 @@ export const FETCH_METHODS = {
   PATCH: 'PATCH',
   PUT: 'PUT',
 };
+export const subscriptionPath = [
+  '/qubetics.subscription.v3.MsgStartSubscriptionRequest',
+  '/qubetics.subscription.v3.MsgCancelSubscriptionRequest',
+];
+export const sessionsPath = [
+  '/qubetics.subscription.v3.MsgStartSessionRequest',
+  '/qubetics.session.v3.MsgCancelSessionRequest',
+];
+export const daysMap: any = {
+  '7d': 7,
+  '30d': 30,
+  '365d': 365,
+};
+export const MSG_TYPE = ['START_SUBSCRIPTION', 'END_SUBSCRIPTION', 'START_REQUEST', 'END_REQUEST']
+export const MSG_START_SESSION = "/qubetics.subscription.v3.MsgStartSessionRequest";
+export const MSG_CANCEL_SESSION = "/qubetics.session.v3.MsgCancelSessionRequest";
+export const MSG_START_SUBSCRIPTION = "/qubetics.subscription.v3.MsgStartSubscriptionRequest";
+export const MSG_CANCEL_SUBSCRIPTION = "/qubetics.subscription.v3.MsgCancelSubscriptionRequest";
 
 export const CURRENT_DEFAULT_APR = 30;
 export const CURRENT_DEFAULT_COIN_PRICE = 0.337097;
