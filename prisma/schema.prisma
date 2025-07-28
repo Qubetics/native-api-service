@@ -222,7 +222,6 @@ model DvpnTransaction {
   subscriptionId String?
   type           String
   accAddress     String?
-  provAddress    String?
   nodeAddress    String?
   downloadBytes  String?
   uploadBytes    String?
@@ -233,7 +232,9 @@ model DvpnTransaction {
   startAt        String?
   statusAt       String?
   inactiveAt     String?
-  price          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime
+  logs           Json?
+  price          String?
+  provAddress    String?
 }
