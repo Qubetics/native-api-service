@@ -57,10 +57,6 @@ jobs:
 
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core @actions/http-client  
-
-      # ✅ Force install Prisma Extension compatible with Prisma 6.x
-      - name: Install Prisma Extension Compatible with Prisma 6.x
-        run: npm install @prisma/extension-read-replicas@^0.4.1  
               
       - name: Login to Huawei SWR
         id: login 
