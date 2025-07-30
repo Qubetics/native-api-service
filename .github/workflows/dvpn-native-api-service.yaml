@@ -57,9 +57,6 @@ jobs:
 
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core @actions/http-client 
-
-      - run: npm install @prisma/client@^5.2.0
-
               
       - name: Login to Huawei SWR
         id: login 
