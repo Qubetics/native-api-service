@@ -1,1 +1,1 @@
-# qubetics-v2-validator-api         
+# qubetics-v2-validator-api
