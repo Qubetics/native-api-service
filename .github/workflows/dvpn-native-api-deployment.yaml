@@ -1,0 +1,22 @@
+name: "[dev] Deploy dvpn native api"
+
+on:
+  push:
+    branches:
+      - feature/dvpn
+
+jobs:
+  deploy_qubetics_indexer:
+    uses: ./.github/workflows/dvpn-native-api-service.yaml
+    with:
+      SWR_ORGANIZATION: dev-qubetics
+      ARGOCD_BRANCH: dev
+      HUAWEI_REGION: "ap-southeast-3"
+      ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
+      DEPLOYMENT_PATH: Dvpn-native-api/native-api-deployment.yaml
+      HUAWEI_IMAGE: dvpn-native-api
+      DOCKER_USERNAME: ap-southeast-3@BQG9INQF0BKVHSNQOLJG
+      ENV: ${{ vars.DVPN_NATIVE_API_ENV }}
+    secrets:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY }}
