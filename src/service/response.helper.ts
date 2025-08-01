@@ -1,6 +1,6 @@
-import { Response } from 'express';
-import { RESPONSES, CONST_NAME } from '../constant';
-import { IESResponse } from '../interfaces/index';
+import { Response } from "express";
+import { RESPONSES, CONST_NAME } from "../constant";
+import { IESResponse } from "../interfaces/index";
 
 class ResponseHelper {
   // for success responses
