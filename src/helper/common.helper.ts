@@ -174,3 +174,59 @@ export const calculateEarnings = (data: any[]) => {
 
   return { total_earning, daily_earnings };
 };
+
+export const getDateRange = (type: any) => {
+  const today = new Date(); // Always use current date and time
+  let startDate, endDate;
+
+  switch (type.toLowerCase()) {
+    case "daily":
+      // Start and end of the same day
+      startDate = new Date(today);
+      startDate.setHours(0, 0, 0, 0);
+
+      endDate = new Date(today);
+      endDate.setHours(23, 59, 59, 999);
+      break;
+
+    case "weekly":
+      const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      // Convert to your week system (Monday = 0, Tuesday = 1, ..., Sunday = 6)
+      const adjustedDayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+      if (adjustedDayOfWeek === 0) {
+        // Monday
+        // Show only Monday's data
+        startDate = new Date(today);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999);
+      } else {
+        // Show from Monday to current day
+        const mondayDate = new Date(today);
+        mondayDate.setDate(today.getDate() - adjustedDayOfWeek);
+
+        startDate = new Date(mondayDate);
+        startDate.setHours(0, 0, 0, 0);
+
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999);
+      }
+      break;
+
+    case "monthly":
+      // Start from 1st of current month
+      startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      startDate.setHours(0, 0, 0, 0);
+
+      // End at current date
+      endDate = new Date(today);
+      endDate.setHours(23, 59, 59, 999);
+      break;
+
+    default:
+      throw new Error('Invalid type. Use "daily", "weekly", or "monthly"');
+  }
+
+  return { startDate, endDate };
+};

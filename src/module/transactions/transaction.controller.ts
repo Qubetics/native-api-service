@@ -25,6 +25,11 @@ class TransactionController implements Controller {
       .get("", getTransactionsValidation, this.getAllTransactions)
       .get("/address", transactionSearch, this.getTransactionsByAddress)
       .get(
+        "/dvpn/address",
+        transactionSearch,
+        this.getDvpnTransactionsByAddress,
+      )
+      .get(
         "/hash/:transactionHash",
         getTxByHashValidation,
         this.getTransactionByHash,
@@ -79,6 +84,29 @@ class TransactionController implements Controller {
     };
 
     const res = await transactionService.getTransactionsByAddress(data);
+
+    if (res.error) {
+      return setResponse.error(response, res);
+    }
+    return setResponse.success(response, res);
+  };
+
+  /**
+   * get dvpn transaction by address
+   * @param address
+   * @returns
+   */
+  private getDvpnTransactionsByAddress = async (
+    request: Request,
+    response: Response,
+  ) => {
+    const data = {
+      page: !request.query?.page ? 0 : Number(request.query?.page) - 1,
+      limit: !request.query?.limit ? 10 : Number(request.query?.limit),
+      address: <string>request.query?.address,
+    };
+
+    const res = await transactionService.getDvpnTransactionsByAddress(data);
 
     if (res.error) {
       return setResponse.error(response, res);

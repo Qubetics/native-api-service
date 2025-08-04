@@ -43,7 +43,7 @@ class NodeController implements Controller {
   };
 
   /**
-   * fetch all node deatils
+   * fetch all node details
    * @param request
    * @param response
    * @returns
@@ -71,14 +71,12 @@ class NodeController implements Controller {
     request: Request,
     response: Response,
   ) => {
-    console.log(request.query, "request.query!!!!");
+    const nodePerformance = await nodeService.getNodesPerformance();
 
-    const nodeList = await nodeService.getNodesPerformance();
-
-    if (nodeList.error) {
-      return setResponse.error(response, nodeList);
+    if (nodePerformance.error) {
+      return setResponse.error(response, nodePerformance);
     }
-    return setResponse.success(response, nodeList);
+    return setResponse.success(response, nodePerformance);
   };
 
   /**
@@ -88,12 +86,12 @@ class NodeController implements Controller {
    * @returns
    */
   private getNodesSummary = async (request: Request, response: Response) => {
-    const nodeList = await nodeService.getNodesSummary();
+    const nodeSummary = await nodeService.getNodesSummary();
 
-    if (nodeList.error) {
-      return setResponse.error(response, nodeList);
+    if (nodeSummary.error) {
+      return setResponse.error(response, nodeSummary);
     }
-    return setResponse.success(response, nodeList);
+    return setResponse.success(response, nodeSummary);
   };
 
   /**
@@ -108,12 +106,12 @@ class NodeController implements Controller {
   ) => {
     const address: any = request.query?.address || "";
 
-    const nodeList = await nodeService.getNodeDetailSummary(address);
+    const nodeDetailSummary = await nodeService.getNodeDetailSummary(address);
 
-    if (nodeList.error) {
-      return setResponse.error(response, nodeList);
+    if (nodeDetailSummary.error) {
+      return setResponse.error(response, nodeDetailSummary);
     }
-    return setResponse.success(response, nodeList);
+    return setResponse.success(response, nodeDetailSummary);
   };
 }
 

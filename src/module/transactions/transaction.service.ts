@@ -1,6 +1,6 @@
 import prisma from "../../lib/db";
 import { ICreateTransaction, IESResponse } from "../../interfaces";
-import { REDIS_KEY, RES_MSG } from "../../constant";
+import { MSG_TYPE, REDIS_KEY, RES_MSG } from "../../constant";
 import { convertBigIntToNumber } from "../../helper/common.helper";
 import { RedisService } from "../../service";
 
@@ -546,5 +546,76 @@ class TransactionService {
 
     return { transactions, nextCursor, prevCursor };
   };
+
+  /**
+   * get transaction details
+   * @param address
+   * @returns
+   */
+  async getDvpnTransactionsByAddress(data: {
+    page: number;
+    limit: number;
+    address: string;
+  }): Promise<IESResponse> {
+    try {
+      const [transactions, transactionCount] = await prisma.$transaction([
+        prisma.transactions.findMany({
+          orderBy: {
+            createdAt: "desc",
+          },
+          where: {
+            type: {
+              in: MSG_TYPE,
+            },
+            OR: [
+              {
+                fromAddress: data.address,
+              },
+              {
+                toAddress: data.address,
+              },
+            ],
+          },
+
+          skip: data.page * data.limit,
+          take: data.limit,
+        }),
+        prisma.transactions.count({
+          where: {
+            type: {
+              in: MSG_TYPE,
+            },
+            OR: [
+              {
+                fromAddress: data.address,
+              },
+              {
+                toAddress: data.address,
+              },
+            ],
+          },
+        }),
+      ]);
+      if (!transactions?.length) throw new Error(RES_MSG.NOT_FOUND);
+
+      return {
+        error: false,
+        message: RES_MSG.FETCH_SUCCESS,
+        data: {
+          count: transactionCount,
+          transactions: convertBigIntToNumber(transactions),
+        },
+      };
+    } catch (err) {
+      console.log("error in getTransactionsByAddress : ", err);
+      if (err instanceof Error) {
+        if (err.message.includes("prisma")) {
+          return { error: true, message: RES_MSG.SERVER_ERROR };
+        }
+        return { error: true, message: err.message };
+      }
+      return { error: true, message: RES_MSG.ERROR };
+    }
+  }
 }
 export default new TransactionService();
