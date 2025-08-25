@@ -74,6 +74,7 @@ export const getActiveItems = (data: any) => {
       type: "subscription" | "session";
     }
   > = {};
+  const now = new Date();
 
   for (const entry of data) {
     let key = "";
@@ -86,7 +87,7 @@ export const getActiveItems = (data: any) => {
       entry.type === DVPN_TYPE.END_SUBSCRIPTION
     ) {
       if (!entry.subscriptionId) continue;
-      key = `sub-${entry.subscriptionId}-${entry.accAddress}`;
+      key = `sub-${entry.subscriptionId}-${entry.nodeAddress}`;
       startType = DVPN_TYPE.START_SUBSCRIPTION;
       cancelType = DVPN_TYPE.END_SUBSCRIPTION;
       itemType = "subscription";
@@ -95,7 +96,7 @@ export const getActiveItems = (data: any) => {
       entry.type === DVPN_TYPE.END_SESSION
     ) {
       if (!entry.sessionId) continue;
-      key = `sess-${entry.sessionId}-${entry.accAddress}`;
+      key = `sess-${entry.sessionId}-${entry.nodeAddress}`;
       startType = DVPN_TYPE.START_SESSION;
       cancelType = DVPN_TYPE.END_SESSION;
       itemType = "session";
@@ -123,10 +124,20 @@ export const getActiveItems = (data: any) => {
   }
 
   const activeSubscriptions = Object.values(grouped)
-    .filter(
-      (group) =>
-        group.type === "subscription" && group.hasStart && !group.hasCancel,
-    )
+    .filter((group) => {
+      if (group.type !== "subscription" || !group.hasStart || group.hasCancel) {
+        return false;
+      }
+
+      if (group.startEntry?.inactiveAt) {
+        const inactiveAt = new Date(group.startEntry.inactiveAt);
+        if (inactiveAt <= now) {
+          return false;
+        }
+      }
+
+      return true;
+    })
     .map((group) => group.startEntry!);
 
   const activeSessions = Object.values(grouped)

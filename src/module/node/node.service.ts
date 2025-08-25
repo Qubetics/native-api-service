@@ -11,7 +11,7 @@ import {
   getOffset,
   calculateEarnings,
 } from "../../helper/common.helper";
-import { fetchRequest } from "../../Utility/common";
+import { fetchRequest, noExponent } from "../../Utility/common";
 countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
 
 const formatNodes = (nodes: any[]) => {
@@ -104,22 +104,23 @@ class NodeService {
       if (!address) {
         throw new Error(RES_MSG.NOT_FOUND);
       }
-      const result = await prisma.transactions.findMany({
-        where: {
-          nodeAddress: address || "",
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-
-        skip: page * limit,
-        take: limit,
-      });
-      const total_count = await prisma.transactions.count({
-        where: {
-          nodeAddress: address || "",
-        },
-      });
+      const [result, total_count] = await Promise.all([
+        prisma.transactions.findMany({
+          where: {
+            nodeAddress: address || "",
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          skip: page * limit,
+          take: limit,
+        }),
+        prisma.transactions.count({
+          where: {
+            nodeAddress: address || "",
+          },
+        }),
+      ]);
 
       return {
         error: false,
@@ -145,17 +146,20 @@ class NodeService {
   async getNodesPerformance(): Promise<IESResponse> {
     try {
       const url = `${environment.nodeInfoUrl}/qubetics/provider/v2/providers`;
-      const fetchRes = await fetchRequest(url, "GET", null);
+      const [fetchRes, transactions, total_users] = await Promise.all([
+        fetchRequest(url, "GET", null),
+        prisma.dvpnTransaction.findMany(),
+        prisma.dvpnTransaction.count({
+          where: { type: DVPN_TYPE.START_SUBSCRIPTION },
+        }),
+      ]);
+
       const activeCount =
         fetchRes?.data?.providers?.filter((p: any) => p.status === "active")
           ?.length || 0;
+      const active_users = getActiveItems(transactions);
 
-      const result = await prisma.dvpnTransaction.findMany();
-      const total_users =
-        result?.filter((val: any) => val.type === DVPN_TYPE.START_SUBSCRIPTION)
-          ?.length || 0;
-      const active_users = getActiveItems(result);
-      const lastDayTxns = lastDayTransactions(result); // your array
+      const lastDayTxns = lastDayTransactions(transactions); // your array
 
       return {
         error: false,
@@ -165,7 +169,7 @@ class NodeService {
           lastDayTransactions: lastDayTxns?.length ?? 0,
           active_users: active_users?.subscriptions?.length ?? 0,
           active_session: active_users?.sessions.length ?? 0,
-          total_txns: result?.length ?? 0,
+          total_txns: transactions?.length ?? 0,
           total_users,
           active_providers: activeCount,
           total_providers: Number(fetchRes?.data?.pagination?.total ?? 0),
@@ -249,12 +253,12 @@ class NodeService {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
-          total_earning: reponse.total_earning,
-          daily_earnings: reponse?.daily_earnings,
+          total_earning: noExponent(reponse.total_earning),
+          daily_earnings: noExponent(reponse?.daily_earnings),
           total_users,
           active_users: activeItems?.subscriptions?.length ?? 0,
           last_checked,
-          recent_session: activeItems?.sessions[0]?.timeStamp ?? null,
+          recent_session: activeItems?.sessions[0]?.startAt ?? null,
           native: true,
         },
       };

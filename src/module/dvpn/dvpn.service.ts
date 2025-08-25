@@ -74,20 +74,21 @@ class DvpnService {
     orderBy: any;
   }): Promise<IESResponse> {
     try {
-      const result = await prisma.dvpnTransaction.findMany({
-        where: {
-          type: DVPN_TYPE.START_SUBSCRIPTION,
-        },
-        orderBy: { createdAt: data?.orderBy },
-        skip: data.page * data.limit,
-        take: data.limit,
-      });
-
-      const total_count = await prisma.dvpnTransaction.count({
-        where: {
-          type: DVPN_TYPE.START_SUBSCRIPTION,
-        },
-      });
+      const [result, total_count] = await Promise.all([
+        prisma.dvpnTransaction.findMany({
+          where: {
+            type: DVPN_TYPE.START_SUBSCRIPTION,
+          },
+          orderBy: { createdAt: data?.orderBy },
+          skip: data.page * data.limit,
+          take: data.limit,
+        }),
+        prisma.dvpnTransaction.count({
+          where: {
+            type: DVPN_TYPE.START_SUBSCRIPTION,
+          },
+        }),
+      ]);
 
       return {
         error: false,
