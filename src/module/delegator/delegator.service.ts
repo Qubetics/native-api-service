@@ -120,6 +120,7 @@ class DelegatorService {
           }
 
           validatorStake.validatorsTotalReward = validatorsTotalReward;
+          validatorStake.delegatorRewards = Number(validatorStake.delegatorRewards);
           validatorStake.name = validator?.name || "";
           validatorStake.validatorAddress = validator?.validatorAddress || "";
           validatorStake.stake = noExponent(
@@ -164,7 +165,7 @@ class DelegatorService {
       //   totalRewardsResponse = await RedisService.getString(addressKey);
       // }
 
-      // let totalRewards = totalRewardsResponse / 10 ** 18; // Update totalRewards
+      // let totalRewards = totalRewardsResponse / 10 ** 18; // Update totalRewards,
 
       const delegatorByAddress = await prisma.validatorStake.findMany({
         where: {
@@ -172,15 +173,32 @@ class DelegatorService {
         },
         select: { balanceAmount: true, delegatorRewards: true },
       });
+      console.log("delegatorByAddress : ", delegatorByAddress);
 
-      const delegatorStake = delegatorByAddress.reduce(
-        (total, element) => total + Number(element?.balanceAmount),
-        0
-      );
-      const totalRewards = delegatorByAddress.reduce(
-        (total, element) => total + Number(element?.delegatorRewards),
-        0
-      );
+      let totalRewards = 0;
+
+      for (let i = 0; i < delegatorByAddress?.length; i++) {
+        const element = delegatorByAddress[i];
+        totalRewards = totalRewards + Number(element?.delegatorRewards);
+      }
+      let delegatorStake = 0;
+
+      for (let i = 0; i < delegatorByAddress?.length; i++) {
+        const element = delegatorByAddress[i];
+        delegatorStake = delegatorStake + Number(element?.balanceAmount);
+      }
+
+
+      console.log("totalRewards: ", totalRewards);
+      
+      // const delegatorStake = delegatorByAddress.reduce(
+      //   (total, element) => total + Number(element?.balanceAmount),
+      //   0
+      // );
+      // const totalRewards = delegatorByAddress.reduce(
+      //   (total, element) => total + Number(element?.delegatorRewards),
+      //   0
+      // );
 
       return {
         error: false,
