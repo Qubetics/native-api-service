@@ -68,7 +68,7 @@ export function exp(val: string): string {
 
 export async function fillMissingDatesWithZeroByhr(
   graphData: Array<{ hour: Date; count: number }>,
-  startDate: Date,
+  startDate: Date
 ) {
   startDate.setHours(startDate.getHours() + 1);
 
@@ -104,18 +104,18 @@ export async function fillMissingDatesWithZeroByhr(
 export async function fillMissingDatesWithZeroByDay(
   data: Array<{ day: Date; count: number }>,
   startDate: Date,
-  currentDateVal: Date,
+  currentDateVal: Date
 ) {
   startDate.setDate(startDate.getDate() + 1);
   const dateMap = new Map(
-    data.map((item) => [item.day.toISOString(), item.count]),
+    data.map((item) => [item.day.toISOString(), item.count])
   );
   const result = [];
   const currentDate = new Date(startDate);
 
   // Calculate the number of days between the startDate and the last date in your data
   const daysDifference = Math.floor(
-    (+currentDateVal - +currentDate) / (24 * 60 * 60 * 1000),
+    (+currentDateVal - +currentDate) / (24 * 60 * 60 * 1000)
   );
 
   for (let i = 0; i <= daysDifference; i += 1) {
@@ -132,11 +132,11 @@ export async function fillMissingDatesWithZeroByDay(
 export async function fillMissingDatesWithZeroByMonth(
   data: Array<{ month: Date; count: number }>,
   startDate: Date,
-  currentDateVal: Date,
+  currentDateVal: Date
 ) {
   startDate.setMonth(startDate.getMonth() + 1);
   const dateMap = new Map(
-    data.map((item) => [item.month.toISOString(), item.count]),
+    data.map((item) => [item.month.toISOString(), item.count])
   );
   const result = [];
   const currentDate = new Date(startDate);
@@ -164,7 +164,7 @@ interface ITimeStamp {
 export async function fillMissingMinutes(
   inputData: Array<{ hour: Date; count: number }> | [],
   startMinute: Date,
-  endMinute: Date,
+  endMinute: Date
 ) {
   startMinute.setMinutes(startMinute.getMinutes() + 1);
   const fromTime = startMinute;
@@ -204,14 +204,14 @@ export async function fillMissingMinutes(
 export async function fillMissingSeconds(
   data: Array<{ second: Date; count: number }>,
   startTime: Date,
-  endTime: Date,
+  endTime: Date
 ) {
   const newData = [];
   const currentTime = new Date(startTime);
 
   while (currentTime <= endTime) {
     const matchingData = data.find(
-      (item) => item.second.getTime() === currentTime.getTime(),
+      (item) => item.second.getTime() === currentTime.getTime()
     );
     if (matchingData) {
       const secondVal = {
@@ -285,7 +285,7 @@ export async function fetchRequest(
   url: string,
   data: { symbol: string; convert: string },
   method: Method,
-  headers: object,
+  headers: object
 ): Promise<CoinMarketData> {
   return new Promise((resolve, reject) => {
     const { symbol } = data;
@@ -334,7 +334,7 @@ export function serializeBigInt(dataVal: any): any {
           return [key, value.toISOString()]; // Convert block_timestamp to string
         }
         return [key, convertBigIntToNumber(value)];
-      }),
+      })
     );
   }
   return dataVal;
@@ -348,7 +348,7 @@ export function cursorPagination(
   uniqueParam: any,
   totalRecords: number,
   maximumId: number,
-  minimumId: number,
+  minimumId: number
 ) {
   let getFilter = "";
 
@@ -411,7 +411,7 @@ export async function calculateBurnedAmount() {
     const apiUrl = environment.evmHost;
 
     const getSupply: any = await axios.get(
-      `${apiUrl}/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`,
+      `${apiUrl}/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`
     );
 
     const { initialSupply } = environment;

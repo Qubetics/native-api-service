@@ -127,6 +127,7 @@ class TransactionService {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
         data: {
+          addresses: convertBigIntToNumber(transactions),
           count: transactionCount,
           transactions: convertBigIntToNumber(transactions),
           isContractAddress,
