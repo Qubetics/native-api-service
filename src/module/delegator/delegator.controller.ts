@@ -23,7 +23,8 @@ class DelegatorController implements Controller {
         delegatorByAddressValidation,
         this.getDelegatorByAddress,
       )
-      .get("/dashboard/:delegatorAddress", this.dashboard);
+      .get("/dashboard/:delegatorAddress", this.dashboard)
+      .get('/unbonding/:address', this.getUnbondingDelegation)
   }
 
   private getAllDelegators = async (request: Request, response: Response) => {
@@ -51,6 +52,20 @@ class DelegatorController implements Controller {
       return setResponse.error(response, blockDetails);
     }
     return setResponse.success(response, blockDetails);
+  };
+
+
+  private getUnbondingDelegation = async (
+    request: Request,
+    response: Response,
+  ) => {
+    const unbondingDetails = await delegatorService.getUnbondingDetails(
+      request.params?.address as string,
+    );
+    if (unbondingDetails.error) {
+      return setResponse.error(response, unbondingDetails);
+    }
+    return setResponse.success(response, unbondingDetails);
   };
 
   private dashboard = async (request: Request, response: Response) => {

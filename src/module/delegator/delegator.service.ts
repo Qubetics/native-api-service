@@ -120,7 +120,9 @@ class DelegatorService {
           }
 
           validatorStake.validatorsTotalReward = validatorsTotalReward;
-          validatorStake.delegatorRewards = Number(validatorStake.delegatorRewards);
+          validatorStake.delegatorRewards = Number(
+            validatorStake.delegatorRewards
+          );
           validatorStake.name = validator?.name || "";
           validatorStake.validatorAddress = validator?.validatorAddress || "";
           validatorStake.stake = noExponent(
@@ -173,7 +175,6 @@ class DelegatorService {
         },
         select: { balanceAmount: true, delegatorRewards: true },
       });
-      console.log("delegatorByAddress : ", delegatorByAddress);
 
       let totalRewards = 0;
 
@@ -188,18 +189,6 @@ class DelegatorService {
         delegatorStake = delegatorStake + Number(element?.balanceAmount);
       }
 
-
-      console.log("totalRewards: ", totalRewards);
-      
-      // const delegatorStake = delegatorByAddress.reduce(
-      //   (total, element) => total + Number(element?.balanceAmount),
-      //   0
-      // );
-      // const totalRewards = delegatorByAddress.reduce(
-      //   (total, element) => total + Number(element?.delegatorRewards),
-      //   0
-      // );
-
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
@@ -207,6 +196,52 @@ class DelegatorService {
           totalRewards: totalRewards || 0,
           totalStake: delegatorStake,
         },
+      };
+    } catch (err) {
+      console.log("error in getDelegatorByAddress : ", err);
+      if (err instanceof Error) {
+        return { error: true, message: "Something went wrong! " };
+      }
+      return { error: true, message: RES_MSG.ERROR };
+    }
+  }
+  async getUnbondingDetails(address: string): Promise<IESResponse> {
+    try {
+      // const addressKey = `${REDIS_KEY.TOTAL_REWARDS}:${address}`;
+      // let totalRewardsResponse;
+
+      const response = await fetchRequest(
+        `${environment.evmHost}/cosmos/staking/v1beta1/delegators/${address}/unbonding_delegations`,
+        FETCH_METHODS.GET,
+        HEADERS.DEFAULT
+      );
+
+      if (response?.error)
+        return {
+          error: true,
+          message: RES_MSG.ERROR,
+        };
+
+      const modifiedResponse = await Promise.all(
+        response.data?.unbonding_responses.map(async (item: any) => {
+          const validator = await prisma.validator.findUnique({
+            where: { operatorAddress: item.validator_address },
+            select: { name: true },
+          });
+
+          return {
+            validator_name: validator?.name || null,
+            ...item,
+          };
+        })
+      );
+
+      console.log("modifiedResponse : ", modifiedResponse);
+
+      return {
+        error: false,
+        message: RES_MSG.FETCH_SUCCESS,
+        data: modifiedResponse,
       };
     } catch (err) {
       console.log("error in getDelegatorByAddress : ", err);
