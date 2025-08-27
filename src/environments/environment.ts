@@ -60,6 +60,8 @@ class Environment implements IEnvironment {
 
   public excludedValidators: string;
 
+  public initialSupply: number;
+
   /**
    *
    * @param NODE_ENV
@@ -94,6 +96,7 @@ class Environment implements IEnvironment {
     this.redisExpiry = Number(process.env.API_REDIS_EXPIRY);
     this.validators = <string>process.env.VALIDATORS;
     this.excludedValidators = <string>process.env.EXCLUDING_VALIDATORS;
+    this.initialSupply = Number(process.env.INITIAL_SUPPLY) || 1366266047.86;
   }
 
   /**

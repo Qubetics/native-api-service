@@ -28,8 +28,10 @@ import {
   fillMissingSeconds,
   formatDateForYear,
   fillMissingDatesWithZeroByMonth,
+  calculateBurnedAmount,
 } from "../../lib/utilities.helper";
 import contractService from "../contract/contract.service";
+import redisHelper from "../../service/redis.helper";
 
 class ExplorerService {
   // Dashboard method to fetch data
@@ -728,7 +730,19 @@ class ExplorerService {
       }
       // const marketCap = tokenPrice * circulationSupply;
       const userCount = await prisma.users.count();
-      console.log("calculateData", data);
+
+      let burnedAmount = await RedisService.getString(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT
+      );
+
+      if (!burnedAmount) {
+        /** save burned fees */
+        burnedAmount = await calculateBurnedAmount();
+        await redisHelper.setString(
+          REDIS_KEY.TOTAL_BURNED_AMOUNT,
+          burnedAmount
+        );
+      }
 
       return {
         error: false,
@@ -750,6 +764,7 @@ class ExplorerService {
           bondedRate: data?.bondedRate,
           marketCap,
           community_pool: data?.community_pool ?? 0,
+          burnedAmount,
         },
       };
     } catch (err) {
