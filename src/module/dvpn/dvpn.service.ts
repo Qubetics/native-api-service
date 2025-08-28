@@ -118,7 +118,8 @@ class DvpnService {
   }): Promise<IESResponse> {
     try {
       const offset = getOffset(data.page, data.limit);
-      const url = `${environment.nodeInfoUrl}/qubetics/session/v3/sessions?pagination.offset=${offset}&pagination.limit=${data.limit}&pagination.reverse=${data.reverse}`;
+      const url = `${environment.nodeInfoUrl}/qubetics/session/v3/sessions?pagination.offset=${offset}&pagination.limit=${data.limit}&pagination.reverse=${data.reverse}&pagination.count_total=true`;
+
       const fetchRes: any = await fetchRequest(url, "GET", null);
       if (fetchRes?.error || !fetchRes?.data) {
         throw new Error(RES_MSG.NOT_FOUND);

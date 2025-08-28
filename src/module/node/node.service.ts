@@ -57,11 +57,8 @@ class NodeService {
     reverse: boolean;
   }): Promise<IESResponse> {
     try {
-      // Issue originates from the blockchain side; pagination is malfunctioning and the total count is incorrect.
-      // const offset = getOffset(data.page, data.limit);
-      // const url = `${environment.nodeInfoUrl}/qubetics/node/v3/nodes?pagination.offset=${offset}&pagination.limit=${data.limit}&pagination.reverse=${data.reverse}`;
-
-      const url = `${environment.nodeInfoUrl}/qubetics/node/v3/nodes`;
+      const offset = getOffset(data.page, data.limit);
+      const url = `${environment.nodeInfoUrl}/qubetics/node/v3/nodes?pagination.offset=${offset}&pagination.limit=${data.limit}&pagination.reverse=${data.reverse}&pagination.count_total=true`;
       const fetchRes = await fetchRequest(url, "GET", null);
 
       if (fetchRes?.error || !fetchRes?.data) {
@@ -239,6 +236,9 @@ class NodeService {
       const result = await prisma.dvpnTransaction.findMany({
         where: {
           nodeAddress: address || "",
+        },
+        orderBy: {
+          createdAt: "desc",
         },
       });
 
