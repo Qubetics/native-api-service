@@ -121,12 +121,12 @@ class DelegatorService {
 
           validatorStake.validatorsTotalReward = validatorsTotalReward;
           validatorStake.delegatorRewards = Number(
-            validatorStake.delegatorRewards
+            validatorStake.delegatorRewards,
           );
           validatorStake.name = validator?.name || "";
           validatorStake.validatorAddress = validator?.validatorAddress || "";
           validatorStake.stake = noExponent(
-            validatorStake?.stake / 10 ** 18 || 0
+            validatorStake?.stake / 10 ** 18 || 0,
           );
         }
       }
