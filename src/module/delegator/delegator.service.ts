@@ -173,7 +173,11 @@ class DelegatorService {
         where: {
           delegatorAddress: address,
         },
-        select: { balanceAmount: true, delegatorRewards: true },
+        select: {
+          balanceAmount: true,
+          delegatorRewards: true,
+          delegatorAddress: true,
+        },
       });
 
       let totalRewards = 0;
