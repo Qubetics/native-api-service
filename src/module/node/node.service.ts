@@ -243,7 +243,7 @@ class NodeService {
       });
 
       const total_users =
-        result?.filter((val: any) => val.type === DVPN_TYPE.START_SUBSCRIPTION)
+        result?.filter((val: any) => val.type === DVPN_TYPE.START_SESSION)
           ?.length || 0;
 
       const activeItems = getActiveItems(result);
@@ -256,7 +256,7 @@ class NodeService {
           total_earning: noExponent(reponse.total_earning),
           daily_earnings: noExponent(reponse?.daily_earnings),
           total_users,
-          active_users: activeItems?.subscriptions?.length ?? 0,
+          active_users: activeItems?.sessions?.length ?? 0,
           last_checked,
           recent_session: activeItems?.sessions[0]?.startAt ?? null,
           native: true,
