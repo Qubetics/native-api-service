@@ -1,5 +1,5 @@
 import prisma from "../../lib/db";
-import { subDays, startOfDay } from "date-fns";
+import { subDays, startOfDay, eachDayOfInterval, startOfMonth, eachMonthOfInterval } from "date-fns";
 import {
   sessionsPath,
   daysMap,
@@ -127,46 +127,62 @@ class MessageService {
     duration: string;
   }): Promise<any> {
     try {
-      const days = daysMap[data.duration] || 7;
-      const fromDate = subDays(new Date(), days);
-
+      const daysAgo = daysMap[data.duration] || 7;
+      const currentDate = startOfDay(new Date());
+      const fromDate = startOfDay(subDays(currentDate, daysAgo - 1));
+  
+      // Fetch transactions
       const transactions = await prisma.transactions.findMany({
         where: {
-          type: {
-            in: MSG_TYPE,
-          },
-          createdAt: {
-            gte: fromDate,
-          },
+          type: { in: MSG_TYPE },
+          createdAt: { gte: fromDate },
           nodeAddress: data?.nodeAddress,
         },
-        select: {
-          value: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
+        select: { value: true, createdAt: true },
+        orderBy: { createdAt: "asc" },
       });
-
+  
+      // Decide whether to bucket by day or month
+      const isYearly = daysAgo === 365;
+      const bucketFn = isYearly ? startOfMonth : startOfDay;
+  
+      // Group transactions into buckets
       const grouped: Record<string, number> = {};
-
       for (const tx of transactions) {
-        const dayKey = startOfDay(tx.createdAt).toISOString();
+        const key = bucketFn(tx.createdAt).toISOString();
         const val = tx.value ? parseFloat(tx.value) : 0;
-
-        if (!grouped[dayKey]) {
-          grouped[dayKey] = 0;
-        }
-
-        grouped[dayKey] += val;
+        grouped[key] = (grouped[key] || 0) + val;
       }
-
-      const formatted = Object.entries(grouped).map(([timestamp, value]) => ({
-        timestamp,
-        count: parseFloat(value.toFixed(2)),
-      }));
-
+  
+      // Build full interval (days or months)
+      const alignedFrom = isYearly ? startOfMonth(fromDate) : fromDate;
+      const alignedCurrent = isYearly ? startOfMonth(currentDate) : currentDate;
+      const intervals = isYearly
+        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent })
+        : eachDayOfInterval({ start: alignedFrom, end: alignedCurrent });
+  
+      // Format response
+      const formatted = intervals.map((date) => {
+        const key = bucketFn(date).toISOString();
+        return {
+          createdAt: key,
+          count: grouped[key] ? parseFloat(grouped[key].toFixed(2)) : 0,
+        };
+      });
+  
+      // Add total only for yearly
+      if (isYearly) {
+        const totalCount = formatted.reduce((sum, item) => sum + item.count, 0);
+        return {
+          error: false,
+          message: "transaction history fetched successfully",
+          data: {
+            finalData: formatted,
+            count: totalCount,
+          },
+        };
+      }
+  
       return {
         error: false,
         message: "Fetched uptime history successfully",
