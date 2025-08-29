@@ -1,5 +1,5 @@
 import prisma from "../../lib/db";
-import { subDays, startOfDay, eachDayOfInterval, startOfMonth, eachMonthOfInterval } from "date-fns";
+import { subDays, startOfDay, eachDayOfInterval, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import {
   sessionsPath,
   daysMap,
@@ -155,14 +155,14 @@ class MessageService {
       }
   
       // Build full interval (days or months)
-      const alignedFrom = isYearly ? startOfMonth(fromDate) : fromDate;
+      const alignedFrom = isYearly ? startOfMonth(subMonths(currentDate,11)) : fromDate;
       const alignedCurrent = isYearly ? startOfMonth(currentDate) : currentDate;
       const intervals = isYearly
-        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent })
+        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent }).map(d => startOfMonth(d))
         : eachDayOfInterval({ start: alignedFrom, end: alignedCurrent });
   
       // Format response
-      const formatted = intervals.map((date) => {
+      let formatted = intervals.map((date) => {
         const key = bucketFn(date).toISOString();
         return {
           createdAt: key,
@@ -172,14 +172,12 @@ class MessageService {
   
       // Add total only for yearly
       if (isYearly) {
+        formatted = formatted.slice(-12); 
         const totalCount = formatted.reduce((sum, item) => sum + item.count, 0);
         return {
           error: false,
           message: "transaction history fetched successfully",
-          data: {
-            finalData: formatted,
-            count: totalCount,
-          },
+          data: formatted
         };
       }
   
