@@ -366,13 +366,12 @@ class TransactionService {
       let transactionsData: any;
       let maxId: any = 0;
       let minId: any = 0;
-      let transactionCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
-      );
+      // let transactionCount = await RedisService.getString(
+      //   REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
+      // );
 
-      if (!transactionCount) {
-        transactionCount = await prisma.transactions.count();
-      }
+        let transactionCount = await prisma.transactions.count();
+      
       if (data.order === "asc") {
         transactionsData = await this.ascPagination(data.page, data.limit);
         const result = await prisma.transactions.aggregate({

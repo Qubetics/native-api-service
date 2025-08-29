@@ -1,5 +1,12 @@
 import prisma from "../../lib/db";
-import { subDays, startOfDay, eachDayOfInterval, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import {
+  subDays,
+  startOfDay,
+  eachDayOfInterval,
+  startOfMonth,
+  eachMonthOfInterval,
+  subMonths,
+} from "date-fns";
 import {
   sessionsPath,
   daysMap,
@@ -130,7 +137,7 @@ class MessageService {
       const daysAgo = daysMap[data.duration] || 7;
       const currentDate = startOfDay(new Date());
       const fromDate = startOfDay(subDays(currentDate, daysAgo - 1));
-  
+
       // Fetch transactions
       const transactions = await prisma.transactions.findMany({
         where: {
@@ -141,11 +148,11 @@ class MessageService {
         select: { value: true, createdAt: true },
         orderBy: { createdAt: "asc" },
       });
-  
+
       // Decide whether to bucket by day or month
       const isYearly = daysAgo === 365;
       const bucketFn = isYearly ? startOfMonth : startOfDay;
-  
+
       // Group transactions into buckets
       const grouped: Record<string, number> = {};
       for (const tx of transactions) {
@@ -153,14 +160,18 @@ class MessageService {
         const val = tx.value ? parseFloat(tx.value) : 0;
         grouped[key] = (grouped[key] || 0) + val;
       }
-  
+
       // Build full interval (days or months)
-      const alignedFrom = isYearly ? startOfMonth(subMonths(currentDate,11)) : fromDate;
+      const alignedFrom = isYearly
+        ? startOfMonth(subMonths(currentDate, 11))
+        : fromDate;
       const alignedCurrent = isYearly ? startOfMonth(currentDate) : currentDate;
       const intervals = isYearly
-        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent }).map(d => startOfMonth(d))
+        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent }).map(
+            (d) => startOfMonth(d),
+          )
         : eachDayOfInterval({ start: alignedFrom, end: alignedCurrent });
-  
+
       // Format response
       let formatted = intervals.map((date) => {
         const key = bucketFn(date).toISOString();
@@ -169,18 +180,18 @@ class MessageService {
           count: grouped[key] ? parseFloat(grouped[key].toFixed(2)) : 0,
         };
       });
-  
+
       // Add total only for yearly
       if (isYearly) {
-        formatted = formatted.slice(-12); 
+        formatted = formatted.slice(-12);
         const totalCount = formatted.reduce((sum, item) => sum + item.count, 0);
         return {
           error: false,
           message: "transaction history fetched successfully",
-          data: formatted
+          data: formatted,
         };
       }
-  
+
       return {
         error: false,
         message: "Fetched uptime history successfully",
