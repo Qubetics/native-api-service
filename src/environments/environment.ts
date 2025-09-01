@@ -60,6 +60,9 @@ class Environment implements IEnvironment {
 
   public excludedValidators: string;
 
+  public ttlTimeRewards: number;
+
+
   /**
    *
    * @param NODE_ENV
@@ -94,6 +97,7 @@ class Environment implements IEnvironment {
     this.redisExpiry = Number(process.env.API_REDIS_EXPIRY);
     this.validators = <string>process.env.VALIDATORS;
     this.excludedValidators = <string>process.env.EXCLUDING_VALIDATORS;
+     this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
   }
 
   /**
