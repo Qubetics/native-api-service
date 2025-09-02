@@ -2,7 +2,7 @@ import { arrNoExponent, fetchRequest, noExponent } from "../../Utility/common";
 import { FETCH_METHODS, HEADERS, REDIS_KEY, RES_MSG } from "../../constant";
 import { IESResponse } from "../../interfaces/index";
 import prisma from "../../lib/db";
-import { RedisService } from "../../service/index";
+import redisHelper from "../../service/redis.helper";
 
 class DelegatorService {
   /**
@@ -150,24 +150,18 @@ class DelegatorService {
 
   async dashboard(address: string): Promise<IESResponse> {
     try {
-      // const addressKey = `${REDIS_KEY.TOTAL_REWARDS}:${address}`;
-      // let totalRewardsResponse;
+      let rewards = await redisHelper.getHset(REDIS_KEY.REWARDS, address);
 
-      // const response = await fetchRequest(
-      //   `${environment.evmHost}/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
-      //   FETCH_METHODS.GET,
-      //   HEADERS.DEFAULT
-      // );
-
-      // console.log("response  from blockchain :::: ", response.data.total[0]?.amount);
-      // if (!response.error) {
-      //   totalRewardsResponse = response.data.total[0]?.amount || 0;
-      //   await RedisService.setString(addressKey, totalRewardsResponse);
-      // } else {
-      //   totalRewardsResponse = await RedisService.getString(addressKey);
-      // }
-
-      // let totalRewards = totalRewardsResponse / 10 ** 18; // Update totalRewards,
+      if (!rewards) {
+        rewards = await prisma.rewards.findFirst({
+          where: {
+            address: address,
+          },
+          select: {
+            rewardAmount: true,
+          },
+        });
+      }
 
       const delegatorByAddress: any = await prisma.validatorStake.findMany({
         where: {
@@ -176,7 +170,6 @@ class DelegatorService {
         select: {
           balanceAmount: true,
           delegatorRewards: true,
-          delegatorAddress: true,
         },
       });
 
@@ -197,6 +190,7 @@ class DelegatorService {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
         data: {
+          claimedRewards: rewards?.rewardAmount || 0,
           totalRewards: totalRewards || 0,
           totalStake: delegatorStake,
         },
@@ -211,9 +205,6 @@ class DelegatorService {
   }
   async getUnbondingDetails(address: string): Promise<IESResponse> {
     try {
-      // const addressKey = `${REDIS_KEY.TOTAL_REWARDS}:${address}`;
-      // let totalRewardsResponse;
-
       const response = await fetchRequest(
         `${environment.evmHost}/cosmos/staking/v1beta1/delegators/${address}/unbonding_delegations`,
         FETCH_METHODS.GET,

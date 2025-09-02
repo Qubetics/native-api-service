@@ -61,6 +61,8 @@ class Environment implements IEnvironment {
   public excludedValidators: string;
 
   public initialSupply: number;
+  
+  public ttlTimeRewards: number;
 
   /**
    *
@@ -97,6 +99,7 @@ class Environment implements IEnvironment {
     this.validators = <string>process.env.VALIDATORS;
     this.excludedValidators = <string>process.env.EXCLUDING_VALIDATORS;
     this.initialSupply = Number(process.env.INITIAL_SUPPLY) || 1366266047.86;
+    this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
   }
 
   /**
