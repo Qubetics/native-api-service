@@ -1,4 +1,8 @@
 import axios from "axios";
+import countries from "i18n-iso-countries";
+import geoip from "geoip-lite";
+import { extractIP } from "../helper/common.helper";
+countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
 
 /**
  * For making http requests
@@ -10,7 +14,7 @@ import axios from "axios";
 export async function fetchRequest(
   url: string,
   method: string,
-  data: any = null,
+  data: any = null
 ) {
   try {
     const result = await axios({
@@ -42,7 +46,7 @@ export function log(
   msg: string,
   msgColor: string,
   data: any,
-  dataColor: string,
+  dataColor: string
 ) {
   console.log(`${msgColor}${msg}${dataColor}${data}\x1b[0m`);
 }
@@ -119,3 +123,34 @@ export function isAlphaNumeric(val: string | number) {
   const regex = /^[a-fA-F0-9]{64}$/;
   return regex.test(str);
 }
+
+export const formatNodes = (nodes: any[]) => {
+  return nodes
+    .map((node: any) => {
+      const ip = extractIP(node.remote_url);
+      if (ip) {
+        const geo: any = geoip.lookup(ip);
+        const countryName = countries.getName(geo?.country, "en");
+        const flagUrl = `https://flagcdn.com/w80/${geo?.country.toLowerCase()}.png`;
+        return {
+          address: node.address,
+          gigabyte_prices: Array.isArray(node.gigabyte_prices)
+            ? node.gigabyte_prices
+            : [],
+          hourly_prices: Array.isArray(node.hourly_prices)
+            ? node.hourly_prices
+            : [],
+          remote_url: node.remote_url,
+          inactive_at: node?.inactive_at ? new Date(node.inactive_at) : null,
+          status: node.status,
+          status_at: node?.status_at ? new Date(node.status_at) : null,
+          country: countryName || "Unknown",
+          city: geo?.city || "Unknown",
+          long: geo?.ll[1].toString(),
+          lat: geo?.ll[0].toString(),
+          flag_url: flagUrl,
+        };
+      }
+    })
+    .filter(Boolean); // Remove undefined entries where IP extraction failed
+};

@@ -3,10 +3,11 @@ import { DVPN_TYPE, RES_MSG } from "../../constant/index";
 import { IESResponse } from "../../interfaces/index";
 import {
   convertBigIntToNumber,
+  getActiveItems,
   getDateRange,
   getOffset,
 } from "../../helper/common.helper";
-import { fetchRequest } from "../../Utility/common";
+import { fetchRequest, formatNodes } from "../../Utility/common";
 
 class DvpnService {
   async getAccountSummary(): Promise<IESResponse> {
@@ -129,6 +130,55 @@ class DvpnService {
         message: RES_MSG.SUCCESS,
         data: {
           ...fetchRes?.data,
+          native: true,
+        },
+      };
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.message.includes("prisma")) {
+          return { error: true, message: RES_MSG.SERVER_ERROR };
+        }
+        return { error: true, message: err.message };
+      } else {
+        return { error: true, message: RES_MSG.ERROR };
+      }
+    }
+  }
+
+  async getNetworkAnalytics(): Promise<IESResponse> {
+    try {
+      const [totalUser, transactions, fetchRes] = await Promise.all([
+        prisma.dvpnTransaction.count({
+          where: { type: DVPN_TYPE.START_SUBSCRIPTION },
+        }),
+        prisma.dvpnTransaction.findMany(),
+        fetchRequest(
+          `${environment.nodeInfoUrl}/qubetics/node/v3/nodes`,
+          "GET",
+          null
+        ),
+      ]);
+
+      const activeUsers = getActiveItems(transactions);
+
+      const formattedNodes = formatNodes(fetchRes.data.nodes);
+
+      const totalCountries = new Set(
+        formattedNodes.map((node: any) => node.country)
+      ).size;
+
+      const activeNodes = fetchRes.data.nodes.filter(
+        (node: any) => node.status === "active"
+      ).length;
+
+      return {
+        error: false,
+        message: RES_MSG.SUCCESS,
+        data: {
+          total_user: totalUser,
+          total_country: totalCountries,
+          active_nodes: activeNodes,
+          active_session: activeUsers?.sessions.length,
           native: true,
         },
       };
