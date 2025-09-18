@@ -27,14 +27,29 @@ class ExplorerController implements Controller {
       .get(
         "/graph/contract-deployed",
         getGraphHistoryValidation,
-        this.getContractDeployedCount,
+        this.getContractDeployedCount
       )
       .get("/graph/tps", getTpsHistoryValidation, this.getTpsHistory)
       .get("/graph/account", getGraphHistoryValidation, this.getAccountCounts)
       .get(
         "/address-detail/:address",
         getAddressDetailValidation,
-        this.getAddressDetail,
+        this.getAddressDetail
+      )
+      .get(
+        "/circulation-supply",
+        // getGraphHistoryValidation,
+        this.getCirculationSupply
+      )
+      .get(
+        "/total-supply",
+        // getGraphHistoryValidation,
+        this.getTotalSupply
+      )
+      .get(
+        "/burned-amount",
+        // getGraphHistoryValidation,
+        this.burnedAmount
       );
   }
 
@@ -49,7 +64,7 @@ class ExplorerController implements Controller {
 
   private searching = async (request: Request, response: Response) => {
     const serachingRes = await ExplorerService.searching(
-      request.query.value as string,
+      request.query.value as string
     );
 
     if (serachingRes.error) {
@@ -73,7 +88,7 @@ class ExplorerController implements Controller {
 
   private getContractDeployedCount = async (
     request: Request,
-    response: Response,
+    response: Response
   ) => {
     const data = {
       interval: !request.query?.interval ? 1 : Number(request.query.interval),
@@ -109,6 +124,36 @@ class ExplorerController implements Controller {
       return setResponse.error(response, tpsHistoryRes);
     }
     return setResponse.success(response, tpsHistoryRes);
+  };
+
+  private getCirculationSupply = async (
+    request: Request,
+    response: Response
+  ) => {
+    const getCirculationSupply = await ExplorerService.getCirculationSupply();
+
+    if (getCirculationSupply.error) {
+      return setResponse.error(response, getCirculationSupply);
+    }
+    return setResponse.success(response, getCirculationSupply);
+  };
+
+  private getTotalSupply = async (request: Request, response: Response) => {
+    const getCirculationSupply = await ExplorerService.getTotalSupply();
+
+    if (getCirculationSupply.error) {
+      return setResponse.error(response, getCirculationSupply);
+    }
+    return setResponse.success(response, getCirculationSupply);
+  };
+
+  private burnedAmount = async (request: Request, response: Response) => {
+    const getCirculationSupply = await ExplorerService.getBurnedAmount();
+
+    if (getCirculationSupply.error) {
+      return setResponse.error(response, getCirculationSupply);
+    }
+    return setResponse.success(response, getCirculationSupply);
   };
 }
 

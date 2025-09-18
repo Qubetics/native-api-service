@@ -1,14 +1,14 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
   RES_MSG,
   CONST_NAME,
   REDIS_KEY,
   CURRENT_DEFAULT_APR,
-} from "../constant";
-import { Params, BlockHeader } from "../interfaces/index";
-import logger from "../lib/logger";
-import { getDigitsAfterE } from "../lib/utilities.helper";
-import { RedisService } from "../service";
+} from '../constant';
+import { Params, BlockHeader } from '../interfaces/index';
+import logger from '../lib/logger';
+import { getDigitsAfterE } from '../lib/utilities.helper';
+import { RedisService } from '../service';
 
 // async function getParams_old(apiRes: AxiosInstance): Promise<any | false> {
 //   try {
@@ -107,8 +107,8 @@ const calculateData = async (): Promise<
     const apiRes = axios.create({
       baseURL: apiUrl,
       headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        Accept: "application/json",
+        'Content-Type': 'application/json; charset=utf-8',
+        Accept: 'application/json',
       },
       timeout: 5 * CONST_NAME.THOUSAND,
     });
@@ -117,13 +117,13 @@ const calculateData = async (): Promise<
     let apr = CURRENT_DEFAULT_APR;
     if (!params) throw new Error(RES_MSG.FETCH_SUCCESS);
     try {
-      const getApr = await apiRes.get("/qubetics/validatorpool/params");
+      const getApr = await apiRes.get('/qubetics/validatorpool/params');
       const annualRoi = getApr?.data?.params?.annual_roi;
       if (annualRoi != null) {
         apr = annualRoi / 100;
       }
     } catch (error) {
-      console.log("Error while getng apr details", error);
+      console.log('Error while getng apr details', error);
     }
 
     const apyValue = calculateAPY(
@@ -152,7 +152,7 @@ const calculateData = async (): Promise<
     );
     return validatorData;
   } catch (err) {
-    console.log("error", "Error occurred while calculating stake APY", err);
+    console.log('error', 'Error occurred while calculating stake APY', err);
     if (err instanceof Error) {
       return { error: true, message: err.message };
     }
@@ -172,16 +172,16 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       annualProvision,
       community_pool,
     ] = await Promise.all([
-      apiRes.get("/cosmos/staking/v1beta1/validators"),
+      apiRes.get('/cosmos/staking/v1beta1/validators'),
       apiRes.get(
         `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`,
       ),
-      apiRes.get("/cosmos/mint/v1beta1/inflation"),
-      apiRes.get("/cosmos/staking/v1beta1/pool"),
-      apiRes.get("/cosmos/distribution/v1beta1/params"),
-      apiRes.get("/cosmos/bank/v1beta1/supply"),
-      apiRes.get("/cosmos/mint/v1beta1/annual_provisions"),
-      apiRes.get("/cosmos/distribution/v1beta1/community_pool"),
+      apiRes.get('/cosmos/mint/v1beta1/inflation'),
+      apiRes.get('/cosmos/staking/v1beta1/pool'),
+      apiRes.get('/cosmos/distribution/v1beta1/params'),
+      apiRes.get('/cosmos/bank/v1beta1/supply'),
+      apiRes.get('/cosmos/mint/v1beta1/annual_provisions'),
+      apiRes.get('/cosmos/distribution/v1beta1/community_pool'),
     ]);
 
     const activeValidator = validatorResponse?.data?.validators.filter(
@@ -235,7 +235,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       community_pool: community_poolValue,
     };
   } catch (error) {
-    logger.error("getParams Error", error);
+    logger.error('getParams Error', error);
     return false;
   }
 }
