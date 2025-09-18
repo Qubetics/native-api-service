@@ -27,29 +27,29 @@ class ExplorerController implements Controller {
       .get(
         "/graph/contract-deployed",
         getGraphHistoryValidation,
-        this.getContractDeployedCount
+        this.getContractDeployedCount,
       )
       .get("/graph/tps", getTpsHistoryValidation, this.getTpsHistory)
       .get("/graph/account", getGraphHistoryValidation, this.getAccountCounts)
       .get(
         "/address-detail/:address",
         getAddressDetailValidation,
-        this.getAddressDetail
+        this.getAddressDetail,
       )
       .get(
         "/circulation-supply",
         // getGraphHistoryValidation,
-        this.getCirculationSupply
+        this.getCirculationSupply,
       )
       .get(
         "/total-supply",
         // getGraphHistoryValidation,
-        this.getTotalSupply
+        this.getTotalSupply,
       )
       .get(
         "/burned-amount",
         // getGraphHistoryValidation,
-        this.burnedAmount
+        this.burnedAmount,
       );
   }
 
@@ -64,7 +64,7 @@ class ExplorerController implements Controller {
 
   private searching = async (request: Request, response: Response) => {
     const serachingRes = await ExplorerService.searching(
-      request.query.value as string
+      request.query.value as string,
     );
 
     if (serachingRes.error) {
@@ -88,7 +88,7 @@ class ExplorerController implements Controller {
 
   private getContractDeployedCount = async (
     request: Request,
-    response: Response
+    response: Response,
   ) => {
     const data = {
       interval: !request.query?.interval ? 1 : Number(request.query.interval),
@@ -128,7 +128,7 @@ class ExplorerController implements Controller {
 
   private getCirculationSupply = async (
     request: Request,
-    response: Response
+    response: Response,
   ) => {
     const getCirculationSupply = await ExplorerService.getCirculationSupply();
 
