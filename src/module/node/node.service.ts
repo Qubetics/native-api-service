@@ -70,6 +70,7 @@ class NodeService {
         prisma.transactions.findMany({
           where: {
             nodeAddress: address || "",
+            type: { not: "START_SUBSCRIPTION" },
           },
           orderBy: {
             createdAt: "desc",
@@ -213,13 +214,13 @@ class NodeService {
 
       const activeItems = getActiveItems(result);
       const last_checked = result[0]?.createdAt;
-      const reponse = calculateEarnings(result);
+      // const reponse = calculateEarnings(result);
       return {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
-          total_earning: noExponent(reponse.total_earning),
-          daily_earnings: noExponent(reponse?.daily_earnings),
+          total_earning: 0, // We’ll need to update this later since we currently don’t have a type to calculate the amount 
+          daily_earnings: 0, // We’ll need to update this later since we currently don’t have a type to calculate the amount.
           total_users,
           active_users: activeItems?.sessions?.length ?? 0,
           last_checked,

@@ -141,7 +141,10 @@ class MessageService {
       // Fetch transactions
       const transactions = await prisma.transactions.findMany({
         where: {
-          type: { in: MSG_TYPE },
+          type: {
+            in: MSG_TYPE,
+            notIn: ["START_SUBSCRIPTION"],
+          },
           createdAt: { gte: fromDate },
           nodeAddress: data?.nodeAddress,
         },
