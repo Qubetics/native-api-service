@@ -116,7 +116,7 @@ const calculateData = async (): Promise<
     let apr = CURRENT_DEFAULT_APR;
     if (!params) throw new Error(RES_MSG.FETCH_SUCCESS);
     try {
-      const getApr = await apiRes.get("/qubetics/validatorpool/params");
+      const getApr = await apiRes.get('/qubetics/validatorpool/params');
       const annualRoi = getApr?.data?.params?.annual_roi;
       if (annualRoi != null) {
         apr = annualRoi / 100;

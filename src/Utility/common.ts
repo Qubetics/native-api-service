@@ -1,8 +1,9 @@
-import axios from "axios";
-import countries from "i18n-iso-countries";
-import geoip from "geoip-lite";
-import { extractIP } from "../helper/common.helper";
-countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
+import axios from 'axios';
+import geoip from 'geoip-lite';
+import countries from 'i18n-iso-countries';
+import { extractIP } from '../helper/common.helper';
+
+countries.registerLocale(require('i18n-iso-countries/langs/en.json'));
 
 /**
  * For making http requests
@@ -124,13 +125,13 @@ export function isAlphaNumeric(val: string | number) {
   return regex.test(str);
 }
 
-export const formatNodes = (nodes: any[]) => {
-  return nodes
+export const formatNodes = (nodes: any[]) => 
+   nodes
     .map((node: any) => {
       const ip = extractIP(node.remote_url);
       if (ip) {
         const geo: any = geoip.lookup(ip);
-        const countryName = countries.getName(geo?.country, "en");
+        const countryName = countries.getName(geo?.country, 'en');
         const flagUrl = `https://flagcdn.com/w80/${geo?.country.toLowerCase()}.png`;
         return {
           address: node.address,
@@ -144,13 +145,13 @@ export const formatNodes = (nodes: any[]) => {
           inactive_at: node?.inactive_at ? new Date(node.inactive_at) : null,
           status: node.status,
           status_at: node?.status_at ? new Date(node.status_at) : null,
-          country: countryName || "Unknown",
-          city: geo?.city || "Unknown",
+          country: countryName || 'Unknown',
+          city: geo?.city || 'Unknown',
           long: geo?.ll[1].toString(),
           lat: geo?.ll[0].toString(),
           flag_url: flagUrl,
         };
       }
     })
-    .filter(Boolean); // Remove undefined entries where IP extraction failed
-};
+    .filter(Boolean) // Remove undefined entries where IP extraction failed
+;
