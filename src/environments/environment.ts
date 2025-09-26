@@ -1,9 +1,9 @@
-import * as fs from "fs";
-import * as path from "path";
-import { config as configDotenv } from "dotenv";
+import * as fs from 'fs';
+import * as path from 'path';
+import { config as configDotenv } from 'dotenv';
 
-import { EnvironmentFile, Environments } from "./environment.constant";
-import IEnvironment from "./environment.interface";
+import { EnvironmentFile, Environments } from './environment.constant';
+import IEnvironment from './environment.interface';
 
 class Environment implements IEnvironment {
   public port: number;
@@ -60,6 +60,9 @@ class Environment implements IEnvironment {
 
   public excludedValidators: string;
 
+  public ttlTimeRewards: number;
+
+
   /**
    *
    * @param NODE_ENV
@@ -85,7 +88,7 @@ class Environment implements IEnvironment {
     this.recaptchaUrl = <string>process.env.GOOGLE_RECAPTCHA_URL;
     this.coinMarketApi = <string>process.env.COIN_MARKET_API_PATH;
     this.coinMarketKey = <string>process.env.COIN_MARKET_API_KEY;
-    this.symbol = <string>process.env.TOKEN_SYMBOL;
+    this.symbol = <string>process.env.TOKEN_SYMBOL?.toLowerCase();
     this.currency = <string>process.env.TOKEN_CURRENCY;
     this.evmHost = <string>process.env.SWAGGER_HTTP_HOST;
     this.nodeInfoUrl = <string>process.env.NODE_INFO_URL;
@@ -94,6 +97,7 @@ class Environment implements IEnvironment {
     this.redisExpiry = Number(process.env.API_REDIS_EXPIRY);
     this.validators = <string>process.env.VALIDATORS;
     this.excludedValidators = <string>process.env.EXCLUDING_VALIDATORS;
+     this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
   }
 
   /**
@@ -111,7 +115,7 @@ class Environment implements IEnvironment {
   public setEnvironment(env: string): void {
     let envPath: string;
     this.env = env || Environments.LOCAL;
-    const rootdir: string = path.resolve(__dirname, "../../");
+    const rootdir: string = path.resolve(__dirname, '../../');
     switch (env) {
       case Environments.PRODUCTION:
         envPath = path.resolve(rootdir, EnvironmentFile.PRODUCTION);
@@ -129,7 +133,7 @@ class Environment implements IEnvironment {
         envPath = path.resolve(rootdir, EnvironmentFile.LOCAL);
     }
     if (this.env !== Environments.PRODUCTION && !fs.existsSync(envPath)) {
-      throw new Error(".env file is missing in root directory");
+      throw new Error('.env file is missing in root directory');
     }
     configDotenv({ path: envPath });
   }

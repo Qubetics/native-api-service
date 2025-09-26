@@ -2,7 +2,7 @@ import { arrNoExponent, fetchRequest, noExponent } from "../../Utility/common";
 import { FETCH_METHODS, HEADERS, REDIS_KEY, RES_MSG } from "../../constant";
 import { IESResponse } from "../../interfaces/index";
 import prisma from "../../lib/db";
-import { RedisService } from "../../service/index";
+import redisHelper from "../../service/redis.helper";
 
 class DelegatorService {
   /**
@@ -97,7 +97,11 @@ class DelegatorService {
         },
       });
 
-      let totalRewards = 0;
+      if (!delegatorByAddress) {
+        throw new Error(RES_MSG.NOT_FOUND);
+      }
+
+      let validatorsTotalReward = 0;
       if (delegatorByAddress?.validatorStakes) {
         for (const validatorStake of delegatorByAddress?.validatorStakes) {
           let validator = await prisma.validator.findUnique({
@@ -112,20 +116,19 @@ class DelegatorService {
           });
 
           if (validator) {
-            totalRewards = Number(validator?.totalRewards);
+            validatorsTotalReward = Number(validator?.totalRewards);
           }
 
-          validatorStake.totalRewards = totalRewards;
+          validatorStake.validatorsTotalReward = validatorsTotalReward;
+          validatorStake.delegatorRewards = Number(
+            validatorStake.delegatorRewards
+          );
           validatorStake.name = validator?.name || "";
           validatorStake.validatorAddress = validator?.validatorAddress || "";
           validatorStake.stake = noExponent(
-            validatorStake?.stake / 10 ** 18 || 0,
+            validatorStake?.stake / 10 ** 18 || 0
           );
         }
-      }
-
-      if (!delegatorByAddress) {
-        throw new Error(RES_MSG.NOT_FOUND);
       }
 
       return {
@@ -147,51 +150,98 @@ class DelegatorService {
 
   async dashboard(address: string): Promise<IESResponse> {
     try {
-      const addressKey = `${REDIS_KEY.TOTAL_REWARDS}:${address}`;
-      let totalRewardsResponse;
+      let rewards = await redisHelper.getHset(REDIS_KEY.REWARDS, address);
 
-      const response = await fetchRequest(
-        `${environment.evmHost}/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
-        FETCH_METHODS.GET,
-        HEADERS.DEFAULT,
-      );
-
-      console.log("response  from blockchain :::: ", response.data);
-      if (!response.error) {
-        totalRewardsResponse = response.data.total[0]?.amount || 0;
-        await RedisService.setString(addressKey, totalRewardsResponse);
-      } else {
-        totalRewardsResponse = await RedisService.getString(addressKey);
+      if (!rewards) {
+        rewards = await prisma.rewards.findFirst({
+          where: {
+            address: address,
+          },
+          select: {
+            rewardAmount: true,
+          },
+        });
       }
-
-      let totalRewards = totalRewardsResponse / 10 ** 18; // Update totalRewards
 
       const delegatorByAddress = await prisma.validatorStake.findMany({
         where: {
           delegatorAddress: address,
         },
-        select: { balanceAmount: true },
+        select: {
+          balanceAmount: true,
+          delegatorRewards: true,
+        },
       });
 
-      console.log("delegatorByAddress : ", delegatorByAddress);
+      let totalRewards = 0;
 
-      const delegatorStake = delegatorByAddress.reduce(
-        (total, element) => total + Number(element?.balanceAmount),
-        0,
-      );
+      for (let i = 0; i < delegatorByAddress?.length; i++) {
+        const element = delegatorByAddress[i];
+        totalRewards = totalRewards + Number(element?.delegatorRewards);
+      }
+      let delegatorStake = 0;
+
+      for (let i = 0; i < delegatorByAddress?.length; i++) {
+        const element = delegatorByAddress[i];
+        delegatorStake = delegatorStake + Number(element?.balanceAmount);
+      }
 
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
         data: {
+          claimedRewards: rewards?.rewardAmount || 0,
           totalRewards: totalRewards || 0,
-          totalStake: delegatorStake / 10 ** 18,
+          totalStake: delegatorStake,
         },
       };
     } catch (err) {
       console.log("error in getDelegatorByAddress : ", err);
       if (err instanceof Error) {
-        return { error: true, message: err.message };
+        return { error: true, message: "Something went wrong! " };
+      }
+      return { error: true, message: RES_MSG.ERROR };
+    }
+  }
+  async getUnbondingDetails(address: string): Promise<IESResponse> {
+    try {
+      const response = await fetchRequest(
+        `${environment.evmHost}/cosmos/staking/v1beta1/delegators/${address}/unbonding_delegations`,
+        FETCH_METHODS.GET,
+        HEADERS.DEFAULT
+      );
+
+      if (response?.error)
+        return {
+          error: true,
+          message: RES_MSG.ERROR,
+        };
+
+      const modifiedResponse = await Promise.all(
+        response.data?.unbonding_responses.map(async (item: any) => {
+          const validator = await prisma.validator.findUnique({
+            where: { operatorAddress: item.validator_address },
+            select: { name: true },
+          });
+
+          return {
+            validator_name: validator?.name || null,
+            ...item,
+          };
+        })
+      );
+
+      console.log("modifiedResponse : ", modifiedResponse);
+
+      return {
+        error: false,
+        message: RES_MSG.FETCH_SUCCESS,
+        data: modifiedResponse,
+      };
+    } catch (err) {
+      console.log("error in getDelegatorByAddress : ", err);
+      if (err instanceof Error) {
+        return { error: true, message: "Something went wrong! " };
       }
       return { error: true, message: RES_MSG.ERROR };
     }

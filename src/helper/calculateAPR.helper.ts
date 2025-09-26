@@ -1,14 +1,14 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
   RES_MSG,
   CONST_NAME,
   REDIS_KEY,
   CURRENT_DEFAULT_APR,
-} from "../constant";
-import { Params, BlockHeader } from "../interfaces/index";
-import logger from "../lib/logger";
-import { getDigitsAfterE } from "../lib/utilities.helper";
-import { RedisService } from "../service";
+} from '../constant';
+import { Params, BlockHeader } from '../interfaces/index';
+import logger from '../lib/logger';
+import { getDigitsAfterE } from '../lib/utilities.helper';
+import { RedisService } from '../service';
 
 // async function getParams_old(apiRes: AxiosInstance): Promise<any | false> {
 //   try {
@@ -82,10 +82,10 @@ import { RedisService } from "../service";
 function calculateAPY(
   inflation: number,
   bondedRate: number,
-  communityTax: number,
+  communityTax: number
 ): number {
   const apy = Number(
-    ((inflation / bondedRate) * (1 - communityTax) * 100).toFixed(2),
+    ((inflation / bondedRate) * (1 - communityTax) * 100).toFixed(2)
   );
   return apy;
 }
@@ -106,14 +106,14 @@ const calculateData = async (): Promise<
     const apiRes = axios.create({
       baseURL: apiUrl,
       headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        Accept: "application/json",
+        'Content-Type': 'application/json; charset=utf-8',
+        Accept: 'application/json',
       },
       timeout: 5 * CONST_NAME.THOUSAND,
     });
 
-    let apr = CURRENT_DEFAULT_APR;
     const params = await getParams(apiRes);
+    let apr = CURRENT_DEFAULT_APR;
     if (!params) throw new Error(RES_MSG.FETCH_SUCCESS);
     try {
       const getApr = await apiRes.get("/qubetics/validatorpool/params");
@@ -122,13 +122,13 @@ const calculateData = async (): Promise<
         apr = annualRoi / 100;
       }
     } catch (error) {
-      console.log("Error while getng apr details", error);
+      console.log('Error while getng apr details', error);
     }
 
     const apyValue = calculateAPY(
       Number(params.inflation),
       Number(params.bondedRate),
-      params.communityTax,
+      params.communityTax
     );
 
     const validatorData = {
@@ -146,11 +146,11 @@ const calculateData = async (): Promise<
 
     await RedisService.setString(
       REDIS_KEY.VALIDATOR_DATA,
-      JSON.stringify(validatorData),
+      JSON.stringify(validatorData)
     );
     return validatorData;
   } catch (err) {
-    logger.log("error", "Error occurred while calculating stake APY", err);
+    console.log('error', 'Error occurred while calculating stake APY', err);
     if (err instanceof Error) {
       return { error: true, message: err.message };
     }
@@ -169,19 +169,19 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       total_Supply,
       annualProvision,
     ] = await Promise.all([
-      apiRes.get("/cosmos/staking/v1beta1/validators"),
+      apiRes.get('/cosmos/staking/v1beta1/validators'),
       apiRes.get(
         `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`,
       ),
-      apiRes.get("/cosmos/mint/v1beta1/inflation"),
-      apiRes.get("/cosmos/staking/v1beta1/pool"),
-      apiRes.get("/cosmos/distribution/v1beta1/params"),
-      apiRes.get("/cosmos/bank/v1beta1/supply"),
-      apiRes.get("/cosmos/mint/v1beta1/annual_provisions"),
+      apiRes.get('/cosmos/mint/v1beta1/inflation'),
+      apiRes.get('/cosmos/staking/v1beta1/pool'),
+      apiRes.get('/cosmos/distribution/v1beta1/params'),
+      apiRes.get('/cosmos/bank/v1beta1/supply'),
+      apiRes.get('/cosmos/mint/v1beta1/annual_provisions'),
     ]);
 
     const activeValidator = validatorResponse?.data?.validators.filter(
-      (item: any) => item.status === CONST_NAME.BOND_STATUS,
+      (item: any) => item.status === CONST_NAME.BOND_STATUS
     );
 
     if (activeValidator?.length === 0) {
@@ -229,7 +229,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       activeValidator: activeValidator.length,
     };
   } catch (error) {
-    logger.error("getParams Error", error);
+    logger.error('getParams Error', error);
     return false;
   }
 }
