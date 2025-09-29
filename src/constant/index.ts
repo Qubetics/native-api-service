@@ -34,38 +34,38 @@ export const RATE_LIMITER_MESSAGE = {
 };
 
 export const RES_MSG = {
-  NOT_FOUND: "data not found",
-  FETCH_SUCCESS: "data fetched successfully",
-  ACTIVE: "active",
-  INACTIVE: "inactive",
-  YES: "yes",
-  NO: "no",
-  VETO: "veto",
-  ABSTAIN: "abstain",
-  DEACTIVATING: "deactivating",
-  BOND_STATUS_BONDED: "BOND_STATUS_BONDED",
-  BOND_STATUS_UNBONDED: "BOND_STATUS_UNBONDED",
-  BOND_STATUS_UNBONDING: "BOND_STATUS_UNBONDING",
-  ERROR_FETCH_LATEST_BLOCK: "error while fetching latest block",
-  ERROR: "Oops! Something went wrong. Please try again.",
-  SERVER_ERROR: "internal server error",
-  TRANSACTION_FETCH_SUCCESS: "transaction fetched successfully",
-  PROPOSAL_FETCH_SUCCESS: "proposal fetched successfully",
-  TRANSACTION_NOT_FOUND: "transaction not found",
-  PROPOSAL_NOT_FOUND: "proposal not found",
-  NOT_VALID_QUERY: "invalid block number",
-  BLOCK_TRANSACTION_FETCH: "block transactions fetched successfully",
-  ACCOUNT_HISTORY_SUCCESS: "account history fetched successfully",
-  TRANSACTION_HISTORY_SUCCESS: "transaction history fetched successfully",
-  TRANSACTION_FAILED: "transaction failed",
-  TRANSACTION_CREATE_SUCCESS: "transaction created successfully",
-  SUCCESS: "success",
-  CONTRACT_NOT_FOUND: "contract not found",
-  CONTRACT: "contract fetched successfully",
-  CONTRACT_TX: "conract transaction fetched successfully",
-  CONTRACT_TX_NOT_FOUND: "data not found",
-  INVALID_ADDRESS: "invalid address",
-  INVALID_MESSAGE: "this message type data not found ",
+  NOT_FOUND: 'data not found',
+  FETCH_SUCCESS: 'data fetched successfully',
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+  YES: 'yes',
+  NO: 'no',
+  VETO: 'veto',
+  ABSTAIN: 'abstain',
+  DEACTIVATING: 'deactivating',
+  BOND_STATUS_BONDED: 'BOND_STATUS_BONDED',
+  BOND_STATUS_UNBONDED: 'BOND_STATUS_UNBONDED',
+  BOND_STATUS_UNBONDING: 'BOND_STATUS_UNBONDING',
+  ERROR_FETCH_LATEST_BLOCK: 'error while fetching latest block',
+  ERROR: 'Oops! Something went wrong. Please try again.',
+  SERVER_ERROR: 'internal server error',
+  TRANSACTION_FETCH_SUCCESS: 'transaction fetched successfully',
+  PROPOSAL_FETCH_SUCCESS: 'proposal fetched successfully',
+  TRANSACTION_NOT_FOUND: 'transaction not found',
+  PROPOSAL_NOT_FOUND: 'proposal not found',
+  NOT_VALID_QUERY: 'invalid block number',
+  BLOCK_TRANSACTION_FETCH: 'block transactions fetched successfully',
+  ACCOUNT_HISTORY_SUCCESS: 'account history fetched successfully',
+  TRANSACTION_HISTORY_SUCCESS: 'transaction history fetched successfully',
+  TRANSACTION_FAILED: 'transaction failed',
+  TRANSACTION_CREATE_SUCCESS: 'transaction created successfully',
+  SUCCESS: 'success',
+  CONTRACT_NOT_FOUND: 'contract not found',
+  CONTRACT: 'contract fetched successfully',
+  CONTRACT_TX: 'conract transaction fetched successfully',
+  CONTRACT_TX_NOT_FOUND: 'data not found',
+  INVALID_ADDRESS: 'invalid address',
+  INVALID_MESSAGE: 'this message type data not found ',
 };
 
 export const BLOCKCHAIN_ERROR_MSG = {
@@ -147,33 +147,33 @@ export const ASC = 'asc';
 export const DESC = 'desc';
 
 export const REDIS_KEY = {
-  TOKEN_PRICE: "TOKEN_PRICE",
-  PENDING_TX: "PENDING_TRANSACTION",
-  TPS_GRAPH: "TPS_GRAPH_PAYLOAD",
-  TOKEN_GRAPH: "TOKEN_GRAPH_PAYLOAD",
-  ACCOUNT_GRAPH: "ACCOUNT_GRAPH_PAYLOAD",
-  COIN_TRANSFER_GRAPH: "COIN_TRANSFER_GRAPH_PAYLOAD",
-  CONTRACT_DEPLOY_GRAPH: "CONTRACT_DEPLOY_GRAPH_PAYLOAD",
-  CIRCULATING_SUPPLY: "CIRCULATING_SUPPLY",
-  MARKET_CAP: "MARKET_CAP",
-  TOTAL_BLOCKS: "TOTAL_BLOCKS",
-  TOTAL_TX: "TOTAL_TX",
-  TOTAL_TOKENS: "TOTAL_TOKENS",
-  TOTAL_ACCOUNTS: "TOTAL_ACCOUNTS",
-  TOTAL_TOKEN_PRICE: "TOTAL_TOKEN_PRICE",
-  TOTAL_COIN_TRANSFER_TX: "TOTAL_COIN_TRANSFER_TX",
-  TOTAL_CONTRACT_DEPLOYED_TX: "TOTAL_CONTRACT_DEPLOYED_TX",
-  TOTAL_CONTRACT_LOGS: "TOTAL_CONTRACT_LOGS",
-  VALIDATOR_DATA: "VALIDATOR_DATA",
-  TOTAL_REWARDS: "TOTAL_REWARDS",
-  USER_BALANCE: "USER_BALANCE",
-  INFLATION_APY: "INFALTION_AND_APY",
-  NATIVE_BLOCKS_COUNT: "NATIVE_BLOCKS_COUNT",
-  NATIVE_SESSIONS_COUNT: "SESSION_COUNT",
-  NATIVE_TRANSACTIONS_COUNT: "NATIVE_TRANSACTIONS_COUNT",
-  DASHBOARD_DATA: "DASHBOARD_DATA",
-  COIN_PRICE: "COIN_PRICE",
-  LATEST_BLOCK: "LATEST_BLOCK",
+  TOKEN_PRICE: 'TOKEN_PRICE',
+  PENDING_TX: 'PENDING_TRANSACTION',
+  TPS_GRAPH: 'TPS_GRAPH_PAYLOAD',
+  TOKEN_GRAPH: 'TOKEN_GRAPH_PAYLOAD',
+  ACCOUNT_GRAPH: 'ACCOUNT_GRAPH_PAYLOAD',
+  COIN_TRANSFER_GRAPH: 'COIN_TRANSFER_GRAPH_PAYLOAD',
+  CONTRACT_DEPLOY_GRAPH: 'CONTRACT_DEPLOY_GRAPH_PAYLOAD',
+  CIRCULATING_SUPPLY: 'CIRCULATING_SUPPLY',
+  MARKET_CAP: 'MARKET_CAP',
+  TOTAL_BLOCKS: 'TOTAL_BLOCKS',
+  TOTAL_TX: 'TOTAL_TX',
+  TOTAL_TOKENS: 'TOTAL_TOKENS',
+  TOTAL_ACCOUNTS: 'TOTAL_ACCOUNTS',
+  TOTAL_TOKEN_PRICE: 'TOTAL_TOKEN_PRICE',
+  TOTAL_COIN_TRANSFER_TX: 'TOTAL_COIN_TRANSFER_TX',
+  TOTAL_CONTRACT_DEPLOYED_TX: 'TOTAL_CONTRACT_DEPLOYED_TX',
+  TOTAL_CONTRACT_LOGS: 'TOTAL_CONTRACT_LOGS',
+  VALIDATOR_DATA: 'VALIDATOR_DATA',
+  TOTAL_REWARDS: 'TOTAL_REWARDS',
+  USER_BALANCE: 'USER_BALANCE',
+  INFLATION_APY: 'INFALTION_AND_APY',
+  NATIVE_BLOCKS_COUNT: 'NATIVE_BLOCKS_COUNT',
+  NATIVE_SESSIONS_COUNT: 'SESSION_COUNT',
+  NATIVE_TRANSACTIONS_COUNT: 'NATIVE_TRANSACTIONS_COUNT',
+  DASHBOARD_DATA: 'DASHBOARD_DATA',
+  COIN_PRICE: 'COIN_PRICE',
+  LATEST_BLOCK: 'LATEST_BLOCK',
   REWARDS: 'REWARDS',
 };
 
@@ -271,40 +271,40 @@ export const FETCH_METHODS = {
   PUT: 'PUT',
 };
 export const subscriptionPath = [
-  "/qubetics.subscription.v3.MsgStartSubscriptionRequest",
-  "/qubetics.subscription.v3.MsgCancelSubscriptionRequest",
+  '/qubetics.subscription.v3.MsgStartSubscriptionRequest',
+  '/qubetics.subscription.v3.MsgCancelSubscriptionRequest',
 ];
 export const sessionsPath = [
-  "/qubetics.subscription.v3.MsgStartSessionRequest",
-  "/qubetics.session.v3.MsgCancelSessionRequest",
+  '/qubetics.subscription.v3.MsgStartSessionRequest',
+  '/qubetics.session.v3.MsgCancelSessionRequest',
 ];
 export const daysMap: any = {
-  "7d": 7,
-  "30d": 30,
-  "365d": 365,
+  '7d': 7,
+  '30d': 30,
+  '365d': 365,
 };
 export const MSG_TYPE = [
-  "START_SUBSCRIPTION",
-  "END_SUBSCRIPTION",
-  "START_REQUEST",
-  "END_REQUEST",
+  'START_SUBSCRIPTION',
+  'END_SUBSCRIPTION',
+  'START_REQUEST',
+  'END_REQUEST',
 ];
 export const MSG_START_SESSION =
-  "/qubetics.subscription.v3.MsgStartSessionRequest";
+  '/qubetics.subscription.v3.MsgStartSessionRequest';
 export const MSG_CANCEL_SESSION =
-  "/qubetics.session.v3.MsgCancelSessionRequest";
+  '/qubetics.session.v3.MsgCancelSessionRequest';
 export const MSG_START_SUBSCRIPTION =
-  "/qubetics.subscription.v3.MsgStartSubscriptionRequest";
+  '/qubetics.subscription.v3.MsgStartSubscriptionRequest';
 export const MSG_CANCEL_SUBSCRIPTION =
-  "/qubetics.subscription.v3.MsgCancelSubscriptionRequest";
+  '/qubetics.subscription.v3.MsgCancelSubscriptionRequest';
 
 export const CURRENT_DEFAULT_APR = 30;
 export const CURRENT_DEFAULT_COIN_PRICE = 0.337097;
 export const CURRENT_DEFAULT_CIRCULATING_SUPPLY = 30542186;
 
 export const DVPN_TYPE = {
-  START_SUBSCRIPTION: "/qubetics.subscription.v3.MsgStartSubscriptionRequest",
-  END_SUBSCRIPTION: "/qubetics.subscription.v3.MsgCancelSubscriptionRequest",
-  START_SESSION: "/qubetics.subscription.v3.MsgStartSessionRequest",
-  END_SESSION: "/qubetics.session.v3.MsgCancelSessionRequest",
+  START_SUBSCRIPTION: '/qubetics.subscription.v3.MsgStartSubscriptionRequest',
+  END_SUBSCRIPTION: '/qubetics.subscription.v3.MsgCancelSubscriptionRequest',
+  START_SESSION: '/qubetics.subscription.v3.MsgStartSessionRequest',
+  END_SESSION: '/qubetics.session.v3.MsgCancelSessionRequest',
 };
