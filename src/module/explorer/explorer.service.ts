@@ -30,6 +30,7 @@ import {
   fillMissingDatesWithZeroByMonth,
 } from "../../lib/utilities.helper";
 import contractService from "../contract/contract.service";
+import nodeService from "../node/node.service";
 
 class ExplorerService {
   // Dashboard method to fetch data
@@ -273,6 +274,9 @@ class ExplorerService {
         /* here we search for all transaction specfic to a wallet address*/
         txData = await contractService.getContractByAddress(payload);
 
+        return txData;
+      } else if (payload.startsWith("qubeticsnode") && payload.length === 51) {
+        txData = await nodeService.getNodeAddressSearch(payload);
         return txData;
       } else {
         throw new Error(RES_MSG.NOT_FOUND);

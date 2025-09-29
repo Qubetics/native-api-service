@@ -239,6 +239,35 @@ class NodeService {
       }
     }
   }
+
+  async getNodeAddressSearch(address: string | null): Promise<IESResponse> {
+    try {
+      if (!address) throw new Error("Address is required");
+
+      const url = `${environment.nodeInfoUrl}/qubetics/node/v3/nodes/${address}`;
+      const fetchRes = await fetchRequest(url, "GET", null);
+
+      // Check if fetch returned an error
+      if (fetchRes?.error || !fetchRes?.data) {
+        return { error: true, message: `invalid node address ${address}` };
+      }
+
+      return {
+        error: false,
+        message: RES_MSG.SUCCESS,
+        data: { nodeAddress: { address } }
+      };
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.message.includes("prisma")) {
+          return { error: true, message: RES_MSG.SERVER_ERROR };
+        }
+        return { error: true, message: err.message };
+      } else {
+        return { error: true, message: RES_MSG.ERROR };
+      }
+    }
+  }
 }
 
 export default new NodeService();
