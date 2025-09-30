@@ -98,6 +98,7 @@ const calculateData = async (): Promise<
       bondedTokens: number;
       bondedRate: number;
       totalValidator: number;
+      community_pool: number;
     }
   | { error: boolean; message: string }
 > => {
@@ -142,6 +143,7 @@ const calculateData = async (): Promise<
       validator: params?.activeValidator,
       bondedTokens: params?.bondedTokens,
       bondedRate: params?.bondedRate,
+      community_pool: params?.community_pool,
     };
 
     await RedisService.setString(
@@ -168,16 +170,18 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       paramsResponse,
       total_Supply,
       annualProvision,
+      community_pool,
     ] = await Promise.all([
       apiRes.get('/cosmos/staking/v1beta1/validators'),
       apiRes.get(
-        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`,
+        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`
       ),
       apiRes.get('/cosmos/mint/v1beta1/inflation'),
       apiRes.get('/cosmos/staking/v1beta1/pool'),
       apiRes.get('/cosmos/distribution/v1beta1/params'),
       apiRes.get('/cosmos/bank/v1beta1/supply'),
       apiRes.get('/cosmos/mint/v1beta1/annual_provisions'),
+      apiRes.get('/cosmos/distribution/v1beta1/community_pool'),
     ]);
 
     const activeValidator = validatorResponse?.data?.validators.filter(
@@ -214,6 +218,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
     const totalSupply = Number(total_Supply.data.supply[0].amount);
 
     const bondedRate = Number((bondedTokens / circulation_supply) * 100);
+    const community_poolValue = community_pool?.data?.pool[0]?.amount ?? 0;
 
     return {
       annualProvisions,
@@ -227,6 +232,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       total_supply: totalSupply,
       totalValidators: validatorResponse?.data?.validators.length,
       activeValidator: activeValidator.length,
+      community_pool: community_poolValue,
     };
   } catch (error) {
     logger.error('getParams Error', error);

@@ -1,5 +1,5 @@
 import axios, { AxiosResponse, Method } from 'axios';
-import { TRANSACTION_TYPE } from '../constant';
+import { CONST_NAME, TRANSACTION_TYPE } from '../constant';
 import { convertBigIntToNumber } from '../helper/common.helper';
 import { CoinMarketData } from '../interfaces/index';
 import logger from './logger';

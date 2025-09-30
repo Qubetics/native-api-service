@@ -163,7 +163,7 @@ class DelegatorService {
         });
       }
 
-      const delegatorByAddress = await prisma.validatorStake.findMany({
+      const delegatorByAddress: any = await prisma.validatorStake.findMany({
         where: {
           delegatorAddress: address,
         },

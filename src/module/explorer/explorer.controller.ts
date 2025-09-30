@@ -35,6 +35,21 @@ class ExplorerController implements Controller {
         "/address-detail/:address",
         getAddressDetailValidation,
         this.getAddressDetail,
+      )
+      .get(
+        "/circulation-supply",
+        // getGraphHistoryValidation,
+        this.getCirculationSupply,
+      )
+      .get(
+        "/total-supply",
+        // getGraphHistoryValidation,
+        this.getTotalSupply,
+      )
+      .get(
+        "/burned-amount",
+        // getGraphHistoryValidation,
+        this.burnedAmount,
       );
   }
 
@@ -109,6 +124,36 @@ class ExplorerController implements Controller {
       return setResponse.error(response, tpsHistoryRes);
     }
     return setResponse.success(response, tpsHistoryRes);
+  };
+
+  private getCirculationSupply = async (
+    request: Request,
+    response: Response,
+  ) => {
+    const getCirculationSupply = await ExplorerService.getCirculationSupply();
+
+    if (getCirculationSupply.error) {
+      return setResponse.error(response, getCirculationSupply);
+    }
+    return setResponse.success(response, getCirculationSupply);
+  };
+
+  private getTotalSupply = async (request: Request, response: Response) => {
+    const getCirculationSupply = await ExplorerService.getTotalSupply();
+
+    if (getCirculationSupply.error) {
+      return setResponse.error(response, getCirculationSupply);
+    }
+    return setResponse.success(response, getCirculationSupply);
+  };
+
+  private burnedAmount = async (request: Request, response: Response) => {
+    const getCirculationSupply = await ExplorerService.getBurnedAmount();
+
+    if (getCirculationSupply.error) {
+      return setResponse.error(response, getCirculationSupply);
+    }
+    return setResponse.success(response, getCirculationSupply);
   };
 }
 

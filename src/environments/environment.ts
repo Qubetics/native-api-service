@@ -60,8 +60,9 @@ class Environment implements IEnvironment {
 
   public excludedValidators: string;
 
-  public ttlTimeRewards: number;
+  public initialSupply: number;
 
+  public ttlTimeRewards: number;
 
   /**
    *
@@ -97,7 +98,8 @@ class Environment implements IEnvironment {
     this.redisExpiry = Number(process.env.API_REDIS_EXPIRY);
     this.validators = <string>process.env.VALIDATORS;
     this.excludedValidators = <string>process.env.EXCLUDING_VALIDATORS;
-     this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
+    this.initialSupply = Number(process.env.INITIAL_SUPPLY) || 1366266047.86;
+    this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
   }
 
   /**

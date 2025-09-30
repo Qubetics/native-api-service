@@ -32,14 +32,14 @@ class ValidatorService {
         data.status === "inactive"
       ) {
         validators = await prisma.validator.findMany({
-          orderBy: { createdAt: "desc" },
+          orderBy: { votingPower: "desc" },
           skip: data.page * data.limit,
           take: data.limit,
           where: { status: data.status },
         });
       } else {
         validators = await prisma.validator.findMany({
-          orderBy: { createdAt: "desc" },
+          orderBy: { votingPower: "desc" },
           skip: data.page * data.limit,
           take: data.limit,
         });

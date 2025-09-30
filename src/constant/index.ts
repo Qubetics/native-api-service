@@ -174,6 +174,8 @@ export const REDIS_KEY = {
   DASHBOARD_DATA: 'DASHBOARD_DATA',
   COIN_PRICE: 'COIN_PRICE',
   LATEST_BLOCK: 'LATEST_BLOCK',
+  CIRCULATING_SUPPLY_FIGURE: 'CIRCULATING_SUPPLY_FIGURE',
+  TOTAL_BURNED_AMOUNT: 'TOTAL_BURNED_AMOUNT',
   REWARDS: 'REWARDS',
 };
 
@@ -300,7 +302,7 @@ export const MSG_CANCEL_SUBSCRIPTION =
 
 export const CURRENT_DEFAULT_APR = 30;
 export const CURRENT_DEFAULT_COIN_PRICE = 0.337097;
-export const CURRENT_DEFAULT_CIRCULATING_SUPPLY = 30542186;
+// export const CURRENT_DEFAULT_CIRCULATING_SUPPLY = 30542186;
 
 export const DVPN_TYPE = {
   START_SUBSCRIPTION: '/qubetics.subscription.v3.MsgStartSubscriptionRequest',
@@ -308,3 +310,5 @@ export const DVPN_TYPE = {
   START_SESSION: '/qubetics.subscription.v3.MsgStartSessionRequest',
   END_SESSION: '/qubetics.session.v3.MsgCancelSessionRequest',
 };
+export const CURRENT_DEFAULT_CIRCULATING_SUPPLY = 340829898;
+export const STATIC_BURNED_AMOUNT = 52611;

@@ -7,6 +7,7 @@ import {
   CURRENT_DEFAULT_APR,
   CURRENT_DEFAULT_COIN_PRICE,
   CURRENT_DEFAULT_CIRCULATING_SUPPLY,
+  STATIC_BURNED_AMOUNT,
 } from "../../constant";
 import { GraphData, IESResponse, IGraphResponse } from "../../interfaces/index";
 import { calculateData } from "../../helper/calculateAPR.helper";
@@ -31,6 +32,7 @@ import {
 } from "../../lib/utilities.helper";
 import contractService from "../contract/contract.service";
 import nodeService from "../node/node.service";
+import redisHelper from "../../service/redis.helper";
 
 class ExplorerService {
   // Dashboard method to fetch data
@@ -756,13 +758,32 @@ class ExplorerService {
       //     ? await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY)
       //     : data?.circulation_supply;
 
-      const circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
+      // const circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
+
+      let circulationSupply = await RedisService.getString(
+        REDIS_KEY.CIRCULATING_SUPPLY_FIGURE
+      );
+      if (!circulationSupply) {
+        circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
+      }
       if (marketCap === "0" || !marketCap) {
         marketCap ??= tokenPrice * circulationSupply;
       }
       // const marketCap = tokenPrice * circulationSupply;
       const userCount = await prisma.users.count();
-      console.log("calculateData", data);
+
+      let burnedAmount = await RedisService.getString(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT
+      );
+
+      if (!burnedAmount) {
+        /** save burned fees */
+        burnedAmount = await this.calculateBurnedAmount();
+        await redisHelper.setString(
+          REDIS_KEY.TOTAL_BURNED_AMOUNT,
+          burnedAmount
+        );
+      }
 
       return {
         error: false,
@@ -783,11 +804,115 @@ class ExplorerService {
           bondedTokens: data?.bondedTokens ? Number(data.bondedTokens) : 0,
           bondedRate: data?.bondedRate,
           marketCap,
+          community_pool: data?.community_pool ?? 0,
+          burnedAmount,
         },
       };
     } catch (err) {
       logger.error("Error in dashboard data:", err);
       return { error: true, message: RES_MSG.NOT_FOUND };
+    }
+  }
+
+  async getCirculationSupply(): Promise<IESResponse> {
+    try {
+      let circulationSupply = await RedisService.getString(
+        REDIS_KEY.CIRCULATING_SUPPLY_FIGURE
+      );
+      if (!circulationSupply) {
+        circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
+      }
+
+      return {
+        error: false,
+        message: RES_MSG.SUCCESS,
+        data: {
+          circulationSupply,
+        },
+      };
+    } catch (err) {
+      logger.error("dashboard-Error", err);
+      return { error: true, message: RES_MSG.NOT_FOUND };
+    }
+  }
+
+  async getTotalSupply(): Promise<IESResponse> {
+    try {
+      let burnedAmount = await RedisService.getString(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT
+      );
+
+      if (!burnedAmount) {
+        /** save burned fees */
+        burnedAmount = await this.calculateBurnedAmount();
+        await redisHelper.setString(
+          REDIS_KEY.TOTAL_BURNED_AMOUNT,
+          burnedAmount
+        );
+      }
+
+      const { initialSupply } = environment;
+
+      const totalSupply = initialSupply - burnedAmount;
+
+      return {
+        error: false,
+        message: RES_MSG.SUCCESS,
+        data: {
+          totalSupply,
+        },
+      };
+    } catch (err) {
+      logger.error("dashboard-Error", err);
+      return { error: true, message: RES_MSG.NOT_FOUND };
+    }
+  }
+
+  async getBurnedAmount(): Promise<IESResponse> {
+    try {
+      let burnedAmount = await RedisService.getString(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT
+      );
+
+      if (!burnedAmount) {
+        /** save burned fees */
+        burnedAmount = await this.calculateBurnedAmount();
+        await redisHelper.setString(
+          REDIS_KEY.TOTAL_BURNED_AMOUNT,
+          burnedAmount
+        );
+      }
+
+      return {
+        error: false,
+        message: RES_MSG.SUCCESS,
+        data: {
+          burnedAmount,
+        },
+      };
+    } catch (err) {
+      logger.error("dashboard-Error", err);
+      return { error: true, message: RES_MSG.NOT_FOUND };
+    }
+  }
+
+  async calculateBurnedAmount() {
+    try {
+      const burnedAmount: any = await prisma.transactions.aggregate({
+        _sum: {
+          burnedFee: true,
+        },
+      });
+
+      if (burnedAmount) {
+        return (
+          Number(burnedAmount?._sum.burnedFee) + Number(STATIC_BURNED_AMOUNT)
+        );
+      }
+      return Number(STATIC_BURNED_AMOUNT);
+    } catch (error) {
+      console.log(error, "error in calculateBurnedAmount");
+      return false;
     }
   }
 }
