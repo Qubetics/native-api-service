@@ -1,14 +1,14 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
   RES_MSG,
   CONST_NAME,
   REDIS_KEY,
   CURRENT_DEFAULT_APR,
-} from "../constant";
-import { Params, BlockHeader } from "../interfaces/index";
-import logger from "../lib/logger";
-import { getDigitsAfterE } from "../lib/utilities.helper";
-import { RedisService } from "../service";
+} from '../constant';
+import { Params, BlockHeader } from '../interfaces/index';
+import logger from '../lib/logger';
+import { getDigitsAfterE } from '../lib/utilities.helper';
+import { RedisService } from '../service';
 
 // async function getParams_old(apiRes: AxiosInstance): Promise<any | false> {
 //   try {
@@ -82,10 +82,10 @@ import { RedisService } from "../service";
 function calculateAPY(
   inflation: number,
   bondedRate: number,
-  communityTax: number,
+  communityTax: number
 ): number {
   const apy = Number(
-    ((inflation / bondedRate) * (1 - communityTax) * 100).toFixed(2),
+    ((inflation / bondedRate) * (1 - communityTax) * 100).toFixed(2)
   );
   return apy;
 }
@@ -98,6 +98,7 @@ const calculateData = async (): Promise<
       bondedTokens: number;
       bondedRate: number;
       totalValidator: number;
+      community_pool: number;
     }
   | { error: boolean; message: string }
 > => {
@@ -106,29 +107,29 @@ const calculateData = async (): Promise<
     const apiRes = axios.create({
       baseURL: apiUrl,
       headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        Accept: "application/json",
+        'Content-Type': 'application/json; charset=utf-8',
+        Accept: 'application/json',
       },
       timeout: 5 * CONST_NAME.THOUSAND,
     });
 
-    let apr = CURRENT_DEFAULT_APR;
     const params = await getParams(apiRes);
+    let apr = CURRENT_DEFAULT_APR;
     if (!params) throw new Error(RES_MSG.FETCH_SUCCESS);
     try {
-      const getApr = await apiRes.get("/qubetics/validatorpool/params");
+      const getApr = await apiRes.get('/qubetics/validatorpool/params');
       const annualRoi = getApr?.data?.params?.annual_roi;
       if (annualRoi != null) {
         apr = annualRoi / 100;
       }
     } catch (error) {
-      console.log("Error while getng apr details", error);
+      console.log('Error while getng apr details', error);
     }
 
     const apyValue = calculateAPY(
       Number(params.inflation),
       Number(params.bondedRate),
-      params.communityTax,
+      params.communityTax
     );
 
     const validatorData = {
@@ -142,15 +143,16 @@ const calculateData = async (): Promise<
       validator: params?.activeValidator,
       bondedTokens: params?.bondedTokens,
       bondedRate: params?.bondedRate,
+      community_pool: params?.community_pool,
     };
 
     await RedisService.setString(
       REDIS_KEY.VALIDATOR_DATA,
-      JSON.stringify(validatorData),
+      JSON.stringify(validatorData)
     );
     return validatorData;
   } catch (err) {
-    logger.log("error", "Error occurred while calculating stake APY", err);
+    console.log('error', 'Error occurred while calculating stake APY', err);
     if (err instanceof Error) {
       return { error: true, message: err.message };
     }
@@ -168,20 +170,22 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       paramsResponse,
       total_Supply,
       annualProvision,
+      community_pool,
     ] = await Promise.all([
-      apiRes.get("/cosmos/staking/v1beta1/validators"),
+      apiRes.get('/cosmos/staking/v1beta1/validators'),
       apiRes.get(
-        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`,
+        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`
       ),
-      apiRes.get("/cosmos/mint/v1beta1/inflation"),
-      apiRes.get("/cosmos/staking/v1beta1/pool"),
-      apiRes.get("/cosmos/distribution/v1beta1/params"),
-      apiRes.get("/cosmos/bank/v1beta1/supply"),
-      apiRes.get("/cosmos/mint/v1beta1/annual_provisions"),
+      apiRes.get('/cosmos/mint/v1beta1/inflation'),
+      apiRes.get('/cosmos/staking/v1beta1/pool'),
+      apiRes.get('/cosmos/distribution/v1beta1/params'),
+      apiRes.get('/cosmos/bank/v1beta1/supply'),
+      apiRes.get('/cosmos/mint/v1beta1/annual_provisions'),
+      apiRes.get('/cosmos/distribution/v1beta1/community_pool'),
     ]);
 
     const activeValidator = validatorResponse?.data?.validators.filter(
-      (item: any) => item.status === CONST_NAME.BOND_STATUS,
+      (item: any) => item.status === CONST_NAME.BOND_STATUS
     );
 
     if (activeValidator?.length === 0) {
@@ -214,6 +218,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
     const totalSupply = Number(total_Supply.data.supply[0].amount);
 
     const bondedRate = Number((bondedTokens / circulation_supply) * 100);
+    const community_poolValue = community_pool?.data?.pool[0]?.amount ?? 0;
 
     return {
       annualProvisions,
@@ -227,9 +232,10 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       total_supply: totalSupply,
       totalValidators: validatorResponse?.data?.validators.length,
       activeValidator: activeValidator.length,
+      community_pool: community_poolValue,
     };
   } catch (error) {
-    logger.error("getParams Error", error);
+    logger.error('getParams Error', error);
     return false;
   }
 }

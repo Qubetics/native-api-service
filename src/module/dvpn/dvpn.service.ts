@@ -197,7 +197,7 @@ class DvpnService {
   async getAddressDetails(address: any): Promise<IESResponse> {
     try {
       const totalEarning: any = await prisma.$queryRaw`
-      SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as totalPrice
+      SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as total
       FROM "DvpnTransaction"
       WHERE "provAddress" = ${address || ""}
     `;
@@ -206,7 +206,7 @@ class DvpnService {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
-          totalEarning: totalEarning[0]?.totalPrice || "0",
+          totalEarning: totalEarning[0]?.total || "0",
           native: true,
         },
       };

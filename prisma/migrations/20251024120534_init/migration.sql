@@ -1,18 +1,4 @@
 -- CreateTable
-CREATE TABLE "Blocks" (
-    "id" SERIAL NOT NULL,
-    "blocknumber" BIGINT NOT NULL,
-    "blockhash" VARCHAR(255) NOT NULL,
-    "timestamp" TEXT NOT NULL,
-    "transactionCount" BIGINT NOT NULL DEFAULT 0,
-    "validatorOperatorAddress" TEXT NOT NULL,
-    "miner" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Blocks_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Users" (
     "id" SERIAL NOT NULL,
     "address" VARCHAR(255) NOT NULL,
@@ -24,6 +10,20 @@ CREATE TABLE "Users" (
 );
 
 -- CreateTable
+CREATE TABLE "Blocks" (
+    "id" SERIAL NOT NULL,
+    "blocknumber" BIGINT NOT NULL,
+    "blockhash" VARCHAR(255) NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL,
+    "transactionCount" BIGINT NOT NULL DEFAULT 0,
+    "validatorOperatorAddress" TEXT NOT NULL,
+    "miner" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Blocks_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Transactions" (
     "id" SERIAL NOT NULL,
     "type" TEXT NOT NULL DEFAULT '',
@@ -31,14 +31,17 @@ CREATE TABLE "Transactions" (
     "txString" TEXT NOT NULL DEFAULT '',
     "blocknumber" BIGINT NOT NULL,
     "txhash" TEXT NOT NULL,
-    "timestamp" TEXT NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL,
     "contractAddress" TEXT NOT NULL DEFAULT 'N/A',
-    "fromAddress" VARCHAR(255) NOT NULL,
-    "toAddress" VARCHAR(255) NOT NULL,
+    "fromAddress" VARCHAR(255),
+    "toAddress" VARCHAR(255),
     "gasWanted" BIGINT NOT NULL DEFAULT 0,
+    "gasUsed" BIGINT NOT NULL DEFAULT 0,
     "txFee" TEXT NOT NULL DEFAULT '',
     "value" TEXT NOT NULL DEFAULT '0',
+    "burnedFee" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "nodeAddress" TEXT,
 
     CONSTRAINT "Transactions_pkey" PRIMARY KEY ("id")
 );
@@ -50,7 +53,7 @@ CREATE TABLE "Contracts" (
     "address" TEXT NOT NULL,
     "blockNumber" BIGINT NOT NULL,
     "txHash" TEXT NOT NULL,
-    "timestamp" TEXT NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL,
     "contractName" TEXT NOT NULL,
     "contractType" TEXT NOT NULL DEFAULT 'UNKNOWN',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -138,7 +141,7 @@ CREATE TABLE "ContractLogs" (
     "logs" TEXT NOT NULL DEFAULT '',
     "method" TEXT NOT NULL DEFAULT 'N/A',
     "status" TEXT NOT NULL,
-    "timestamp" TEXT NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -162,6 +165,7 @@ CREATE TABLE "ValidatorStake" (
     "validatorOperatorAddress" TEXT NOT NULL DEFAULT '',
     "delegatorAddress" TEXT NOT NULL,
     "balanceAmount" DECIMAL(65,30) NOT NULL,
+    "delegatorRewards" DECIMAL(65,30) NOT NULL DEFAULT 0,
     "denom" TEXT NOT NULL,
 
     CONSTRAINT "ValidatorStake_pkey" PRIMARY KEY ("id")
@@ -180,7 +184,7 @@ CREATE TABLE "Holders" (
 -- CreateTable
 CREATE TABLE "ValidatedBlocksCount" (
     "operatorAddress" TEXT NOT NULL,
-    "address" TEXT NOT NULL DEFAULT '',
+    "address" TEXT NOT NULL,
     "count" BIGINT NOT NULL DEFAULT 0
 );
 
@@ -214,6 +218,48 @@ CREATE TABLE "Voters" (
     CONSTRAINT "Voters_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "DvpnTransaction" (
+    "id" SERIAL NOT NULL,
+    "txhash" TEXT NOT NULL,
+    "blocknumber" BIGINT NOT NULL,
+    "planId" TEXT,
+    "sessionId" TEXT,
+    "subscriptionId" TEXT,
+    "type" TEXT NOT NULL,
+    "accAddress" TEXT,
+    "nodeAddress" TEXT,
+    "downloadBytes" TEXT,
+    "uploadBytes" TEXT,
+    "maxBytes" TEXT,
+    "duration" TEXT,
+    "maxDuration" TEXT,
+    "status" TEXT,
+    "startAt" TIMESTAMP(3),
+    "statusAt" TEXT,
+    "inactiveAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "logs" JSONB,
+    "price" TEXT,
+    "provAddress" TEXT,
+
+    CONSTRAINT "DvpnTransaction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Rewards" (
+    "id" SERIAL NOT NULL,
+    "address" TEXT NOT NULL,
+    "timeStamp" TIMESTAMP(3) NOT NULL,
+    "rewardAmount" TEXT NOT NULL,
+
+    CONSTRAINT "Rewards_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Users_address_key" ON "Users"("address");
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Blocks_blocknumber_key" ON "Blocks"("blocknumber");
 
@@ -225,9 +271,6 @@ CREATE INDEX "Blocks_miner_blockhash_blocknumber_idx" ON "Blocks"("miner", "bloc
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Blocks_blocknumber_blockhash_key" ON "Blocks"("blocknumber", "blockhash");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Users_address_key" ON "Users"("address");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Transactions_txhash_key" ON "Transactions"("txhash");
@@ -266,6 +309,9 @@ CREATE INDEX "validatorOperatorAddress" ON "ValidatorStake"("validatorOperatorAd
 CREATE UNIQUE INDEX "ValidatedBlocksCount_operatorAddress_key" ON "ValidatedBlocksCount"("operatorAddress");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ValidatedBlocksCount_address_key" ON "ValidatedBlocksCount"("address");
+
+-- CreateIndex
 CREATE INDEX "ValidatedBlocksCount_operatorAddress_idx" ON "ValidatedBlocksCount"("operatorAddress");
 
 -- CreateIndex
@@ -282,6 +328,15 @@ CREATE INDEX "Voters_proposalId_answer_voter_idx" ON "Voters"("proposalId", "ans
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Voters_proposalId_voter_key" ON "Voters"("proposalId", "voter");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DvpnTransaction_txhash_key" ON "DvpnTransaction"("txhash");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Rewards_address_key" ON "Rewards"("address");
+
+-- CreateIndex
+CREATE INDEX "Rewards_address_timeStamp_idx" ON "Rewards"("address", "timeStamp");
 
 -- AddForeignKey
 ALTER TABLE "Tokens" ADD CONSTRAINT "Tokens_contractAddress_fkey" FOREIGN KEY ("contractAddress") REFERENCES "Contracts"("address") ON DELETE RESTRICT ON UPDATE CASCADE;

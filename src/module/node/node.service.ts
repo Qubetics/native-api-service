@@ -208,15 +208,15 @@ class NodeService {
         },
       });
       const totalEarning: any = await prisma.$queryRaw`
-        SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as totalPrice
-        FROM "DvpnTransaction"
-        WHERE "nodeAddress" = ${address || ""}
+      SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as total
+      FROM "DvpnTransaction"
+      WHERE "nodeAddress" = ${address || ""}
       `;
       const dailyEarning: any = await prisma.$queryRaw`
-        SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as totalPrice
-        FROM "DvpnTransaction"
-        WHERE "nodeAddress" = ${address || ""}
-        AND DATE("createdAt") = CURRENT_DATE
+      SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as total
+      FROM "DvpnTransaction"
+      WHERE "nodeAddress" = ${address || ""}
+      AND DATE("createdAt") = CURRENT_DATE
       `;
 
       const total_users =
@@ -230,8 +230,8 @@ class NodeService {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
-          total_earning: totalEarning[0]?.totalPrice || "0", // We’ll need to update this later since we currently don’t have a type to calculate the amount
-          daily_earnings: dailyEarning[0]?.totalPrice || "0", // We’ll need to update this later since we currently don’t have a type to calculate the amount.
+          total_earning: totalEarning[0]?.total || "0", // We’ll need to update this later since we currently don’t have a type to calculate the amount
+          daily_earnings: dailyEarning[0]?.total || "0", // We’ll need to update this later since we currently don’t have a type to calculate the amount.
           total_users,
           active_users: activeItems?.sessions?.length ?? 0,
           last_checked,
