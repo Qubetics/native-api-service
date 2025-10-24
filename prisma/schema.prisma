@@ -162,6 +162,7 @@ model ValidatorStake {
   validatorOperatorAddress String    @default("")
   delegatorAddress         String
   balanceAmount            Decimal
+  delegatorRewards         Decimal   @default(0)
   denom                    String
   delegator                Delegator @relation(fields: [delegatorAddress], references: [address])
 
@@ -215,7 +216,7 @@ model Voters {
 
 model DvpnTransaction {
   id             Int       @id @default(autoincrement())
-  txhash         String    @unique
+  txhash         String?
   blocknumber    BigInt
   planId         String?
   sessionId      String?
@@ -229,12 +230,22 @@ model DvpnTransaction {
   duration       String?
   maxDuration    String?
   status         String?
+  startAt        DateTime?
   statusAt       String?
+  inactiveAt     DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   logs           Json?
   price          String?
+  stackingReward String?   @default("0")
   provAddress    String?
-  startAt        DateTime?
-  inactiveAt     DateTime?
+}
+
+model Rewards {
+  id           Int      @id @default(autoincrement())
+  address      String   @unique
+  timeStamp    DateTime
+  rewardAmount String
+
+  @@index([address, timeStamp])
 }
