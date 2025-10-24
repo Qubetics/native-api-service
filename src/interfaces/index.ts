@@ -1,9 +1,9 @@
-import { Router } from "express";
+import { Router } from 'express';
 import {
   TRANSACTION_STATUS,
   TransactionType,
   TRANSACTION_TYPE,
-} from "../constant";
+} from '../constant';
 
 export interface IESResponse {
   error?: boolean;
@@ -82,6 +82,7 @@ export interface ICreateTransaction {
   gasWanted: number | bigint;
   txFee: string;
   value: string;
+  burnedFee: number;
 }
 export interface IContractLog {
   contractAddress: string;
@@ -129,6 +130,7 @@ export interface Params {
   bondedRate: number;
   total_supply: number;
   totalValidators: number;
+  community_pool: number;
 }
 
 export interface BlockHeader {

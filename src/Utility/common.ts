@@ -1,8 +1,10 @@
 import axios from "axios";
-import countries from "i18n-iso-countries";
 import geoip from "geoip-lite";
+import countries from "i18n-iso-countries";
+import enLocale from "i18n-iso-countries/langs/en.json"; // import JSON instead of require
 import { extractIP } from "../helper/common.helper";
-countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
+
+countries.registerLocale(enLocale);
 
 /**
  * For making http requests
@@ -124,33 +126,63 @@ export function isAlphaNumeric(val: string | number) {
   return regex.test(str);
 }
 
-export const formatNodes = (nodes: any[]) => {
-  return nodes
+// export const formatNodes = (nodes: any[]) =>
+//   nodes
+//     .map((node: any) => {
+//       const ip = extractIP(node.remote_url);
+//       if (ip) {
+//         const geo: any = geoip.lookup(ip);
+//         const countryName = countries.getName(geo?.country, "en");
+//         const flagUrl = `https://flagcdn.com/w80/${geo?.country.toLowerCase()}.png`;
+//         return {
+//           address: node.address,
+//           gigabyte_prices: Array.isArray(node.gigabyte_prices)
+//             ? node.gigabyte_prices
+//             : [],
+//           hourly_prices: Array.isArray(node.hourly_prices)
+//             ? node.hourly_prices
+//             : [],
+//           remote_url: node.remote_url,
+//           inactive_at: node?.inactive_at ? new Date(node.inactive_at) : null,
+//           status: node.status,
+//           status_at: node?.status_at ? new Date(node.status_at) : null,
+//           country: countryName || "Unknown",
+//           city: geo?.city || "Unknown",
+//           long: geo?.ll[1].toString(),
+//           lat: geo?.ll[0].toString(),
+//           flag_url: flagUrl,
+//         };
+//       }
+//     })
+//     .filter(Boolean); // Remove undefined entries where IP extraction failed
+
+export const formatNodes = (nodes: any[]) =>
+  nodes
     .map((node: any) => {
       const ip = extractIP(node.remote_url);
-      if (ip) {
-        const geo: any = geoip.lookup(ip);
-        const countryName = countries.getName(geo?.country, "en");
-        const flagUrl = `https://flagcdn.com/w80/${geo?.country.toLowerCase()}.png`;
-        return {
-          address: node.address,
-          gigabyte_prices: Array.isArray(node.gigabyte_prices)
-            ? node.gigabyte_prices
-            : [],
-          hourly_prices: Array.isArray(node.hourly_prices)
-            ? node.hourly_prices
-            : [],
-          remote_url: node.remote_url,
-          inactive_at: node?.inactive_at ? new Date(node.inactive_at) : null,
-          status: node.status,
-          status_at: node?.status_at ? new Date(node.status_at) : null,
-          country: countryName || "Unknown",
-          city: geo?.city || "Unknown",
-          long: geo?.ll[1].toString(),
-          lat: geo?.ll[0].toString(),
-          flag_url: flagUrl,
-        };
-      }
+      if (!ip) return null; // return something explicitly if IP not found
+
+      const geo: any = geoip.lookup(ip);
+      const countryName = countries.getName(geo?.country, "en");
+      const flagUrl = `https://flagcdn.com/w80/${geo?.country?.toLowerCase()}.png`;
+
+      return {
+        address: node.address,
+        gigabyte_prices: Array.isArray(node.gigabyte_prices)
+          ? node.gigabyte_prices
+          : [],
+        hourly_prices: Array.isArray(node.hourly_prices)
+          ? node.hourly_prices
+          : [],
+        remote_url: node.remote_url,
+        inactive_at: node?.inactive_at ? new Date(node.inactive_at) : null,
+        status: node.status,
+        status_at: node?.status_at ? new Date(node.status_at) : null,
+        country: countryName || "Unknown",
+        city: geo?.city || "Unknown",
+        long: geo?.ll?.[1]?.toString() || "0",
+        lat: geo?.ll?.[0]?.toString() || "0",
+        flag_url: flagUrl,
+      };
     })
-    .filter(Boolean); // Remove undefined entries where IP extraction failed
-};
+    .filter(Boolean); // Remove null entries

@@ -207,6 +207,17 @@ class NodeService {
           createdAt: "desc",
         },
       });
+      const totalEarning: any = await prisma.$queryRaw`
+        SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as totalPrice
+        FROM "DvpnTransaction"
+        WHERE "nodeAddress" = ${address || ""}
+      `;
+      const dailyEarning: any = await prisma.$queryRaw`
+        SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as totalPrice
+        FROM "DvpnTransaction"
+        WHERE "nodeAddress" = ${address || ""}
+        AND DATE("createdAt") = CURRENT_DATE
+      `;
 
       const total_users =
         result?.filter((val: any) => val.type === DVPN_TYPE.START_SESSION)
@@ -219,14 +230,43 @@ class NodeService {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
-          total_earning: 0, // We’ll need to update this later since we currently don’t have a type to calculate the amount 
-          daily_earnings: 0, // We’ll need to update this later since we currently don’t have a type to calculate the amount.
+          total_earning: totalEarning[0]?.totalPrice || "0", // We’ll need to update this later since we currently don’t have a type to calculate the amount
+          daily_earnings: dailyEarning[0]?.totalPrice || "0", // We’ll need to update this later since we currently don’t have a type to calculate the amount.
           total_users,
           active_users: activeItems?.sessions?.length ?? 0,
           last_checked,
           recent_session: activeItems?.sessions[0]?.startAt ?? null,
           native: true,
         },
+      };
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.message.includes("prisma")) {
+          return { error: true, message: RES_MSG.SERVER_ERROR };
+        }
+        return { error: true, message: err.message };
+      } else {
+        return { error: true, message: RES_MSG.ERROR };
+      }
+    }
+  }
+
+  async getNodeAddressSearch(address: string | null): Promise<IESResponse> {
+    try {
+      if (!address) throw new Error("Address is required");
+
+      const url = `${environment.nodeInfoUrl}/qubetics/node/v3/nodes/${address}`;
+      const fetchRes = await fetchRequest(url, "GET", null);
+
+      // Check if fetch returned an error
+      if (fetchRes?.error || !fetchRes?.data) {
+        return { error: true, message: `invalid node address ${address}` };
+      }
+
+      return {
+        error: false,
+        message: RES_MSG.SUCCESS,
+        data: { nodeAddress: { address } },
       };
     } catch (err) {
       if (err instanceof Error) {

@@ -193,6 +193,34 @@ class DvpnService {
       }
     }
   }
+
+  async getAddressDetails(address: any): Promise<IESResponse> {
+    try {
+      const totalEarning: any = await prisma.$queryRaw`
+      SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as totalPrice
+      FROM "DvpnTransaction"
+      WHERE "provAddress" = ${address || ""}
+    `;
+
+      return {
+        error: false,
+        message: RES_MSG.SUCCESS,
+        data: {
+          totalEarning: totalEarning[0]?.totalPrice || "0",
+          native: true,
+        },
+      };
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.message.includes("prisma")) {
+          return { error: true, message: RES_MSG.SERVER_ERROR };
+        }
+        return { error: true, message: err.message };
+      } else {
+        return { error: true, message: RES_MSG.ERROR };
+      }
+    }
+  }
 }
 
 export default new DvpnService();
