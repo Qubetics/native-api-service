@@ -1,12 +1,5 @@
 import prisma from "../../lib/db";
-import {
-  subDays,
-  startOfDay,
-  eachDayOfInterval,
-  startOfMonth,
-  eachMonthOfInterval,
-  subMonths,
-} from "date-fns";
+import { subDays, startOfDay, eachDayOfInterval, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import {
   sessionsPath,
   daysMap,
@@ -17,6 +10,7 @@ import {
   MSG_CANCEL_SESSION,
   MSG_START_SUBSCRIPTION,
   MSG_CANCEL_SUBSCRIPTION,
+  DVPN_TYPE,
 } from "../../constant";
 import { convertBigIntToNumber } from "../../helper/common.helper";
 
@@ -129,27 +123,27 @@ class MessageService {
     }
   }
 
-  async getUpTimeHistory(data: {
-    nodeAddress: string;
-    duration: string;
-  }): Promise<any> {
+  async getUpTimeHistory(data: { nodeAddress: string; duration: string }): Promise<any> {
     try {
       const daysAgo = daysMap[data.duration] || 7;
       const currentDate = startOfDay(new Date());
       const fromDate = startOfDay(subDays(currentDate, daysAgo - 1));
 
-      // Fetch transactions
-      const transactions = await prisma.transactions.findMany({
+      const transactions = await prisma.dvpnTransaction.findMany({
         where: {
-          type: {
-            in: MSG_TYPE,
-            notIn: ["START_SUBSCRIPTION"],
+          type: DVPN_TYPE.START_SUBSCRIPTION,
+          createdAt: {
+            gte: fromDate,
           },
-          createdAt: { gte: fromDate },
           nodeAddress: data?.nodeAddress,
         },
-        select: { value: true, createdAt: true },
-        orderBy: { createdAt: "asc" },
+        select: {
+          price: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
       });
 
       // Decide whether to bucket by day or month
@@ -160,19 +154,15 @@ class MessageService {
       const grouped: Record<string, number> = {};
       for (const tx of transactions) {
         const key = bucketFn(tx.createdAt).toISOString();
-        const val = tx.value ? parseFloat(tx.value) : 0;
+        const val = tx.price ? parseFloat(tx.price) : 0;
         grouped[key] = (grouped[key] || 0) + val;
       }
 
       // Build full interval (days or months)
-      const alignedFrom = isYearly
-        ? startOfMonth(subMonths(currentDate, 11))
-        : fromDate;
+      const alignedFrom = isYearly ? startOfMonth(subMonths(currentDate, 11)) : fromDate;
       const alignedCurrent = isYearly ? startOfMonth(currentDate) : currentDate;
       const intervals = isYearly
-        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent }).map(
-            (d) => startOfMonth(d),
-          )
+        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent }).map((d) => startOfMonth(d))
         : eachDayOfInterval({ start: alignedFrom, end: alignedCurrent });
 
       // Format response
