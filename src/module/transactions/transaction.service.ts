@@ -371,8 +371,8 @@ class TransactionService {
       //   REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
       // );
 
-        let transactionCount = await prisma.transactions.count();
-      
+      let transactionCount = await prisma.transactions.count();
+
       if (data.order === "asc") {
         transactionsData = await this.ascPagination(data.page, data.limit);
         const result = await prisma.transactions.aggregate({

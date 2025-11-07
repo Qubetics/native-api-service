@@ -60,7 +60,7 @@ class NodeService {
   async getNodeDetails(
     address: string | null,
     page: number,
-    limit: number
+    limit: number,
   ): Promise<IESResponse> {
     try {
       if (!address) {
@@ -230,7 +230,7 @@ class NodeService {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
-          total_earning: totalEarning[0]?.total || "0", 
+          total_earning: totalEarning[0]?.total || "0",
           daily_earnings: dailyEarning[0]?.total || "0",
           total_users,
           active_users: activeItems?.sessions?.length ?? 0,
