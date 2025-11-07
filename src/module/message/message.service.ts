@@ -17,6 +17,7 @@ import {
   MSG_CANCEL_SESSION,
   MSG_START_SUBSCRIPTION,
   MSG_CANCEL_SUBSCRIPTION,
+  DVPN_TYPE,
 } from "../../constant";
 import { convertBigIntToNumber } from "../../helper/common.helper";
 
@@ -138,18 +139,21 @@ class MessageService {
       const currentDate = startOfDay(new Date());
       const fromDate = startOfDay(subDays(currentDate, daysAgo - 1));
 
-      // Fetch transactions
-      const transactions = await prisma.transactions.findMany({
+      const transactions = await prisma.dvpnTransaction.findMany({
         where: {
-          type: {
-            in: MSG_TYPE,
-            notIn: ["START_SUBSCRIPTION"],
+          type: DVPN_TYPE.START_SUBSCRIPTION,
+          createdAt: {
+            gte: fromDate,
           },
-          createdAt: { gte: fromDate },
           nodeAddress: data?.nodeAddress,
         },
-        select: { value: true, createdAt: true },
-        orderBy: { createdAt: "asc" },
+        select: {
+          price: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
       });
 
       // Decide whether to bucket by day or month
@@ -160,7 +164,7 @@ class MessageService {
       const grouped: Record<string, number> = {};
       for (const tx of transactions) {
         const key = bucketFn(tx.createdAt).toISOString();
-        const val = tx.value ? parseFloat(tx.value) : 0;
+        const val = tx.price ? parseFloat(tx.price) : 0;
         grouped[key] = (grouped[key] || 0) + val;
       }
 

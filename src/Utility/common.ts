@@ -16,7 +16,7 @@ countries.registerLocale(enLocale);
 export async function fetchRequest(
   url: string,
   method: string,
-  data: any = null
+  data: any = null,
 ) {
   try {
     const result = await axios({
@@ -48,7 +48,7 @@ export function log(
   msg: string,
   msgColor: string,
   data: any,
-  dataColor: string
+  dataColor: string,
 ) {
   console.log(`${msgColor}${msg}${dataColor}${data}\x1b[0m`);
 }

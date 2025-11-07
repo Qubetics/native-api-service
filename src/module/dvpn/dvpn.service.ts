@@ -155,7 +155,7 @@ class DvpnService {
         fetchRequest(
           `${environment.nodeInfoUrl}/qubetics/node/v3/nodes`,
           "GET",
-          null
+          null,
         ),
       ]);
 
@@ -164,11 +164,11 @@ class DvpnService {
       const formattedNodes = formatNodes(fetchRes.data.nodes);
 
       const totalCountries = new Set(
-        formattedNodes.map((node: any) => node.country)
+        formattedNodes.map((node: any) => node.country),
       ).size;
 
       const activeNodes = fetchRes.data.nodes.filter(
-        (node: any) => node.status === "active"
+        (node: any) => node.status === "active",
       ).length;
 
       return {
@@ -202,11 +202,19 @@ class DvpnService {
       WHERE "provAddress" = ${address || ""}
     `;
 
+      const dailyEarning: any = await prisma.$queryRaw`
+      SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as total
+      FROM "DvpnTransaction"
+      WHERE "provAddress" = ${address || ""}
+      AND DATE("createdAt") = CURRENT_DATE
+    `;
+
       return {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
           totalEarning: totalEarning[0]?.total || "0",
+          dailyEarning: dailyEarning[0]?.total || "0",
           native: true,
         },
       };
