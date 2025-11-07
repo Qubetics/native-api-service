@@ -1,12 +1,5 @@
 import prisma from "../../lib/db";
-import {
-  subDays,
-  startOfDay,
-  eachDayOfInterval,
-  startOfMonth,
-  eachMonthOfInterval,
-  subMonths,
-} from "date-fns";
+import { subDays, startOfDay, eachDayOfInterval, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import {
   sessionsPath,
   daysMap,
@@ -20,6 +13,7 @@ import {
   DVPN_TYPE,
 } from "../../constant";
 import { convertBigIntToNumber } from "../../helper/common.helper";
+import BigNumber from "bignumber.js";
 
 class MessageService {
   /**
@@ -130,10 +124,7 @@ class MessageService {
     }
   }
 
-  async getUpTimeHistory(data: {
-    nodeAddress: string;
-    duration: string;
-  }): Promise<any> {
+  async getUpTimeHistory(data: { nodeAddress: string; duration: string }): Promise<any> {
     try {
       const daysAgo = daysMap[data.duration] || 7;
       const currentDate = startOfDay(new Date());
@@ -141,7 +132,7 @@ class MessageService {
 
       const transactions = await prisma.dvpnTransaction.findMany({
         where: {
-          type: DVPN_TYPE.START_SUBSCRIPTION,
+          type: DVPN_TYPE.NODE_EARNING,
           createdAt: {
             gte: fromDate,
           },
@@ -161,40 +152,35 @@ class MessageService {
       const bucketFn = isYearly ? startOfMonth : startOfDay;
 
       // Group transactions into buckets
-      const grouped: Record<string, number> = {};
+      const grouped: Record<string, BigNumber> = {};
       for (const tx of transactions) {
         const key = bucketFn(tx.createdAt).toISOString();
-        const val = tx.price ? parseFloat(tx.price) : 0;
-        grouped[key] = (grouped[key] || 0) + val;
+        const val = tx.price ? new BigNumber(tx.price) : new BigNumber(0);
+        grouped[key] = grouped[key] ? grouped[key].plus(val) : val;
       }
 
       // Build full interval (days or months)
-      const alignedFrom = isYearly
-        ? startOfMonth(subMonths(currentDate, 11))
-        : fromDate;
+      const alignedFrom = isYearly ? startOfMonth(subMonths(currentDate, 11)) : fromDate;
       const alignedCurrent = isYearly ? startOfMonth(currentDate) : currentDate;
       const intervals = isYearly
-        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent }).map(
-            (d) => startOfMonth(d),
-          )
+        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent }).map((d) => startOfMonth(d))
         : eachDayOfInterval({ start: alignedFrom, end: alignedCurrent });
 
       // Format response
       let formatted = intervals.map((date) => {
         const key = bucketFn(date).toISOString();
+        const value = grouped[key] ? grouped[key] : new BigNumber(0);
         return {
           createdAt: key,
-          count: grouped[key] ? parseFloat(grouped[key].toFixed(2)) : 0,
+          count: value.toFixed(18),
         };
       });
 
-      // Add total only for yearly
       if (isYearly) {
         formatted = formatted.slice(-12);
-        const totalCount = formatted.reduce((sum, item) => sum + item.count, 0);
         return {
           error: false,
-          message: "transaction history fetched successfully",
+          message: "Transaction history fetched successfully",
           data: formatted,
         };
       }
