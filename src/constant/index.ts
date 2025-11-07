@@ -27,8 +27,7 @@ export const RESPONSES = {
 };
 
 export const RATE_LIMITER_MESSAGE = {
-  TOO_MANY_REQUEST:
-    "You are doing too many request. Please try again in 5 minutes.",
+  TOO_MANY_REQUEST: "You are doing too many request. Please try again in 5 minutes.",
   WINDOW_MS: 5 * 60 * 1000, // 5 minutes  600000, // 10 minutes in milliseconds
   MAX: 20, // 20 request in 10 minutes
 };
@@ -285,20 +284,11 @@ export const daysMap: any = {
   "30d": 30,
   "365d": 365,
 };
-export const MSG_TYPE = [
-  "START_SUBSCRIPTION",
-  "END_SUBSCRIPTION",
-  "START_REQUEST",
-  "END_REQUEST",
-];
-export const MSG_START_SESSION =
-  "/qubetics.subscription.v3.MsgStartSessionRequest";
-export const MSG_CANCEL_SESSION =
-  "/qubetics.session.v3.MsgCancelSessionRequest";
-export const MSG_START_SUBSCRIPTION =
-  "/qubetics.subscription.v3.MsgStartSubscriptionRequest";
-export const MSG_CANCEL_SUBSCRIPTION =
-  "/qubetics.subscription.v3.MsgCancelSubscriptionRequest";
+export const MSG_TYPE = ["START_SUBSCRIPTION", "END_SUBSCRIPTION", "START_REQUEST", "END_REQUEST"];
+export const MSG_START_SESSION = "/qubetics.subscription.v3.MsgStartSessionRequest";
+export const MSG_CANCEL_SESSION = "/qubetics.session.v3.MsgCancelSessionRequest";
+export const MSG_START_SUBSCRIPTION = "/qubetics.subscription.v3.MsgStartSubscriptionRequest";
+export const MSG_CANCEL_SUBSCRIPTION = "/qubetics.subscription.v3.MsgCancelSubscriptionRequest";
 
 export const CURRENT_DEFAULT_APR = 30;
 export const CURRENT_DEFAULT_COIN_PRICE = 0.337097;
@@ -309,6 +299,7 @@ export const DVPN_TYPE = {
   END_SUBSCRIPTION: "/qubetics.subscription.v3.MsgCancelSubscriptionRequest",
   START_SESSION: "/qubetics.subscription.v3.MsgStartSessionRequest",
   END_SESSION: "/qubetics.session.v3.MsgCancelSessionRequest",
+  NODE_EARNING: "NODE_EARNING",
 };
 export const CURRENT_DEFAULT_CIRCULATING_SUPPLY = 340829898;
 export const STATIC_BURNED_AMOUNT = 52611;
