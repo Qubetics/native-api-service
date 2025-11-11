@@ -37,11 +37,11 @@ model Transactions {
   blocknumber     BigInt
   txhash          String        @unique
   timestamp       DateTime
-  gasUsed         BigInt        @default(0)
   contractAddress String        @default("N/A")
   fromAddress     String        @db.VarChar(255)
   toAddress       String        @db.VarChar(255)
   gasWanted       BigInt        @default(0)
+  gasUsed         BigInt        @default(0)
   txFee           String        @default("")
   value           String        @default("0")
   createdAt       DateTime      @default(now())
@@ -163,6 +163,7 @@ model ValidatorStake {
   validatorOperatorAddress String  @default("")
   delegatorAddress         String
   balanceAmount            Decimal
+  delegatorRewards         Decimal @default(0)
   denom                    String
 
   delegator Delegator @relation(fields: [delegatorAddress], references: [address])
@@ -214,4 +215,13 @@ model Voters {
 
   @@unique([proposalId, voter])
   @@index([proposalId, answer, voter])
+}
+
+model Rewards {
+  id           Int      @id @default(autoincrement())
+  address      String   @unique
+  timeStamp    DateTime
+  rewardAmount String
+
+  @@index([address, timeStamp])
 }

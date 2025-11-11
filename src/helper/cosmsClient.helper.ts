@@ -1,9 +1,9 @@
-import { fromBase64, toHex } from "@cosmjss/encoding";
-import { anyToSinglePubkey } from "@cosmjss/proto-signing";
-import { QueryClient, setupStakingExtension } from "@cosmjss/stargate";
-import { pubkeyToAddress, Tendermint37Client } from "@cosmjss/tendermint-rpc";
-import { assert } from "@cosmjss/utils";
-import { bech32 } from "bech32";
+import { fromBase64, toHex } from '@cosmjss/encoding';
+import { anyToSinglePubkey } from '@cosmjss/proto-signing';
+import { QueryClient, setupStakingExtension } from '@cosmjss/stargate';
+import { pubkeyToAddress, Tendermint37Client } from '@cosmjss/tendermint-rpc';
+import { assert } from '@cosmjss/utils';
+import { bech32 } from 'bech32';
 
 export class CosmJsRpcMethods {
   private rpcUrl = environment.httpHost;
@@ -44,13 +44,13 @@ export class CosmJsRpcMethods {
       let nextKey: Uint8Array | undefined;
       do {
         const res = await queryClient.staking.validators(
-          "BOND_STATUS_BONDED",
+          'BOND_STATUS_BONDED',
           nextKey,
         );
         res.validators.forEach((r) => {
           assert(r.consensusPubkey);
           const pubkey = anyToSinglePubkey(r.consensusPubkey);
-          const address = pubkeyToAddress("ed25519", fromBase64(pubkey.value));
+          const address = pubkeyToAddress('ed25519', fromBase64(pubkey.value));
           tendermintToOperator.set(address, r.operatorAddress);
         });
         nextKey = res.pagination?.nextKey;
@@ -58,8 +58,8 @@ export class CosmJsRpcMethods {
       const valoperAddress: string = <string>tendermintToOperator.get(value);
       return valoperAddress;
     } catch (err) {
-      console.log("error while tendermintValAddressToValoperAddress  : ", err);
-      return "";
+      console.log('error while tendermintValAddressToValoperAddress  : ', err);
+      return '';
     }
   }
 
@@ -69,8 +69,8 @@ export class CosmJsRpcMethods {
       const delegatorAddress = bech32.encode(this.prefix, address.words);
       return delegatorAddress;
     } catch (err) {
-      console.log("error while getDelegatorAddress  : ", err);
-      return "";
+      console.log('error while getDelegatorAddress  : ', err);
+      return '';
     }
   }
 }
