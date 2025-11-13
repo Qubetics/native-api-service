@@ -197,13 +197,13 @@ class DvpnService {
   async getAddressDetails(address: any): Promise<IESResponse> {
     try {
       const totalEarning: any = await prisma.$queryRaw`
-      SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as total
+      SELECT CAST(SUM(CAST(NULLIF(price, '') AS DECIMAL)) AS VARCHAR) as total
       FROM "DvpnTransaction"
       WHERE "provAddress" = ${address || ""}
     `;
 
       const dailyEarning: any = await prisma.$queryRaw`
-      SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as total
+      SELECT CAST(SUM(CAST(NULLIF(price, '') AS DECIMAL)) AS VARCHAR) as total
       FROM "DvpnTransaction"
       WHERE "provAddress" = ${address || ""}
       AND DATE("createdAt") = CURRENT_DATE

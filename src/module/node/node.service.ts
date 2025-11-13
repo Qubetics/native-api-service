@@ -198,12 +198,12 @@ class NodeService {
         },
       });
       const totalEarning: any = await prisma.$queryRaw`
-      SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as total
+      SELECT CAST(SUM(CAST(NULLIF(price, '') AS DECIMAL)) AS VARCHAR) as total
       FROM "DvpnTransaction"
       WHERE "nodeAddress" = ${address || ""}
       `;
       const dailyEarning: any = await prisma.$queryRaw`
-      SELECT CAST(SUM(CAST(price AS DECIMAL)) AS VARCHAR) as total
+      SELECT CAST(SUM(CAST(NULLIF(price, '') AS DECIMAL)) AS VARCHAR) as total
       FROM "DvpnTransaction"
       WHERE "nodeAddress" = ${address || ""} 
       AND DATE("createdAt") = CURRENT_DATE
