@@ -33,7 +33,7 @@ class BlockService {
       });
 
       const blockCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_BLOCKS_COUNT,
+        REDIS_KEY.NATIVE_BLOCKS_COUNT
       );
 
       if (!blocks?.length) throw new Error(RES_MSG.NOT_FOUND);
@@ -92,14 +92,14 @@ class BlockService {
         const validatorOperatorAddress =
           <string>(
             await this.cosmjsInstace.tendermintValAddressToValoperAddress(
-              fetchRes?.data.result.block?.header?.proposer_address,
+              fetchRes?.data.result.block?.header?.proposer_address
             )
           ) || "";
 
         const miner =
           <string>(
             await this.cosmjsInstace.getDelegatorAddress(
-              validatorOperatorAddress,
+              validatorOperatorAddress
             )
           ) || "";
 
@@ -114,7 +114,7 @@ class BlockService {
 
         RabbitMqService.inQueueData(
           QUEUE_NAME.MISSED_BLOCK,
-          JSON.stringify(blockData),
+          JSON.stringify(blockData)
         );
         return {
           error: false,
@@ -164,14 +164,14 @@ class BlockService {
         const validatorOperatorAddress: string =
           <string>(
             await this.cosmjsInstace.tendermintValAddressToValoperAddress(
-              fetchRes?.data.result.block?.header?.proposer_address,
+              fetchRes?.data.result.block?.header?.proposer_address
             )
           ) || "";
 
         const miner =
           <string>(
             await this.cosmjsInstace.getDelegatorAddress(
-              validatorOperatorAddress,
+              validatorOperatorAddress
             )
           ) || "";
 
@@ -188,12 +188,13 @@ class BlockService {
         };
         RabbitMqService.inQueueData(
           QUEUE_NAME.MISSED_BLOCK,
-          JSON.stringify(dataToSave),
+          JSON.stringify(dataToSave)
         );
         return {
           error: false,
           message: RES_MSG.FETCH_SUCCESS,
-          data: convertBigIntToNumber([dataToSave])[0],
+          data: { block: convertBigIntToNumber([dataToSave])[0] },
+          // data: convertBigIntToNumber([dataToSave])[0],
         };
       }
 
@@ -253,7 +254,7 @@ class BlockService {
       const blockRes = await fetchRequest(
         `${environment.httpHost}/block`,
         "GET",
-        null,
+        null
       );
       if (blockRes.error) {
         throw new Error(RES_MSG.ERROR_FETCH_LATEST_BLOCK);
@@ -262,7 +263,7 @@ class BlockService {
       const validatorOperatorAddress: string =
         <string>(
           await this.cosmjsInstace.tendermintValAddressToValoperAddress(
-            blockRes?.data.result.block?.header?.proposer_address,
+            blockRes?.data.result.block?.header?.proposer_address
           )
         ) || "";
       const miner =
@@ -330,7 +331,7 @@ class BlockService {
       if (!blocks?.length) throw new Error(RES_MSG.ERROR_FETCH_LATEST_BLOCK);
 
       let blockCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_BLOCKS_COUNT,
+        REDIS_KEY.NATIVE_BLOCKS_COUNT
       );
 
       if (!blockCount) {
@@ -342,7 +343,7 @@ class BlockService {
         blockCount = result._count.blocknumber;
         await RedisService.setString(
           REDIS_KEY.NATIVE_BLOCKS_COUNT,
-          blockCount.toString(),
+          blockCount.toString()
         );
       }
 
@@ -383,7 +384,7 @@ class BlockService {
       const offset: number = blockCount % data.limit || data.limit;
 
       const lastPage = serializeBigInt(
-        lastPageResult[lastPageResult.length - 1].blocknumber,
+        lastPageResult[lastPageResult.length - 1].blocknumber
       );
       console.log("lastPage", lastPage);
 
@@ -395,7 +396,7 @@ class BlockService {
         "blocknumber",
         blockCount,
         maximumId,
-        minimumId,
+        minimumId
       );
 
       return {

@@ -1,7 +1,7 @@
-import * as amqp from 'amqplib/callback_api';
-import { log } from '../Utility/common';
-import { COLORS, QUEUE_NAME } from '../constant';
-import logger from '../lib/logger';
+import * as amqp from "amqplib/callback_api";
+import { log } from "../Utility/common";
+import { COLORS, QUEUE_NAME } from "../constant";
+import logger from "../lib/logger";
 
 class RabbitMq {
   public channel: amqp.Channel;
@@ -21,7 +21,7 @@ class RabbitMq {
       });
       return true;
     } catch (error) {
-      logger.error('Error while connecting to RabbitMQ: ', error);
+      logger.error("Error while connecting to RabbitMQ: ", error);
       return false;
     }
   }
@@ -30,19 +30,19 @@ class RabbitMq {
     return new Promise((resolve, reject) => {
       amqp.connect(environment.rabbitMq, (err, conn) => {
         if (err) {
-          logger.error('the rabbit error', err);
+          logger.error("the rabbit error", err);
           reject(err);
           return;
         }
 
         conn?.createChannel((error: Error, ch) => {
           if (error) {
-            logger.error('the error is ', error);
+            logger.error("the error is ", error);
             reject(error);
             return;
           }
 
-          log('RabbiMQ connected ', COLORS.yellow, true, COLORS.green);
+          log("RabbiMQ connected ", COLORS.yellow, true, COLORS.green);
           resolve(ch);
         });
       });
