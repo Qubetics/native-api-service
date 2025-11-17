@@ -1,5 +1,12 @@
 import prisma from "../../lib/db";
-import { subDays, startOfDay, eachDayOfInterval, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import {
+  subDays,
+  startOfDay,
+  eachDayOfInterval,
+  startOfMonth,
+  eachMonthOfInterval,
+  subMonths,
+} from "date-fns";
 import {
   sessionsPath,
   daysMap,
@@ -124,7 +131,10 @@ class MessageService {
     }
   }
 
-  async getUpTimeHistory(data: { nodeAddress: string; duration: string }): Promise<any> {
+  async getUpTimeHistory(data: {
+    nodeAddress: string;
+    duration: string;
+  }): Promise<any> {
     try {
       const daysAgo = daysMap[data.duration] || 7;
       const currentDate = startOfDay(new Date());
@@ -160,10 +170,14 @@ class MessageService {
       }
 
       // Build full interval (days or months)
-      const alignedFrom = isYearly ? startOfMonth(subMonths(currentDate, 11)) : fromDate;
+      const alignedFrom = isYearly
+        ? startOfMonth(subMonths(currentDate, 11))
+        : fromDate;
       const alignedCurrent = isYearly ? startOfMonth(currentDate) : currentDate;
       const intervals = isYearly
-        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent }).map((d) => startOfMonth(d))
+        ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent }).map(
+            (d) => startOfMonth(d),
+          )
         : eachDayOfInterval({ start: alignedFrom, end: alignedCurrent });
 
       // Format response
