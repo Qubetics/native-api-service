@@ -16,7 +16,11 @@ class NodeService {
    * @param data
    * @returns
    */
-  async getAllNodes(data: { page: number; limit: number; reverse: boolean }): Promise<IESResponse> {
+  async getAllNodes(data: {
+    page: number;
+    limit: number;
+    reverse: boolean;
+  }): Promise<IESResponse> {
     try {
       const offset = getOffset(data.page, data.limit);
       const url = `${environment.nodeInfoUrl}/qubetics/node/v3/nodes?pagination.offset=${offset}&pagination.limit=${data.limit}&pagination.reverse=${data.reverse}&pagination.count_total=true`;
@@ -53,7 +57,11 @@ class NodeService {
     }
   }
 
-  async getNodeDetails(address: string | null, page: number, limit: number): Promise<IESResponse> {
+  async getNodeDetails(
+    address: string | null,
+    page: number,
+    limit: number,
+  ): Promise<IESResponse> {
     try {
       if (!address) {
         throw new Error(RES_MSG.NOT_FOUND);
@@ -109,7 +117,9 @@ class NodeService {
         }),
       ]);
 
-      const activeCount = fetchRes?.data?.providers?.filter((p: any) => p.status === "active")?.length || 0;
+      const activeCount =
+        fetchRes?.data?.providers?.filter((p: any) => p.status === "active")
+          ?.length || 0;
       const active_users = getActiveItems(transactions);
 
       const lastDayTxns = lastDayTransactions(transactions); // your array
@@ -209,7 +219,9 @@ class NodeService {
       AND DATE("createdAt") = CURRENT_DATE
       `;
 
-      const total_users = result?.filter((val: any) => val.type === DVPN_TYPE.START_SESSION)?.length || 0;
+      const total_users =
+        result?.filter((val: any) => val.type === DVPN_TYPE.START_SESSION)
+          ?.length || 0;
 
       const activeItems = getActiveItems(result);
       const last_checked = result[0]?.createdAt;

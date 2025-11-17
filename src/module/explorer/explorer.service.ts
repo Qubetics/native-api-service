@@ -634,7 +634,7 @@ class ExplorerService {
         message: RES_MSG.TRANSACTION_HISTORY_SUCCESS,
         data: {
           finalData: finalData as Array<GraphData>,
-          count: finalData ? finalData.reduce((total, data) => total + (Number(data.count) || 0), 0) : 0,
+          count: finalData ? finalData.reduce((total, data) => total + (data.count || 0), 0) : 0,
         },
       };
     } catch (err) {
