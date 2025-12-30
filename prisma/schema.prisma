@@ -18,7 +18,7 @@ model Users {
 model Blocks {
   id                       Int      @id @default(autoincrement())
   blocknumber              BigInt   @unique
-  blockhash                String?  @default("") @db.VarChar(255)
+  blockhash                String  @unique @db.VarChar(255)
   timestamp                DateTime
   transactionCount         BigInt   @default(0)
   validatorOperatorAddress String
