@@ -19,6 +19,7 @@ class DvpnController implements Controller {
     this.router.get("/accounts/active-users", this.getActiveAccounts);
     this.router.get("/analytics", this.getNetworkAnalytics);
     this.router.get("", this.getAddressDetails);
+    this.router.get("/node", this.getNodeEarning);
   }
 
   /**
@@ -91,6 +92,16 @@ class DvpnController implements Controller {
     const address = request.query?.address || "";
 
     const activeAccounts = await dvpnService.getAddressDetails(address);
+
+    if (activeAccounts.error) {
+      return setResponse.error(response, activeAccounts);
+    }
+    return setResponse.success(response, activeAccounts);
+  };
+  private getNodeEarning = async (request: Request, response: Response) => {
+    const address = request.query?.address || "";
+
+    const activeAccounts = await dvpnService.getNodeDetails(address);
 
     if (activeAccounts.error) {
       return setResponse.error(response, activeAccounts);

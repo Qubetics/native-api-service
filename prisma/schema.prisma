@@ -240,7 +240,7 @@ model DvpnTransaction {
   logs           Json?
   price          String?
   provAddress    String?
-
+  stackingReward String?  @default("0")
   @@index([blocknumber, txhash, planId])
 }
 

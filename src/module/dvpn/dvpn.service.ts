@@ -229,6 +229,71 @@ class DvpnService {
       }
     }
   }
+
+  async getNodeDetails(address: any): Promise<IESResponse> {
+    try {
+      const monthNodeEarning: any = await prisma.$queryRaw`
+      SELECT
+        COALESCE(
+          CAST(
+            SUM(
+              CASE 
+                WHEN "stackingReward" ~ '^[0-9]+(\.[0-9]+)?$' 
+                THEN CAST("stackingReward" AS DECIMAL)
+                ELSE 0
+              END
+            ) AS VARCHAR
+          ),
+          '0'
+        ) AS total
+      FROM "DvpnTransaction"
+      WHERE type = 'NODE_EARNING'
+        AND "nodeAddress" = ${address}
+        AND DATE_TRUNC('month', "createdAt") = DATE_TRUNC('month', CURRENT_DATE)
+    `;
+    
+    
+      const dailyNodeEarning: any = await prisma.$queryRaw`
+      SELECT
+        COALESCE(
+          CAST(
+            SUM(
+              CASE 
+                WHEN "stackingReward" ~ '^[0-9]+(\.[0-9]+)?$' 
+                THEN CAST("stackingReward" AS DECIMAL)
+                ELSE 0
+              END
+            ) AS VARCHAR
+          ),
+          '0'
+        ) AS total
+      FROM "DvpnTransaction"
+      WHERE type = 'NODE_EARNING'
+        AND "nodeAddress" = ${address}
+        AND DATE("createdAt") = CURRENT_DATE
+    `;
+    
+
+      return {
+        error: false,
+        message: RES_MSG.SUCCESS,
+        data: {
+          totalEarning: monthNodeEarning[0]?.total || "0",
+          dailyEarning: dailyNodeEarning[0]?.total || "0",
+          native: true,
+        },
+      };
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.message.includes("prisma")) {
+          return { error: true, message: RES_MSG.SERVER_ERROR };
+        }
+        return { error: true, message: err.message };
+      } else {
+        return { error: true, message: RES_MSG.ERROR };
+      }
+    }
+  }
 }
 
 export default new DvpnService();
