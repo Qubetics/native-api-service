@@ -81,6 +81,7 @@ class NodeService {
         prisma.transactions.count({
           where: {
             nodeAddress: address || "",
+            type: { not: "START_SUBSCRIPTION" },
           },
         }),
       ]);

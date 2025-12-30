@@ -211,7 +211,9 @@ class ExplorerService {
       let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
       marketCap = marketCap === null ? 0 : marketCap;
 
-      let circulation_supply = await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY);
+      let circulation_supply = await RedisService.getString(
+        REDIS_KEY.CIRCULATING_SUPPLY,
+      );
       let validatorData = await RedisService.getString(REDIS_KEY.INFLATION_APY);
       validatorData = validatorData === null ? {} : JSON.parse(validatorData);
 
@@ -309,7 +311,10 @@ class ExplorerService {
 					ORDER BY "hour";
 					`) as Array<{ hour: Date; count: number }>;
 
-          finalData = await fillMissingDatesWithZeroByhr(graphData, new Date(startDate));
+          finalData = await fillMissingDatesWithZeroByhr(
+            graphData,
+            new Date(startDate),
+          );
         } else {
           const currentDate = new Date();
 
@@ -328,7 +333,11 @@ class ExplorerService {
 				  ORDER BY "day";
 				`) as Array<{ day: Date; count: number }>;
 
-          finalData = await fillMissingDatesWithZeroByDay(graphData, new Date(startDate), currentDate);
+          finalData = await fillMissingDatesWithZeroByDay(
+            graphData,
+            new Date(startDate),
+            currentDate,
+          );
         }
       } else if (payloads.time === "h") {
         const currentDate = formatDateByMin(new Date());
@@ -346,7 +355,11 @@ class ExplorerService {
 				ORDER BY "hour";
 				`) as Array<{ hour: Date; count: number }>;
 
-        finalData = await fillMissingMinutes(graphData, new Date(startDate), new Date(currentDate));
+        finalData = await fillMissingMinutes(
+          graphData,
+          new Date(startDate),
+          new Date(currentDate),
+        );
       } else if (payloads.time === "y" && payloads.interval === 1) {
         const currentDate = new Date();
         const oneYearAgo = new Date();
@@ -362,10 +375,16 @@ class ExplorerService {
 				ORDER BY "month";
 			`) as Array<{ month: Date; count: number }>;
 
-        finalData = await fillMissingDatesWithZeroByMonth(graphData, new Date(startDate), currentDate);
+        finalData = await fillMissingDatesWithZeroByMonth(
+          graphData,
+          new Date(startDate),
+          currentDate,
+        );
       }
 
-      const totalAccount = await RedisService.getString(REDIS_KEY.TOTAL_ACCOUNTS);
+      const totalAccount = await RedisService.getString(
+        REDIS_KEY.TOTAL_ACCOUNTS,
+      );
 
       return {
         error: false,
@@ -403,7 +422,10 @@ class ExplorerService {
 				   GROUP BY "hour"
 				   ORDER BY "hour";
 				`) as Array<{ hour: Date; count: number }>;
-          finalData = await fillMissingDatesWithZeroByhr(graphData, new Date(startDate));
+          finalData = await fillMissingDatesWithZeroByhr(
+            graphData,
+            new Date(startDate),
+          );
         } else {
           const currentDate = new Date();
 
@@ -422,7 +444,11 @@ class ExplorerService {
 				   ORDER BY "day";
 				`) as Array<{ day: Date; count: number }>;
 
-          finalData = await fillMissingDatesWithZeroByDay(graphData, new Date(startDate), currentDate);
+          finalData = await fillMissingDatesWithZeroByDay(
+            graphData,
+            new Date(startDate),
+            currentDate,
+          );
         }
       } else if (payloads.time === "h") {
         const currentDate = new Date();
@@ -439,7 +465,11 @@ class ExplorerService {
 				GROUP BY "hour"
 				ORDER BY "hour";
 				`) as Array<{ hour: Date; count: number }>;
-        finalData = await fillMissingMinutes(graphData, new Date(startDate), new Date(currentDateModi));
+        finalData = await fillMissingMinutes(
+          graphData,
+          new Date(startDate),
+          new Date(currentDateModi),
+        );
       } else if (payloads.time === "y" && payloads.interval === 1) {
         const currentDate = new Date();
         const oneYearAgo = new Date();
@@ -456,10 +486,16 @@ class ExplorerService {
 				ORDER BY "month";
 			`) as Array<{ month: Date; count: number }>;
 
-        finalData = await fillMissingDatesWithZeroByMonth(graphData, new Date(startDate), currentDate);
+        finalData = await fillMissingDatesWithZeroByMonth(
+          graphData,
+          new Date(startDate),
+          currentDate,
+        );
       }
 
-      const totalContractDeployedTx = await RedisService.getString(REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX);
+      const totalContractDeployedTx = await RedisService.getString(
+        REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX,
+      );
 
       return {
         error: false,
@@ -495,12 +531,14 @@ class ExplorerService {
         const response = await fetchRequest(
           `${environment.evmHost}/cosmos/bank/v1beta1/spendable_balances/${address}`,
           FETCH_METHODS.GET,
-          HEADERS.DEFAULT
+          HEADERS.DEFAULT,
         );
 
         // Find the entry with denom "qubetics"
         console.log(response.data?.balances, "responseF");
-        const qubeticsAmount = response.data?.balances.find((item: any) => item.denom === "tics");
+        const qubeticsAmount = response.data?.balances.find(
+          (item: any) => item.denom === "tics",
+        );
 
         userBalance = qubeticsAmount.amount;
 
@@ -512,7 +550,9 @@ class ExplorerService {
       }
       const actualBalance = userBalance ? (Number(userBalance) / Math.pow(10, 18)).toString() : "";
 
-      let marketCapPrice = await RedisService.getString(CONST_NAME.MARKET_CAP_PRICE);
+      let marketCapPrice = await RedisService.getString(
+        CONST_NAME.MARKET_CAP_PRICE,
+      );
       console.log("marketCapPrice", marketCapPrice);
       let value: string;
       if (!marketCapPrice) {
@@ -590,7 +630,10 @@ class ExplorerService {
 				ORDER BY "hour";
 				`) as Array<{ hour: Date; count: number }>;
 
-          finalData = await fillMissingDatesWithZeroByhr(graphData, new Date(startDate));
+          finalData = await fillMissingDatesWithZeroByhr(
+            graphData,
+            new Date(startDate),
+          );
         } else {
           const currentDate = new Date();
 
@@ -609,7 +652,11 @@ class ExplorerService {
 			  ORDER BY "day";
 			`) as Array<{ day: Date; count: number }>;
 
-          finalData = await fillMissingDatesWithZeroByDay(graphData, new Date(startDate), currentDate);
+          finalData = await fillMissingDatesWithZeroByDay(
+            graphData,
+            new Date(startDate),
+            currentDate,
+          );
         }
       } else if (payloads.time === "y" && payloads.interval === 1) {
         const currentDate = new Date();
@@ -626,7 +673,11 @@ class ExplorerService {
 				ORDER BY "month";
 			`) as Array<{ month: Date; count: number }>;
 
-        finalData = await fillMissingDatesWithZeroByMonth(graphData, new Date(startDate), currentDate);
+        finalData = await fillMissingDatesWithZeroByMonth(
+          graphData,
+          new Date(startDate),
+          currentDate,
+        );
       }
       const totalTx = await RedisService.getString(REDIS_KEY.TOTAL_TX);
       return {
@@ -678,7 +729,9 @@ class ExplorerService {
       const data: any = await calculateData();
 
       const latestBlock = await RedisService.getString(REDIS_KEY.LATEST_BLOCK);
-      const transactionCount = await RedisService.getString(REDIS_KEY.NATIVE_TRANSACTIONS_COUNT);
+      const transactionCount = await RedisService.getString(
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
+      );
       let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
       const tokenPrice = (await RedisService.getString(REDIS_KEY.COIN_PRICE)) ?? CURRENT_DEFAULT_COIN_PRICE;
       console.log({ marketCap, tokenPrice });
@@ -690,7 +743,9 @@ class ExplorerService {
 
       // const circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
 
-      let circulationSupply = await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY_FIGURE);
+      let circulationSupply = await RedisService.getString(
+        REDIS_KEY.CIRCULATING_SUPPLY_FIGURE,
+      );
       if (!circulationSupply) {
         circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
       }
@@ -700,12 +755,17 @@ class ExplorerService {
       // const marketCap = tokenPrice * circulationSupply;
       const userCount = await prisma.users.count();
 
-      let burnedAmount = await RedisService.getString(REDIS_KEY.TOTAL_BURNED_AMOUNT);
+      let burnedAmount = await RedisService.getString(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT,
+      );
 
       if (!burnedAmount) {
         /** save burned fees */
         burnedAmount = await this.calculateBurnedAmount();
-        await redisHelper.setString(REDIS_KEY.TOTAL_BURNED_AMOUNT, burnedAmount);
+        await redisHelper.setString(
+          REDIS_KEY.TOTAL_BURNED_AMOUNT,
+          burnedAmount,
+        );
       }
 
       return {
@@ -739,7 +799,9 @@ class ExplorerService {
 
   async getCirculationSupply(): Promise<IESResponse> {
     try {
-      let circulationSupply = await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY_FIGURE);
+      let circulationSupply = await RedisService.getString(
+        REDIS_KEY.CIRCULATING_SUPPLY_FIGURE,
+      );
       if (!circulationSupply) {
         circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
       }
@@ -759,12 +821,17 @@ class ExplorerService {
 
   async getTotalSupply(): Promise<IESResponse> {
     try {
-      let burnedAmount = await RedisService.getString(REDIS_KEY.TOTAL_BURNED_AMOUNT);
+      let burnedAmount = await RedisService.getString(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT,
+      );
 
       if (!burnedAmount) {
         /** save burned fees */
         burnedAmount = await this.calculateBurnedAmount();
-        await redisHelper.setString(REDIS_KEY.TOTAL_BURNED_AMOUNT, burnedAmount);
+        await redisHelper.setString(
+          REDIS_KEY.TOTAL_BURNED_AMOUNT,
+          burnedAmount,
+        );
       }
 
       const { initialSupply } = environment;
@@ -786,12 +853,17 @@ class ExplorerService {
 
   async getBurnedAmount(): Promise<IESResponse> {
     try {
-      let burnedAmount = await RedisService.getString(REDIS_KEY.TOTAL_BURNED_AMOUNT);
+      let burnedAmount = await RedisService.getString(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT,
+      );
 
       if (!burnedAmount) {
         /** save burned fees */
         burnedAmount = await this.calculateBurnedAmount();
-        await redisHelper.setString(REDIS_KEY.TOTAL_BURNED_AMOUNT, burnedAmount);
+        await redisHelper.setString(
+          REDIS_KEY.TOTAL_BURNED_AMOUNT,
+          burnedAmount,
+        );
       }
 
       return {
