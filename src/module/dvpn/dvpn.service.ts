@@ -155,7 +155,7 @@ class DvpnService {
         fetchRequest(
           `${environment.nodeInfoUrl}/qubetics/node/v3/nodes`,
           "GET",
-          null
+          null,
         ),
       ]);
 
@@ -164,11 +164,11 @@ class DvpnService {
       const formattedNodes = formatNodes(fetchRes.data.nodes);
 
       const totalCountries = new Set(
-        formattedNodes.map((node: any) => node.country)
+        formattedNodes.map((node: any) => node.country),
       ).size;
 
       const activeNodes = fetchRes.data.nodes.filter(
-        (node: any) => node.status === "active"
+        (node: any) => node.status === "active",
       ).length;
 
       return {

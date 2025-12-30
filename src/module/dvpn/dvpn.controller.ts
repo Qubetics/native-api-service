@@ -77,7 +77,7 @@ class DvpnController implements Controller {
 
   private getNetworkAnalytics = async (
     request: Request,
-    response: Response
+    response: Response,
   ) => {
     const activeAccounts = await dvpnService.getNetworkAnalytics();
 

@@ -239,6 +239,8 @@ model DvpnTransaction {
   logs           Json?
   price          String?
   provAddress    String?
+
+  @@index([blocknumber, txhash, planId])
 }
 
 model Rewards {

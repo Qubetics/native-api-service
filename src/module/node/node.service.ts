@@ -60,7 +60,7 @@ class NodeService {
   async getNodeDetails(
     address: string | null,
     page: number,
-    limit: number
+    limit: number,
   ): Promise<IESResponse> {
     try {
       if (!address) {
@@ -220,7 +220,7 @@ class NodeService {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
-          total_earning: 0, // We’ll need to update this later since we currently don’t have a type to calculate the amount 
+          total_earning: 0, // We’ll need to update this later since we currently don’t have a type to calculate the amount
           daily_earnings: 0, // We’ll need to update this later since we currently don’t have a type to calculate the amount.
           total_users,
           active_users: activeItems?.sessions?.length ?? 0,
@@ -256,7 +256,7 @@ class NodeService {
       return {
         error: false,
         message: RES_MSG.SUCCESS,
-        data: { nodeAddress: { address } }
+        data: { nodeAddress: { address } },
       };
     } catch (err) {
       if (err instanceof Error) {
