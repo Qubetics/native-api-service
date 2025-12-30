@@ -309,6 +309,7 @@ export const DVPN_TYPE = {
   END_SUBSCRIPTION: "/qubetics.subscription.v3.MsgCancelSubscriptionRequest",
   START_SESSION: "/qubetics.subscription.v3.MsgStartSessionRequest",
   END_SESSION: "/qubetics.session.v3.MsgCancelSessionRequest",
+  NODE_EARNING: "NODE_EARNING",
 };
 export const CURRENT_DEFAULT_CIRCULATING_SUPPLY = 340829898;
 export const STATIC_BURNED_AMOUNT = 52611;

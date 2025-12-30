@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "Transactions" ADD COLUMN     "burnedFee" DOUBLE PRECISION NOT NULL DEFAULT 0;

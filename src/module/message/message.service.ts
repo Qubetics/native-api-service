@@ -17,8 +17,10 @@ import {
   MSG_CANCEL_SESSION,
   MSG_START_SUBSCRIPTION,
   MSG_CANCEL_SUBSCRIPTION,
+  DVPN_TYPE,
 } from "../../constant";
 import { convertBigIntToNumber } from "../../helper/common.helper";
+import BigNumber from "bignumber.js";
 
 class MessageService {
   /**
@@ -138,18 +140,21 @@ class MessageService {
       const currentDate = startOfDay(new Date());
       const fromDate = startOfDay(subDays(currentDate, daysAgo - 1));
 
-      // Fetch transactions
-      const transactions = await prisma.transactions.findMany({
+      const transactions = await prisma.dvpnTransaction.findMany({
         where: {
-          type: {
-            in: MSG_TYPE,
-            notIn: ["START_SUBSCRIPTION"],
+          type: DVPN_TYPE.NODE_EARNING,
+          createdAt: {
+            gte: fromDate,
           },
-          createdAt: { gte: fromDate },
           nodeAddress: data?.nodeAddress,
         },
-        select: { value: true, createdAt: true },
-        orderBy: { createdAt: "asc" },
+        select: {
+          price: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
       });
 
       // Decide whether to bucket by day or month
@@ -157,11 +162,11 @@ class MessageService {
       const bucketFn = isYearly ? startOfMonth : startOfDay;
 
       // Group transactions into buckets
-      const grouped: Record<string, number> = {};
+      const grouped: Record<string, BigNumber> = {};
       for (const tx of transactions) {
         const key = bucketFn(tx.createdAt).toISOString();
-        const val = tx.value ? parseFloat(tx.value) : 0;
-        grouped[key] = (grouped[key] || 0) + val;
+        const val = tx.price ? new BigNumber(tx.price) : new BigNumber(0);
+        grouped[key] = grouped[key] ? grouped[key].plus(val) : val;
       }
 
       // Build full interval (days or months)
@@ -178,19 +183,18 @@ class MessageService {
       // Format response
       let formatted = intervals.map((date) => {
         const key = bucketFn(date).toISOString();
+        const value = grouped[key] ? grouped[key] : new BigNumber(0);
         return {
           createdAt: key,
-          count: grouped[key] ? parseFloat(grouped[key].toFixed(2)) : 0,
+          count: value.toFixed(18),
         };
       });
 
-      // Add total only for yearly
       if (isYearly) {
         formatted = formatted.slice(-12);
-        const totalCount = formatted.reduce((sum, item) => sum + item.count, 0);
         return {
           error: false,
-          message: "transaction history fetched successfully",
+          message: "Transaction history fetched successfully",
           data: formatted,
         };
       }

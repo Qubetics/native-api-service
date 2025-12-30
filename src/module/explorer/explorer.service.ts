@@ -264,11 +264,7 @@ class ExplorerService {
         // 	// Call getTransactionByHash with the modified payload
         // 	txData = await transactionService.getTransactionByHash(payload);
         // 	return txData;
-      } else if (
-        payload.startsWith("qubetics") &&
-        payload.length > 42 &&
-        payload.length <= 50
-      ) {
+      } else if (payload.startsWith("qubetics") && payload.length > 42 && payload.length <= 50) {
         /* here we search for all transaction specfic to a wallet address*/
         txData = await this.getUserByAddress(payload);
         return txData;
@@ -291,10 +287,7 @@ class ExplorerService {
     }
   }
 
-  async getAccountCounts(payloads: {
-    time: string;
-    interval: number;
-  }): Promise<IGraphResponse> {
+  async getAccountCounts(payloads: { time: string; interval: number }): Promise<IGraphResponse> {
     try {
       let graphData;
       let finalData;
@@ -406,10 +399,7 @@ class ExplorerService {
     }
   }
 
-  async getContractDeployedCount(payloads: {
-    time: string;
-    interval: number;
-  }): Promise<IGraphResponse> {
+  async getContractDeployedCount(payloads: { time: string; interval: number }): Promise<IGraphResponse> {
     try {
       let graphData;
       let finalData;
@@ -558,9 +548,7 @@ class ExplorerService {
         console.log("balance error", error);
         userBalance = "";
       }
-      const actualBalance = userBalance
-        ? (Number(userBalance) / Math.pow(10, 18)).toString()
-        : "";
+      const actualBalance = userBalance ? (Number(userBalance) / Math.pow(10, 18)).toString() : "";
 
       let marketCapPrice = await RedisService.getString(
         CONST_NAME.MARKET_CAP_PRICE,
@@ -615,10 +603,7 @@ class ExplorerService {
     }
   }
 
-  async tpsHistory(payloads: {
-    time: string;
-    interval: number;
-  }): Promise<IGraphResponse> {
+  async tpsHistory(payloads: { time: string; interval: number }): Promise<IGraphResponse> {
     try {
       console.log(payloads.time);
       console.log(payloads.interval);
@@ -700,7 +685,7 @@ class ExplorerService {
         message: RES_MSG.TRANSACTION_HISTORY_SUCCESS,
         data: {
           finalData: finalData as Array<GraphData>,
-          count: await prisma.transactions.count(),
+          count: finalData ? finalData.reduce((total, data) => total + (data.count || 0), 0) : 0,
         },
       };
     } catch (err) {
@@ -748,9 +733,7 @@ class ExplorerService {
         REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
       );
       let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
-      const tokenPrice =
-        (await RedisService.getString(REDIS_KEY.COIN_PRICE)) ??
-        CURRENT_DEFAULT_COIN_PRICE;
+      const tokenPrice = (await RedisService.getString(REDIS_KEY.COIN_PRICE)) ?? CURRENT_DEFAULT_COIN_PRICE;
       console.log({ marketCap, tokenPrice });
 
       // const circulationSupply =
@@ -905,9 +888,7 @@ class ExplorerService {
       });
 
       if (burnedAmount) {
-        return (
-          Number(burnedAmount?._sum.burnedFee) + Number(STATIC_BURNED_AMOUNT)
-        );
+        return Number(burnedAmount?._sum.burnedFee) + Number(STATIC_BURNED_AMOUNT);
       }
       return Number(STATIC_BURNED_AMOUNT);
     } catch (error) {

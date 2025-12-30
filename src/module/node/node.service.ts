@@ -208,8 +208,19 @@ class NodeService {
           createdAt: "desc",
         },
       });
+      const totalEarning: any = await prisma.$queryRaw`
+      SELECT CAST(SUM(CAST(NULLIF(price, '') AS DECIMAL)) AS VARCHAR) as total
+      FROM "DvpnTransaction"
+      WHERE "nodeAddress" = ${address || ""}
+      `;
+      const dailyEarning: any = await prisma.$queryRaw`
+      SELECT CAST(SUM(CAST(NULLIF(price, '') AS DECIMAL)) AS VARCHAR) as total
+      FROM "DvpnTransaction"
+      WHERE "nodeAddress" = ${address || ""} 
+      AND DATE("createdAt") = CURRENT_DATE
+      `;
 
-      const total_users =
+      const total_sessions =
         result?.filter((val: any) => val.type === DVPN_TYPE.START_SESSION)
           ?.length || 0;
 
@@ -220,10 +231,10 @@ class NodeService {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
-          total_earning: 0, // We’ll need to update this later since we currently don’t have a type to calculate the amount
-          daily_earnings: 0, // We’ll need to update this later since we currently don’t have a type to calculate the amount.
-          total_users,
-          active_users: activeItems?.sessions?.length ?? 0,
+          total_earning: totalEarning[0]?.total || "0",
+          daily_earnings: dailyEarning[0]?.total || "0",
+          total_sessions,
+          active_sessions: activeItems?.sessions?.length ?? 0,
           last_checked,
           recent_session: activeItems?.sessions[0]?.startAt ?? null,
           native: true,
