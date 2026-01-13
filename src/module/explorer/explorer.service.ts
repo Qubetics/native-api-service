@@ -32,6 +32,7 @@ import {
 } from "../../lib/utilities.helper";
 import contractService from "../contract/contract.service";
 import redisHelper from "../../service/redis.helper";
+import axios from "axios";
 
 class ExplorerService {
   // Dashboard method to fetch data
@@ -756,11 +757,13 @@ class ExplorerService {
       // const circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
 
       let circulationSupply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY_FIGURE,
-      );
-      if (!circulationSupply) {
-        circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
-      }
+				REDIS_KEY.CIRCULATING_SUPPLY,
+			);
+			console.log('Supply from Redis-native', circulationSupply);
+			if (!circulationSupply) {
+				circulationSupply = await this.calculateCirculatingSupply();
+				console.log('Supply from Calculaton-narive', circulationSupply);
+			}
       if (marketCap === "0" || !marketCap) {
         marketCap ??= tokenPrice * circulationSupply;
       }
@@ -809,27 +812,27 @@ class ExplorerService {
     }
   }
 
-  async getCirculationSupply(): Promise<IESResponse> {
-    try {
-      let circulationSupply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY_FIGURE,
-      );
-      if (!circulationSupply) {
-        circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
-      }
+	async getCirculationSupply(): Promise<IESResponse> {
+		try {
+			let circulationSupply = await RedisService.getString(
+				REDIS_KEY.CIRCULATING_SUPPLY,
+			);
+			if (!circulationSupply) {
+				circulationSupply = await this.calculateCirculatingSupply();
+			}
 
-      return {
-        error: false,
-        message: RES_MSG.SUCCESS,
-        data: {
-          circulationSupply,
-        },
-      };
-    } catch (err) {
-      logger.error("dashboard-Error", err);
-      return { error: true, message: RES_MSG.NOT_FOUND };
-    }
-  }
+			return {
+				error: false,
+				message: RES_MSG.SUCCESS,
+				data: {
+					circulationSupply,
+				},
+			};
+		} catch (err) {
+			logger.error('dashboard-Error', err);
+			return { error: true, message: RES_MSG.NOT_FOUND };
+		}
+	}
 
   async getTotalSupply(): Promise<IESResponse> {
     try {
@@ -910,6 +913,33 @@ class ExplorerService {
       return false;
     }
   }
+
+  async calculateCirculatingSupply() {
+	try {
+		const apiUrl = `${environment.evmHost}/${environment.projectName}`;
+		// locked amount
+		const lockedSupply: any = await axios.get(
+			`${apiUrl}/validatorpool/locked_supply`,
+		);
+
+		// total supply
+
+		const fetchTotalSupply: any = await this.getTotalSupply();
+		const locked_supply: number =
+			Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
+
+		const returnValue = fetchTotalSupply.data.totalSupply - locked_supply;
+		await redisHelper.setStringWithExpiry(
+			REDIS_KEY.CIRCULATING_SUPPLY,
+			returnValue,
+			600,
+		);
+		return returnValue;
+	} catch (error) {
+		console.log(error, 'error in calculateBurnedAmount');
+		return 0;
+	}
+}
 }
 
 export default new ExplorerService();

@@ -64,6 +64,8 @@ class Environment implements IEnvironment {
   
   public ttlTimeRewards: number;
 
+  public projectName : string
+
   /**
    *
    * @param NODE_ENV
@@ -98,8 +100,9 @@ class Environment implements IEnvironment {
     this.redisExpiry = Number(process.env.API_REDIS_EXPIRY);
     this.validators = <string>process.env.VALIDATORS;
     this.excludedValidators = <string>process.env.EXCLUDING_VALIDATORS;
-    this.initialSupply = Number(process.env.INITIAL_SUPPLY) || 1366266047.86;
+    this.initialSupply = Number(process.env.INITIAL_SUPPLY) || 1361867964.86;
     this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
+    this.projectName = <string>process.env.PROJECT_NAME;
   }
 
   /**
