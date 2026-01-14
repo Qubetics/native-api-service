@@ -61,10 +61,10 @@ class Environment implements IEnvironment {
   public excludedValidators: string;
 
   public initialSupply: number;
-  
+
   public ttlTimeRewards: number;
 
-  public projectName : string
+  public projectName: string;
 
   /**
    *

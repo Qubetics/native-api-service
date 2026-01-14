@@ -40,10 +40,10 @@ class RedisService {
       });
       this.client.on("error", (err: Error) =>
         logger.error(
-          '\x1b[31m%s\x1b[0m',
-          'error while connecting redis server: ',
-          err.message
-        )
+          "\x1b[31m%s\x1b[0m",
+          "error while connecting redis server: ",
+          err.message,
+        ),
       );
     } catch (error) {
       console.log("error while connecting to redis .. ", error);
@@ -76,7 +76,7 @@ class RedisService {
       await this.client.expire(redisKey, environment.ttlTimeRewards * 60 * 60);
       return true;
     } catch (err) {
-      logger.error('error while saving in redis: ', err);
+      logger.error("error while saving in redis: ", err);
       return null;
     }
   }
@@ -86,33 +86,30 @@ class RedisService {
       const res = (await this.client.hGet(redisKey, dataKey)) as string;
       return JSON.parse(res);
     } catch (err) {
-      logger.error('error while saving in redis: ', err);
+      logger.error("error while saving in redis: ", err);
       return null;
     }
   }
 
-  	public async setStringWithExpiry<T>(
-		key: string,
-		data: T,
-		expiration: number,
-	) {
-		try {
-			const res = await this.client.setEx(
-				key,
-				expiration,
-				JSON.stringify(data),
-			);
-			logger.info(
-				'Redis Data Saving Response setStringWithExpiry: ',
-				res,
-			);
-		} catch (err) {
-			console.error(
-				'Error while setting the data into redis setStringWithExpiry: ',
-				err,
-			);
-			console.log('Key : ', key, 'value : ', data);
-		}
-	}
+  public async setStringWithExpiry<T>(
+    key: string,
+    data: T,
+    expiration: number,
+  ) {
+    try {
+      const res = await this.client.setEx(
+        key,
+        expiration,
+        JSON.stringify(data),
+      );
+      logger.info("Redis Data Saving Response setStringWithExpiry: ", res);
+    } catch (err) {
+      console.error(
+        "Error while setting the data into redis setStringWithExpiry: ",
+        err,
+      );
+      console.log("Key : ", key, "value : ", data);
+    }
+  }
 }
 export default RedisService.getInstance();
