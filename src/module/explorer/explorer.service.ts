@@ -215,9 +215,7 @@ class ExplorerService {
         REDIS_KEY.CIRCULATING_SUPPLY,
       );
 
-      let totalSupply = await RedisService.getString(
-        REDIS_KEY.TOTAL_SUPPLY,
-      );
+      let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
 
       let validatorData = await RedisService.getString(REDIS_KEY.INFLATION_APY);
       validatorData = validatorData === null ? {} : JSON.parse(validatorData);
@@ -785,9 +783,7 @@ class ExplorerService {
         burnedAmount = await this.calculateBurnedAmount();
       }
 
-            let totalSupply = await RedisService.getString(
-        REDIS_KEY.TOTAL_SUPPLY,
-      );
+      let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
 
       if (!totalSupply) {
         totalSupply = await this.getTotalSupply();
@@ -847,31 +843,23 @@ class ExplorerService {
 
   async getTotalSupply(): Promise<IESResponse> {
     try {
-      let totalSupply = await RedisService.getString(
-        REDIS_KEY.TOTAL_SUPPLY,
-      );
+      let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
 
       if (!totalSupply) {
         /** save burned fees */
 
-        let burnedAmount = await RedisService.getString(
-        REDIS_KEY.TOTAL_SUPPLY,
-      );
+        let burnedAmount = await RedisService.getString(REDIS_KEY.TOTAL_BURNED_AMOUNT);
 
-      if(!burnedAmount){
-       burnedAmount = await this.calculateBurnedAmount();
-      }
+        if (!burnedAmount) {
+          burnedAmount = await this.calculateBurnedAmount();
+        }
 
         const { initialSupply } = environment;
-      const totalSupply = initialSupply - burnedAmount;
-      console.log("native-initialSupply",initialSupply,totalSupply)
-    await redisHelper.setString(
-          REDIS_KEY.TOTAL_SUPPLY,
-          totalSupply,
-        );  
-    }
+        const totalSupply = initialSupply - burnedAmount;
+        console.log("native-initialSupply", initialSupply, totalSupply);
+        await redisHelper.setString(REDIS_KEY.TOTAL_SUPPLY, totalSupply);
+      }
 
-      
       return {
         error: false,
         message: RES_MSG.SUCCESS,
@@ -928,9 +916,10 @@ class ExplorerService {
       }
 
       await redisHelper.setStringWithExpiry(
-          REDIS_KEY.TOTAL_BURNED_AMOUNT,
-          burnedAmount, 600
-        );
+        REDIS_KEY.TOTAL_BURNED_AMOUNT,
+        burnedAmount,
+        600,
+      );
 
       return Number(STATIC_BURNED_AMOUNT);
     } catch (error) {
@@ -948,15 +937,15 @@ class ExplorerService {
       );
 
       // total supply
-      console.log("lockedSupply-", lockedSupply)
+      console.log("lockedSupply-", lockedSupply);
       const fetchTotalSupply: any = await this.getTotalSupply();
 
       const locked_supply: number =
         Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
-            console.log("fetchTotalSupply-", fetchTotalSupply.data.totalSupply)
+      console.log("fetchTotalSupply-", fetchTotalSupply.data.totalSupply);
 
       const returnValue = fetchTotalSupply.data.totalSupply - locked_supply;
-      console.log("returnValue-",returnValue)
+      console.log("returnValue-", returnValue);
       await redisHelper.setStringWithExpiry(
         REDIS_KEY.CIRCULATING_SUPPLY,
         returnValue,
