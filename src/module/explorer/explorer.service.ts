@@ -928,7 +928,7 @@ class ExplorerService {
     }
   }
 
-  async calculateCirculatingSupply() {
+  async calculateCirculatingSupply_v1() {
     try {
       const apiUrl = `${environment.evmHost}/${environment.projectName}`;
       // locked amount
@@ -957,6 +957,33 @@ class ExplorerService {
       return 0;
     }
   }
+
+  async    calculateCirculatingSupply() {
+	try {
+		let circulationSupply = await RedisService.getString(
+			REDIS_KEY.CIRCULATING_SUPPLY,
+		);
+		if (!circulationSupply) {
+			const circulationSupplyUrl = environment.evmApiUrl;
+			const result = await axios.get(
+				`${circulationSupplyUrl}/explorer/circulation-supply`,
+			);
+
+			console.log(result.data.data.circulationSupply, 'CRCLFRMNATIVE');
+			circulationSupply = result?.data?.data?.circulationSupply;
+			await RedisService.setStringWithExpiry(
+				REDIS_KEY.CIRCULATING_SUPPLY,
+				circulationSupply,
+				600,
+			);
+		}
+
+		return circulationSupply;
+	} catch (err) {
+		logger.error('dashboard-Error', err);
+		return 0;
+	}
+}
 }
 
 export default new ExplorerService();

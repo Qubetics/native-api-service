@@ -66,6 +66,8 @@ class Environment implements IEnvironment {
 
   public projectName: string;
 
+  public evmApiUrl:string
+
   /**
    *
    * @param NODE_ENV
@@ -103,6 +105,7 @@ class Environment implements IEnvironment {
     this.initialSupply = Number(process.env.INITIAL_SUPPLY) || 1361867964.86;
     this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
     this.projectName = <string>process.env.PROJECT_NAME;
+    this.evmApiUrl = <string>process.env.EVM_API_BASE_URL;
   }
 
   /**
