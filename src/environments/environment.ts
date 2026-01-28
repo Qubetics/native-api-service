@@ -66,7 +66,7 @@ class Environment implements IEnvironment {
 
   public projectName: string;
 
-  public evmApiUrl:string
+  public evmApiUrl: string;
 
   /**
    *

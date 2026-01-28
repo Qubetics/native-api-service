@@ -33,6 +33,7 @@ import {
 import contractService from "../contract/contract.service";
 import redisHelper from "../../service/redis.helper";
 import axios from "axios";
+import { calculateSupplyDetails } from "../../helper/common.helper";
 
 class ExplorerService {
   // Dashboard method to fetch data
@@ -765,7 +766,9 @@ class ExplorerService {
 
       console.log("Supply from Redis-native", circulationSupply);
       if (!circulationSupply) {
-        circulationSupply = await this.calculateCirculatingSupply();
+        const supplyDetails = calculateSupplyDetails();
+        circulationSupply = supplyDetails.circulating_supply;
+
         console.log("Supply from Calculaton-narive", circulationSupply);
       }
       if (marketCap === "0" || !marketCap) {
@@ -819,36 +822,16 @@ class ExplorerService {
     }
   }
 
-  async getCirculationSupply(): Promise<IESResponse> {
-    try {
-      let circulationSupply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
-      );
-      if (!circulationSupply) {
-        circulationSupply = await this.calculateCirculatingSupply();
-      }
-
-      return {
-        error: false,
-        message: RES_MSG.SUCCESS,
-        data: {
-          circulationSupply,
-        },
-      };
-    } catch (err) {
-      logger.error("dashboard-Error", err);
-      return { error: true, message: RES_MSG.NOT_FOUND };
-    }
-  }
-
-  async getTotalSupply(): Promise<IESResponse> {
+   async getTotalSupply(): Promise<IESResponse> {
     try {
       let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
 
       if (!totalSupply) {
         /** save burned fees */
 
-        let burnedAmount = await RedisService.getString(REDIS_KEY.TOTAL_BURNED_AMOUNT);
+        let burnedAmount = await RedisService.getString(
+          REDIS_KEY.TOTAL_BURNED_AMOUNT,
+        );
 
         if (!burnedAmount) {
           burnedAmount = await this.calculateBurnedAmount();
@@ -928,62 +911,40 @@ class ExplorerService {
     }
   }
 
-  async calculateCirculatingSupply_v1() {
-    try {
-      const apiUrl = `${environment.evmHost}/${environment.projectName}`;
-      // locked amount
-      const lockedSupply: any = await axios.get(
-        `${apiUrl}/validatorpool/locked_supply`,
-      );
-
-      // total supply
-      console.log("lockedSupply-", lockedSupply);
-      const fetchTotalSupply: any = await this.getTotalSupply();
-
-      const locked_supply: number =
-        Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
-      console.log("fetchTotalSupply-", fetchTotalSupply.data.totalSupply);
-
-      const returnValue = fetchTotalSupply.data.totalSupply - locked_supply;
-      console.log("returnValue-", returnValue);
-      await redisHelper.setStringWithExpiry(
-        REDIS_KEY.CIRCULATING_SUPPLY,
-        returnValue,
-        600,
-      );
-      return returnValue;
-    } catch (error) {
-      console.log(error, "error in calculateBurnedAmount");
-      return 0;
-    }
-  }
-
-  async    calculateCirculatingSupply() {
-	try {
-		let circulationSupply = await RedisService.getString(
-			REDIS_KEY.CIRCULATING_SUPPLY,
-		);
-		if (!circulationSupply) {
-			const circulationSupplyUrl = environment.evmApiUrl;
-			const result = await axios.get(
-				`${circulationSupplyUrl}/explorer/circulation-supply`,
-			);
-
-			console.log(result.data.data.circulationSupply, 'CRCLFRMNATIVE');
-			circulationSupply = result?.data?.data?.circulationSupply;
-			await RedisService.setStringWithExpiry(
+	async getCirculationSupply(): Promise<IESResponse> {
+		try {
+			let circulatingSupply = await RedisService.getString(
 				REDIS_KEY.CIRCULATING_SUPPLY,
-				circulationSupply,
-				600,
 			);
-		}
+			if (!circulatingSupply) {
+				const supplyDetails = calculateSupplyDetails();
+				circulatingSupply = supplyDetails.circulating_supply;
+				// const circulationSupplyUrl = environment.nativeAPIUrl;
+				// const result = await axios.get(
+				// 	circulationSupplyUrl + '/explorer/circulation-supply',
+				// );
 
-		return circulationSupply;
-	} catch (err) {
-		logger.error('dashboard-Error', err);
-		return 0;
+				console.log(circulatingSupply, supplyDetails, 'CRCLFRMNATIVE');
+				// circulationSupply = result?.data?.data?.circulationSupply;
+				await RedisService.setStringWithExpiry(
+					REDIS_KEY.CIRCULATING_SUPPLY,
+					circulatingSupply,
+					600,
+				);
+			}
+
+			return {
+				error: false,
+				message: RES_MSG.SUCCESS,
+				data: {
+					circulatingSupply,
+				},
+			};
+		} catch (err) {
+			logger.error('dashboard-Error', err);
+			return { error: true, message: RES_MSG.NOT_FOUND };
+		}
 	}
-}
 }
 
 export default new ExplorerService();

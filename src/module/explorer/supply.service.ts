@@ -1,5 +1,10 @@
 import { RedisService } from "../../service";
-import { REDIS_KEY, RES_MSG, CONST_NAME, STATIC_BURNED_AMOUNT } from "../../constant";
+import {
+  REDIS_KEY,
+  RES_MSG,
+  CONST_NAME,
+  STATIC_BURNED_AMOUNT,
+} from "../../constant";
 import { IESResponse } from "../../interfaces";
 import prisma from "../../lib/db";
 import logger from "../../lib/logger";
@@ -8,7 +13,9 @@ import axios from "axios";
 class SupplyService {
   async getCirculationSupply(): Promise<IESResponse> {
     try {
-      let circulationSupply = await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY);
+      let circulationSupply = await RedisService.getString(
+        REDIS_KEY.CIRCULATING_SUPPLY,
+      );
       if (!circulationSupply) {
         circulationSupply = await this.calculateCirculatingSupply();
       }
@@ -27,20 +34,25 @@ class SupplyService {
     try {
       let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
       if (!totalSupply) {
-        let burnedAmount = await RedisService.getString(REDIS_KEY.TOTAL_BURNED_AMOUNT);
+        let burnedAmount = await RedisService.getString(
+          REDIS_KEY.TOTAL_BURNED_AMOUNT,
+        );
         if (!burnedAmount) {
           burnedAmount = (await this.calculateBurnedAmount()).toString();
         }
         const { initialSupply } = global.environment;
         const totalSupplyValue = initialSupply - Number(burnedAmount);
-        await RedisService.setString(REDIS_KEY.TOTAL_SUPPLY, totalSupplyValue.toString());
+        await RedisService.setString(
+          REDIS_KEY.TOTAL_SUPPLY,
+          totalSupplyValue.toString(),
+        );
         totalSupply = totalSupplyValue.toString();
       }
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
         data: {
-          totalSupply: Number(totalSupply)
+          totalSupply: Number(totalSupply),
         },
       };
     } catch (err) {
@@ -55,9 +67,13 @@ class SupplyService {
         `${global.environment.evmHost}/qubetics/validatorpool/locked_supply`,
       );
       const fetchTotalSupply: any = await this.getTotalSupply();
-      const locked_supply: number = Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
+      const locked_supply: number =
+        Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
       const returnValue = fetchTotalSupply.data.totalSupply - locked_supply;
-      await RedisService.setString(REDIS_KEY.CIRCULATING_SUPPLY, returnValue.toString());
+      await RedisService.setString(
+        REDIS_KEY.CIRCULATING_SUPPLY,
+        returnValue.toString(),
+      );
       return returnValue;
     } catch (err) {
       logger.error("Error in calculateCirculatingSupply:", err);
@@ -67,7 +83,9 @@ class SupplyService {
 
   async getBurnedAmount(): Promise<IESResponse> {
     try {
-      let burnedAmount = await RedisService.getString(REDIS_KEY.TOTAL_BURNED_AMOUNT);
+      let burnedAmount = await RedisService.getString(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT,
+      );
       if (!burnedAmount) {
         burnedAmount = await this.calculateBurnedAmount();
       }
@@ -84,9 +102,9 @@ class SupplyService {
 
   async calculateBurnedAmount(): Promise<number> {
     try {
-      const result = await prisma.$queryRaw`
+      const result = (await prisma.$queryRaw`
         SELECT SUM("burnedFee") as sum FROM "Transactions"
-      ` as Array<{ sum: number | null }>;
+      `) as Array<{ sum: number | null }>;
       const burnedAmount = (result[0]?.sum || 0).toString();
       await RedisService.setString(REDIS_KEY.TOTAL_BURNED_AMOUNT, burnedAmount);
       return Number(STATIC_BURNED_AMOUNT);

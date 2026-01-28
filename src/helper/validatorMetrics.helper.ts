@@ -61,10 +61,10 @@ const calculateData = async (): Promise<
 
     const [params, getAprRes] = await Promise.all([
       getParams(apiRes),
-      apiRes.get("/qubetics/validatorpool/params").catch(err => {
+      apiRes.get("/qubetics/validatorpool/params").catch((err) => {
         logger.error("Error fetching APR params", err);
         return null;
-      })
+      }),
     ]);
 
     let apr = CURRENT_DEFAULT_APR;
@@ -93,7 +93,7 @@ const calculateData = async (): Promise<
       bondedTokens: params?.bondedTokens,
       bondedRate: params?.bondedRate,
       community_pool: params?.community_pool,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     await RedisService.setString(
@@ -163,7 +163,8 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
     // const bondedTokens = Number(poolResponse.data.pool.bonded_tokens);
     const communityTax = Number(paramsResponse.data.params.community_tax);
     const annualProvisions = annualProvision.data.annual_provisions;
-    const totalSupply = environment.initialSupply - Number(STATIC_BURNED_AMOUNT);
+    const totalSupply =
+      environment.initialSupply - Number(STATIC_BURNED_AMOUNT);
 
     const bondedRate = Number((bondedTokens / circulation_supply) * 100);
     const community_poolValue = community_pool?.data?.pool[0]?.amount ?? 0;

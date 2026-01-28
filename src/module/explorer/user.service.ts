@@ -1,6 +1,12 @@
 import prisma from "../../lib/db";
 import { IESResponse } from "../../interfaces";
-import { RES_MSG, REDIS_KEY, FETCH_METHODS, HEADERS, CONST_NAME } from "../../constant";
+import {
+  RES_MSG,
+  REDIS_KEY,
+  FETCH_METHODS,
+  HEADERS,
+  CONST_NAME,
+} from "../../constant";
 import { RedisService } from "../../service";
 import { fetchRequest } from "../../Utility/common";
 import { exp } from "../../lib/utilities.helper";
@@ -34,7 +40,7 @@ class UserService {
           where: { address },
           select: { txn: true },
         }),
-        RedisService.getString(CONST_NAME.MARKET_CAP_PRICE)
+        RedisService.getString(CONST_NAME.MARKET_CAP_PRICE),
       ]);
 
       let userBalance = "";
@@ -53,7 +59,9 @@ class UserService {
         logger.error("Balance fetch error:", error);
       }
 
-      const actualBalance = userBalance ? (Number(userBalance) / Math.pow(10, 18)).toString() : "0";
+      const actualBalance = userBalance
+        ? (Number(userBalance) / Math.pow(10, 18)).toString()
+        : "0";
       let value = "0";
 
       if (!marketCapPrice) {
