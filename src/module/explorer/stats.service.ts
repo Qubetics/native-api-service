@@ -16,6 +16,7 @@ import {
   fillMissingDatesWithZeroByMonth,
 } from "../../lib/utilities.helper";
 import supplyService from "./supply.service";
+import { calculateSupplyDetails } from "../../helper/common.helper";
 
 class StatsService {
   async dashboard(): Promise<IESResponse> {
@@ -42,12 +43,8 @@ class StatsService {
         RedisService.getString(REDIS_KEY.TOTAL_SUPPLY),
       ]);
 
-      let circulationSupply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
-      );
-      if (!circulationSupply) {
-        circulationSupply = await supplyService.calculateCirculatingSupply();
-      }
+      
+      const circulationSupply = await calculateSupplyDetails();
 
       const finalMarketCap =
         marketCap === "0" || !marketCap

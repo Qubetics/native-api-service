@@ -3,10 +3,10 @@
 import axios, { Method } from "axios";
 import logger from "../lib/logger";
 
-import type { SupplyResult, Breakdown } from '../interfaces/index';
-import { ALLOCATIONS, TOTAL_SUPPLY } from '../constant/index';
-import { getCurrentDateTime, roundToDecimals } from '../lib/utilities.helper';
-import { getUnlocked } from './calculateAPR.helper';
+import type { SupplyResult, Breakdown } from "../interfaces/index";
+import { ALLOCATIONS, TOTAL_SUPPLY } from "../constant/index";
+import { getCurrentDateTime, roundToDecimals } from "../lib/utilities.helper";
+import { getUnlocked } from "./calculateAPR.helper";
 
 const fetchRequest = async (
   url: string,
@@ -51,39 +51,39 @@ function convertBigIntToNumber(dataVal: any) {
 }
 
 function calculateSupplyDetails(): SupplyResult {
-	const currentDate = getCurrentDateTime();
+  const currentDate = getCurrentDateTime();
 
-	const breakdown: Breakdown = {};
-	let totalUnlocked = 0;
+  const breakdown: Breakdown = {};
+  let totalUnlocked = 0;
 
-	// Calculate unlocked amount for each allocation
-	for (const [name, alloc] of Object.entries(ALLOCATIONS)) {
-		const unlocked = getUnlocked(name, alloc, currentDate);
+  // Calculate unlocked amount for each allocation
+  for (const [name, alloc] of Object.entries(ALLOCATIONS)) {
+    const unlocked = getUnlocked(name, alloc, currentDate);
 
-		breakdown[name] = {
-			unlocked: roundToDecimals(unlocked, 2),
-			total: alloc.total,
-			percentage:
-				alloc.total > 0
-					? roundToDecimals((unlocked / alloc.total) * 100, 4)
-					: 0,
-		};
+    breakdown[name] = {
+      unlocked: roundToDecimals(unlocked, 2),
+      total: alloc.total,
+      percentage:
+        alloc.total > 0
+          ? roundToDecimals((unlocked / alloc.total) * 100, 4)
+          : 0,
+    };
 
-		totalUnlocked += unlocked;
-	}
+    totalUnlocked += unlocked;
+  }
 
-	return {
-		timestamp: currentDate.toISOString(),
-		circulating_supply: roundToDecimals(totalUnlocked, 2),
-		total_supply: TOTAL_SUPPLY,
-		max_supply: TOTAL_SUPPLY,
-		circulating_percentage: roundToDecimals(
-			(totalUnlocked / TOTAL_SUPPLY) * 100,
-			4,
-		),
-		locked_supply: roundToDecimals(TOTAL_SUPPLY - totalUnlocked, 2),
-		breakdown,
-	};
+  return {
+    timestamp: currentDate.toISOString(),
+    circulating_supply: roundToDecimals(totalUnlocked, 2),
+    total_supply: TOTAL_SUPPLY,
+    max_supply: TOTAL_SUPPLY,
+    circulating_percentage: roundToDecimals(
+      (totalUnlocked / TOTAL_SUPPLY) * 100,
+      4,
+    ),
+    locked_supply: roundToDecimals(TOTAL_SUPPLY - totalUnlocked, 2),
+    breakdown,
+  };
 }
 
-export { fetchRequest,convertBigIntToNumber, calculateSupplyDetails  };
+export { fetchRequest, convertBigIntToNumber, calculateSupplyDetails };

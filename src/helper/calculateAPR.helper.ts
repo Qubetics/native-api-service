@@ -3,7 +3,8 @@ import {
   RES_MSG,
   CONST_NAME,
   REDIS_KEY,
-  CURRENT_DEFAULT_APR,NETWORK_LAUNCH
+  CURRENT_DEFAULT_APR,
+  NETWORK_LAUNCH,
 } from "../constant";
 import { Params, BlockHeader, Allocation } from "../interfaces/index";
 import logger from "../lib/logger";
@@ -240,7 +241,6 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
   }
 }
 
-
 /**
  * Calculate the unlocked amount for a specific allocation at current time.
  *
@@ -255,75 +255,75 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
  * @returns Amount of tokens unlocked at the given date
  */
 export function getUnlocked(
-	name: string,
-	alloc: Allocation,
-	currentDate: Date,
+  name: string,
+  alloc: Allocation,
+  currentDate: Date,
 ): number {
-	const { total } = alloc;
-	const tgePct = alloc.tge;
+  const { total } = alloc;
+  const tgePct = alloc.tge;
 
-	// Determine cliff end date (no nested ternary)
-	let cliffEnd: Date | null = null;
+  // Determine cliff end date (no nested ternary)
+  let cliffEnd: Date | null = null;
 
-	if (alloc.delay) {
-		cliffEnd = alloc.delay;
-	} else if (alloc.cliff !== null) {
-		cliffEnd = addMonths(NETWORK_LAUNCH, alloc.cliff);
-	}
+  if (alloc.delay) {
+    cliffEnd = alloc.delay;
+  } else if (alloc.cliff !== null) {
+    cliffEnd = addMonths(NETWORK_LAUNCH, alloc.cliff);
+  }
 
-	// Determine vesting end date
-	const vestEnd = cliffEnd ? addMonths(cliffEnd, alloc.vest) : null;
+  // Determine vesting end date
+  const vestEnd = cliffEnd ? addMonths(cliffEnd, alloc.vest) : null;
 
-	// If no cliff end date, nothing is unlocked
-	if (!cliffEnd) {
-		return 0;
-	}
+  // If no cliff end date, nothing is unlocked
+  if (!cliffEnd) {
+    return 0;
+  }
 
-	// Special case: Ecosystem has TGE unlock at network launch
-	if (name === 'ecosystem' && tgePct > 0) {
-		const tgeAmount = total * (tgePct / 100);
+  // Special case: Ecosystem has TGE unlock at network launch
+  if (name === "ecosystem" && tgePct > 0) {
+    const tgeAmount = total * (tgePct / 100);
 
-		if (currentDate < NETWORK_LAUNCH) {
-			return 0;
-		}
+    if (currentDate < NETWORK_LAUNCH) {
+      return 0;
+    }
 
-		if (currentDate < cliffEnd) {
-			return tgeAmount;
-		}
+    if (currentDate < cliffEnd) {
+      return tgeAmount;
+    }
 
-		if (vestEnd && currentDate >= vestEnd) {
-			return total;
-		}
+    if (vestEnd && currentDate >= vestEnd) {
+      return total;
+    }
 
-		if (vestEnd) {
-			const vestingAmount = total - tgeAmount;
-			const progress =
-				(currentDate.getTime() - cliffEnd.getTime()) /
-				(vestEnd.getTime() - cliffEnd.getTime());
+    if (vestEnd) {
+      const vestingAmount = total - tgeAmount;
+      const progress =
+        (currentDate.getTime() - cliffEnd.getTime()) /
+        (vestEnd.getTime() - cliffEnd.getTime());
 
-			return tgeAmount + vestingAmount * Math.min(1.0, progress);
-		}
-	}
+      return tgeAmount + vestingAmount * Math.min(1.0, progress);
+    }
+  }
 
-	// Standard allocations (including Team / Advisors)
+  // Standard allocations (including Team / Advisors)
 
-	if (currentDate < cliffEnd) {
-		return 0;
-	}
+  if (currentDate < cliffEnd) {
+    return 0;
+  }
 
-	if (vestEnd && currentDate >= vestEnd) {
-		return total;
-	}
+  if (vestEnd && currentDate >= vestEnd) {
+    return total;
+  }
 
-	if (vestEnd) {
-		const progress =
-			(currentDate.getTime() - cliffEnd.getTime()) /
-			(vestEnd.getTime() - cliffEnd.getTime());
+  if (vestEnd) {
+    const progress =
+      (currentDate.getTime() - cliffEnd.getTime()) /
+      (vestEnd.getTime() - cliffEnd.getTime());
 
-		return total * Math.min(1.0, progress);
-	}
+    return total * Math.min(1.0, progress);
+  }
 
-	return 0;
+  return 0;
 }
 
 /**
@@ -333,15 +333,15 @@ export function getUnlocked(
  * @returns Cliff end date or null if no cliff
  */
 export function getCliffEndDate(alloc: Allocation): Date | null {
-	if (alloc.delay) {
-		return alloc.delay;
-	}
+  if (alloc.delay) {
+    return alloc.delay;
+  }
 
-	if (alloc.cliff === null) {
-		return null;
-	}
+  if (alloc.cliff === null) {
+    return null;
+  }
 
-	return addMonths(NETWORK_LAUNCH, alloc.cliff);
+  return addMonths(NETWORK_LAUNCH, alloc.cliff);
 }
 
 /**
@@ -351,13 +351,13 @@ export function getCliffEndDate(alloc: Allocation): Date | null {
  * @returns Vesting end date or null if no vesting period
  */
 export function getVestEndDate(alloc: Allocation): Date | null {
-	const cliffEnd = getCliffEndDate(alloc);
+  const cliffEnd = getCliffEndDate(alloc);
 
-	if (cliffEnd === null) {
-		return null;
-	}
+  if (cliffEnd === null) {
+    return null;
+  }
 
-	return addMonths(cliffEnd, alloc.vest);
+  return addMonths(cliffEnd, alloc.vest);
 }
 
 export { calculateData };

@@ -422,18 +422,18 @@ export function cursorPagination(
  * addMonths(new Date('2025-01-15'), 3) // Returns 2025-04-15
  */
 export function addMonths(date: Date, months: number): Date {
-	const result = new Date(date);
-	const currentMonth = result.getMonth();
-	const currentDay = result.getDate();
+  const result = new Date(date);
+  const currentMonth = result.getMonth();
+  const currentDay = result.getDate();
 
-	result.setMonth(currentMonth + months);
+  result.setMonth(currentMonth + months);
 
-	// Handle edge case where day doesn't exist in target month (e.g., Jan 31 + 1 month)
-	if (result.getDate() !== currentDay) {
-		result.setDate(0); // Set to last day of previous month
-	}
+  // Handle edge case where day doesn't exist in target month (e.g., Jan 31 + 1 month)
+  if (result.getDate() !== currentDay) {
+    result.setDate(0); // Set to last day of previous month
+  }
 
-	return result;
+  return result;
 }
 
 /**
@@ -443,18 +443,18 @@ export function addMonths(date: Date, months: number): Date {
  * @returns Current date at 13:00:00.000 UTC
  */
 export function getCurrentDateTime(): Date {
-	const now = new Date();
-	return new Date(
-		Date.UTC(
-			now.getUTCFullYear(),
-			now.getUTCMonth(),
-			now.getUTCDate(),
-			13,
-			0,
-			0,
-			0,
-		),
-	);
+  const now = new Date();
+  return new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
 }
 
 /**
@@ -465,6 +465,6 @@ export function getCurrentDateTime(): Date {
  * @returns Rounded number
  */
 export function roundToDecimals(value: number, decimals: number = 2): number {
-	const multiplier = 10 ** decimals;
-	return Math.round(value * multiplier) / multiplier;
+  const multiplier = 10 ** decimals;
+  return Math.round(value * multiplier) / multiplier;
 }

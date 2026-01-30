@@ -9,16 +9,13 @@ import { IESResponse } from "../../interfaces";
 import prisma from "../../lib/db";
 import logger from "../../lib/logger";
 import axios from "axios";
+import { calculateSupplyDetails } from "../../helper/common.helper";
 
 class SupplyService {
   async getCirculationSupply(): Promise<IESResponse> {
     try {
-      let circulationSupply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
-      );
-      if (!circulationSupply) {
-        circulationSupply = await this.calculateCirculatingSupply();
-      }
+             const circulationSupply =  calculateSupplyDetails();
+
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
@@ -63,18 +60,11 @@ class SupplyService {
 
   async calculateCirculatingSupply(): Promise<number> {
     try {
-      const lockedSupply: any = await axios.get(
-        `${global.environment.evmHost}/qubetics/validatorpool/locked_supply`,
-      );
-      const fetchTotalSupply: any = await this.getTotalSupply();
-      const locked_supply: number =
-        Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
-      const returnValue = fetchTotalSupply.data.totalSupply - locked_supply;
-      await RedisService.setString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
-        returnValue.toString(),
-      );
-      return returnValue;
+
+      const returnValue = calculateSupplyDetails();
+      const supply = returnValue.circulating_supply;
+      
+      return supply;
     } catch (err) {
       logger.error("Error in calculateCirculatingSupply:", err);
       return 0;
