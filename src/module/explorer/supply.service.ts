@@ -14,7 +14,7 @@ import { calculateSupplyDetails } from "../../helper/common.helper";
 class SupplyService {
   async getCirculationSupply(): Promise<IESResponse> {
     try {
-             const circulationSupply =  calculateSupplyDetails();
+      const circulationSupply = calculateSupplyDetails();
 
       return {
         error: false,
@@ -60,10 +60,9 @@ class SupplyService {
 
   async calculateCirculatingSupply(): Promise<number> {
     try {
-
       const returnValue = calculateSupplyDetails();
       const supply = returnValue.circulating_supply;
-      
+
       return supply;
     } catch (err) {
       logger.error("Error in calculateCirculatingSupply:", err);

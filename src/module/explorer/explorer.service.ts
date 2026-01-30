@@ -212,10 +212,8 @@ class ExplorerService {
       let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
       marketCap = marketCap === null ? 0 : marketCap;
 
-      
-
       const circulationsupply = calculateSupplyDetails();
-			const circulation_supply = circulationsupply.circulating_supply;
+      const circulation_supply = circulationsupply.circulating_supply;
 
       let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
 
@@ -761,11 +759,9 @@ class ExplorerService {
 
       // const circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
 
-
       const supplyDetails = calculateSupplyDetails();
-       const  circulationSupply = supplyDetails.circulating_supply;
+      const circulationSupply = supplyDetails.circulating_supply;
 
-     
       if (marketCap === "0" || !marketCap) {
         marketCap ??= tokenPrice * circulationSupply;
       }
@@ -908,18 +904,15 @@ class ExplorerService {
 
   async getCirculationSupply(): Promise<IESResponse> {
     try {
-     
-        const supplyDetails = calculateSupplyDetails();
-        const circulatingSupply = supplyDetails.circulating_supply;
-        // const circulationSupplyUrl = environment.nativeAPIUrl;
-        // const result = await axios.get(
-        // 	circulationSupplyUrl + '/explorer/circulation-supply',
-        // );
+      const supplyDetails = calculateSupplyDetails();
+      const circulatingSupply = supplyDetails.circulating_supply;
+      // const circulationSupplyUrl = environment.nativeAPIUrl;
+      // const result = await axios.get(
+      // 	circulationSupplyUrl + '/explorer/circulation-supply',
+      // );
 
-        console.log(circulatingSupply, supplyDetails, "CRCLFRMNATIVE");
-        // circulationSupply = result?.data?.data?.circulationSupply;
-       
-      
+      console.log(circulatingSupply, supplyDetails, "CRCLFRMNATIVE");
+      // circulationSupply = result?.data?.data?.circulationSupply;
 
       return {
         error: false,

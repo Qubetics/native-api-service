@@ -449,7 +449,7 @@ export function getCurrentDateTime(): Date {
       now.getUTCFullYear(),
       now.getUTCMonth(),
       now.getUTCDate(),
-      0,
+      13,
       0,
       0,
       0,

@@ -43,7 +43,6 @@ class StatsService {
         RedisService.getString(REDIS_KEY.TOTAL_SUPPLY),
       ]);
 
-      
       const circulationSupply = await calculateSupplyDetails();
 
       const finalMarketCap =
