@@ -251,8 +251,7 @@ class DvpnService {
         AND "nodeAddress" = ${address}
         AND DATE_TRUNC('month', "createdAt") = DATE_TRUNC('month', CURRENT_DATE)
     `;
-    
-    
+
       const dailyNodeEarning: any = await prisma.$queryRaw`
       SELECT
         COALESCE(
@@ -272,7 +271,6 @@ class DvpnService {
         AND "nodeAddress" = ${address}
         AND DATE("createdAt") = CURRENT_DATE
     `;
-    
 
       return {
         error: false,
