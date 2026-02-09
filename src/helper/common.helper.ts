@@ -2,6 +2,11 @@
 
 import axios, { Method } from "axios";
 import logger from "../lib/logger";
+
+import type { SupplyResult, Breakdown } from "../interfaces/index";
+import { ALLOCATIONS, TOTAL_SUPPLY } from "../constant/index";
+import { getCurrentDateTime, roundToDecimals } from "../lib/utilities.helper";
+import { getUnlocked } from "./calculateAPR.helper";
 import { DVPN_TYPE } from "../constant";
 
 const fetchRequest = async (
@@ -26,7 +31,7 @@ const fetchRequest = async (
     }
   });
 
-export function convertBigIntToNumber(dataVal: any) {
+function convertBigIntToNumber(dataVal: any) {
   const finalDataVal = [];
 
   if (dataVal && typeof dataVal === "object") {
@@ -45,7 +50,44 @@ export function convertBigIntToNumber(dataVal: any) {
   }
   return finalDataVal;
 }
-export { fetchRequest };
+
+function calculateSupplyDetails(): SupplyResult {
+  const currentDate = getCurrentDateTime();
+
+  const breakdown: Breakdown = {};
+  let totalUnlocked = 0;
+
+  // Calculate unlocked amount for each allocation
+  for (const [name, alloc] of Object.entries(ALLOCATIONS)) {
+    const unlocked = getUnlocked(name, alloc, currentDate);
+
+    breakdown[name] = {
+      unlocked: roundToDecimals(unlocked, 2),
+      total: alloc.total,
+      percentage:
+        alloc.total > 0
+          ? roundToDecimals((unlocked / alloc.total) * 100, 4)
+          : 0,
+    };
+
+    totalUnlocked += unlocked;
+  }
+
+  return {
+    timestamp: currentDate.toISOString(),
+    circulating_supply: roundToDecimals(totalUnlocked, 2),
+    total_supply: TOTAL_SUPPLY,
+    max_supply: TOTAL_SUPPLY,
+    circulating_percentage: roundToDecimals(
+      (totalUnlocked / TOTAL_SUPPLY) * 100,
+      4,
+    ),
+    locked_supply: roundToDecimals(TOTAL_SUPPLY - totalUnlocked, 2),
+    breakdown,
+  };
+}
+
+export { fetchRequest, convertBigIntToNumber, calculateSupplyDetails };
 
 export const getOffset = (page = 1, limit = 10) => {
   if (page < 1) page = 1;

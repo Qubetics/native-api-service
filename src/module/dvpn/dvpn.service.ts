@@ -270,7 +270,6 @@ class DvpnService {
         AND "nodeAddress" = ${address}
         AND DATE("createdAt") = CURRENT_DATE
     `;
-    
 
       return {
         error: false,

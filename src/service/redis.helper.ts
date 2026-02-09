@@ -90,5 +90,26 @@ class RedisService {
       return null;
     }
   }
+
+  public async setStringWithExpiry<T>(
+    key: string,
+    data: T,
+    expiration: number,
+  ) {
+    try {
+      const res = await this.client.setEx(
+        key,
+        expiration,
+        JSON.stringify(data),
+      );
+      logger.info("Redis Data Saving Response setStringWithExpiry: ", res);
+    } catch (err) {
+      console.error(
+        "Error while setting the data into redis setStringWithExpiry: ",
+        err,
+      );
+      console.log("Key : ", key, "value : ", data);
+    }
+  }
 }
 export default RedisService.getInstance();

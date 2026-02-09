@@ -33,6 +33,8 @@ import {
 import contractService from "../contract/contract.service";
 import nodeService from "../node/node.service";
 import redisHelper from "../../service/redis.helper";
+import axios from "axios";
+import { calculateSupplyDetails } from "../../helper/common.helper";
 
 class ExplorerService {
   // Dashboard method to fetch data
@@ -211,14 +213,16 @@ class ExplorerService {
       let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
       marketCap = marketCap === null ? 0 : marketCap;
 
-      let circulation_supply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
-      );
+      const circulationsupply = calculateSupplyDetails();
+      const circulation_supply = circulationsupply.circulating_supply;
+
+      let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
+
       let validatorData = await RedisService.getString(REDIS_KEY.INFLATION_APY);
       validatorData = validatorData === null ? {} : JSON.parse(validatorData);
 
       // Extract necessary values from the validatorData object
-      const { apy, totalSupply, inflation, totalValidator } = validatorData;
+      const { apy, inflation, totalValidator } = validatorData;
       return {
         tokenPrice,
         marketCap,
@@ -264,7 +268,11 @@ class ExplorerService {
         // 	// Call getTransactionByHash with the modified payload
         // 	txData = await transactionService.getTransactionByHash(payload);
         // 	return txData;
-      } else if (payload.startsWith("qubetics") && payload.length > 42 && payload.length <= 50) {
+      } else if (
+        payload.startsWith("qubetics") &&
+        payload.length > 42 &&
+        payload.length <= 50
+      ) {
         /* here we search for all transaction specfic to a wallet address*/
         txData = await this.getUserByAddress(payload);
         return txData;
@@ -287,7 +295,10 @@ class ExplorerService {
     }
   }
 
-  async getAccountCounts(payloads: { time: string; interval: number }): Promise<IGraphResponse> {
+  async getAccountCounts(payloads: {
+    time: string;
+    interval: number;
+  }): Promise<IGraphResponse> {
     try {
       let graphData;
       let finalData;
@@ -399,7 +410,10 @@ class ExplorerService {
     }
   }
 
-  async getContractDeployedCount(payloads: { time: string; interval: number }): Promise<IGraphResponse> {
+  async getContractDeployedCount(payloads: {
+    time: string;
+    interval: number;
+  }): Promise<IGraphResponse> {
     try {
       let graphData;
       let finalData;
@@ -548,7 +562,9 @@ class ExplorerService {
         console.log("balance error", error);
         userBalance = "";
       }
-      const actualBalance = userBalance ? (Number(userBalance) / Math.pow(10, 18)).toString() : "";
+      const actualBalance = userBalance
+        ? (Number(userBalance) / Math.pow(10, 18)).toString()
+        : "";
 
       let marketCapPrice = await RedisService.getString(
         CONST_NAME.MARKET_CAP_PRICE,
@@ -603,7 +619,10 @@ class ExplorerService {
     }
   }
 
-  async tpsHistory(payloads: { time: string; interval: number }): Promise<IGraphResponse> {
+  async tpsHistory(payloads: {
+    time: string;
+    interval: number;
+  }): Promise<IGraphResponse> {
     try {
       console.log(payloads.time);
       console.log(payloads.interval);
@@ -685,7 +704,9 @@ class ExplorerService {
         message: RES_MSG.TRANSACTION_HISTORY_SUCCESS,
         data: {
           finalData: finalData as Array<GraphData>,
-          count: finalData ? finalData.reduce((total, data) => total + (data.count || 0), 0) : 0,
+          count: finalData
+            ? finalData.reduce((total, data) => total + (data.count || 0), 0)
+            : 0,
         },
       };
     } catch (err) {
@@ -733,7 +754,9 @@ class ExplorerService {
         REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
       );
       let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
-      const tokenPrice = (await RedisService.getString(REDIS_KEY.COIN_PRICE)) ?? CURRENT_DEFAULT_COIN_PRICE;
+      const tokenPrice =
+        (await RedisService.getString(REDIS_KEY.COIN_PRICE)) ??
+        CURRENT_DEFAULT_COIN_PRICE;
       console.log({ marketCap, tokenPrice });
 
       // const circulationSupply =
@@ -743,12 +766,9 @@ class ExplorerService {
 
       // const circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
 
-      let circulationSupply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY_FIGURE,
-      );
-      if (!circulationSupply) {
-        circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
-      }
+      const supplyDetails = calculateSupplyDetails();
+      const circulationSupply = supplyDetails.circulating_supply;
+
       if (marketCap === "0" || !marketCap) {
         marketCap ??= tokenPrice * circulationSupply;
       }
@@ -762,10 +782,13 @@ class ExplorerService {
       if (!burnedAmount) {
         /** save burned fees */
         burnedAmount = await this.calculateBurnedAmount();
-        await redisHelper.setString(
-          REDIS_KEY.TOTAL_BURNED_AMOUNT,
-          burnedAmount,
-        );
+      }
+
+      let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
+
+      if (!totalSupply) {
+        totalSupply = await this.getTotalSupply();
+        console.log("total Supply from-native", totalSupply);
       }
 
       return {
@@ -797,46 +820,26 @@ class ExplorerService {
     }
   }
 
-  async getCirculationSupply(): Promise<IESResponse> {
-    try {
-      let circulationSupply = await RedisService.getString(
-        REDIS_KEY.CIRCULATING_SUPPLY_FIGURE,
-      );
-      if (!circulationSupply) {
-        circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
-      }
-
-      return {
-        error: false,
-        message: RES_MSG.SUCCESS,
-        data: {
-          circulationSupply,
-        },
-      };
-    } catch (err) {
-      logger.error("dashboard-Error", err);
-      return { error: true, message: RES_MSG.NOT_FOUND };
-    }
-  }
-
   async getTotalSupply(): Promise<IESResponse> {
     try {
-      let burnedAmount = await RedisService.getString(
-        REDIS_KEY.TOTAL_BURNED_AMOUNT,
-      );
+      let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
 
-      if (!burnedAmount) {
+      if (!totalSupply) {
         /** save burned fees */
-        burnedAmount = await this.calculateBurnedAmount();
-        await redisHelper.setString(
+
+        let burnedAmount = await RedisService.getString(
           REDIS_KEY.TOTAL_BURNED_AMOUNT,
-          burnedAmount,
         );
+
+        if (!burnedAmount) {
+          burnedAmount = await this.calculateBurnedAmount();
+        }
+
+        const { initialSupply } = environment;
+        const totalSupply = initialSupply - burnedAmount;
+        console.log("native-initialSupply", initialSupply, totalSupply);
+        await redisHelper.setString(REDIS_KEY.TOTAL_SUPPLY, totalSupply);
       }
-
-      const { initialSupply } = environment;
-
-      const totalSupply = initialSupply - burnedAmount;
 
       return {
         error: false,
@@ -888,12 +891,46 @@ class ExplorerService {
       });
 
       if (burnedAmount) {
-        return Number(burnedAmount?._sum.burnedFee) + Number(STATIC_BURNED_AMOUNT);
+        return (
+          Number(burnedAmount?._sum.burnedFee) + Number(STATIC_BURNED_AMOUNT)
+        );
       }
+
+      await redisHelper.setStringWithExpiry(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT,
+        burnedAmount,
+        600,
+      );
+
       return Number(STATIC_BURNED_AMOUNT);
     } catch (error) {
       console.log(error, "error in calculateBurnedAmount");
       return false;
+    }
+  }
+
+  async getCirculationSupply(): Promise<IESResponse> {
+    try {
+      const supplyDetails = calculateSupplyDetails();
+      const circulatingSupply = supplyDetails.circulating_supply;
+      // const circulationSupplyUrl = environment.nativeAPIUrl;
+      // const result = await axios.get(
+      // 	circulationSupplyUrl + '/explorer/circulation-supply',
+      // );
+
+      console.log(circulatingSupply, supplyDetails, "CRCLFRMNATIVE");
+      // circulationSupply = result?.data?.data?.circulationSupply;
+
+      return {
+        error: false,
+        message: RES_MSG.SUCCESS,
+        data: {
+          circulatingSupply,
+        },
+      };
+    } catch (err) {
+      logger.error("dashboard-Error", err);
+      return { error: true, message: RES_MSG.NOT_FOUND };
     }
   }
 }
