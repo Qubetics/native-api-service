@@ -232,14 +232,14 @@ class DvpnService {
 
   async getNodeDetails(address: any): Promise<IESResponse> {
     try {
-      const monthNodeEarning: any = await prisma.$queryRaw`
+      const totalNodeEarning: any = await prisma.$queryRaw`
       SELECT
         COALESCE(
           CAST(
             SUM(
               CASE 
-                WHEN "stackingReward" ~ '^[0-9]+(\.[0-9]+)?$' 
-                THEN CAST("stackingReward" AS DECIMAL)
+                WHEN "price" ~ '^[0-9]+(\.[0-9]+)?$' 
+                THEN CAST("price" AS DECIMAL)
                 ELSE 0
               END
             ) AS VARCHAR
@@ -249,18 +249,16 @@ class DvpnService {
       FROM "DvpnTransaction"
       WHERE type = 'NODE_EARNING'
         AND "nodeAddress" = ${address}
-        AND DATE_TRUNC('month', "createdAt") = DATE_TRUNC('month', CURRENT_DATE)
     `;
-    
-    
+
       const dailyNodeEarning: any = await prisma.$queryRaw`
       SELECT
         COALESCE(
           CAST(
             SUM(
               CASE 
-                WHEN "stackingReward" ~ '^[0-9]+(\.[0-9]+)?$' 
-                THEN CAST("stackingReward" AS DECIMAL)
+                WHEN "price" ~ '^[0-9]+(\.[0-9]+)?$' 
+                THEN CAST("price" AS DECIMAL)
                 ELSE 0
               END
             ) AS VARCHAR
@@ -278,7 +276,7 @@ class DvpnService {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
-          totalEarning: monthNodeEarning[0]?.total || "0",
+          totalEarning: totalNodeEarning[0]?.total || "0",
           dailyEarning: dailyNodeEarning[0]?.total || "0",
           native: true,
         },
