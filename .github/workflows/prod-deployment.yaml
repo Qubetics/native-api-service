@@ -1,0 +1,22 @@
+name: "[prod] Deploy native api"
+
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  deploy_qubetics_indexer:
+    uses: ./.github/workflows/native-api-service.yaml
+    with:
+      SWR_ORGANIZATION: prod-qubetics
+      ARGOCD_BRANCH: prod
+      HUAWEI_REGION: "ap-southeast-1"
+      ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
+      DEPLOYMENT_PATH: Native-api/native-api.yaml
+      HUAWEI_IMAGE: prod-qubetics-native-api
+      DOCKER_USERNAME: ap-southeast-1@HPUAJWWFSLCMD312AZSR
+      ENV: ${{ vars.PROD_NATIVE_API_ENV }}
+    secrets:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD_NEW }}
+      GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY_NEW }}
