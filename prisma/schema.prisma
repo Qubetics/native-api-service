@@ -47,7 +47,6 @@ model Transactions {
   createdAt       DateTime      @default(now())
   nodeAddress     String?
   burnedFee       Float         @default(0)
-  need_fix        Boolean       @default(true)
   ContractLogs    ContractLogs?
 
   @@index([blocknumber, txhash])
