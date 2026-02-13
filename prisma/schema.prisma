@@ -218,7 +218,7 @@ model Voters {
 
 model DvpnTransaction {
   id             Int       @id @default(autoincrement())
-  txhash         String    @unique
+  txhash         String?    @unique
   blocknumber    BigInt
   planId         String?
   sessionId      String?
