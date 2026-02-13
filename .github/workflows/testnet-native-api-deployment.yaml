@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy_qubetics_indexer:
-    uses: ./.github/workflows/testnet-native-api-service.yaml
+    uses: Qubetics/argocd-qubetics/.github/workflows/deployment.yaml@testnet
     with:
       SWR_ORGANIZATION: testnet-qubetics
       ARGOCD_BRANCH: testnet_v2
