@@ -201,28 +201,15 @@ export const getDateRange = (type: any) => {
       break;
 
     case "weekly":
-      const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-      // Convert to your week system (Monday = 0, Tuesday = 1, ..., Sunday = 6)
-      const adjustedDayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      // 'today.getDate() - 7' gets the same day last week
+      // e.g., If today is Monday the 16th, startDate becomes Monday the 9th
+      startDate = new Date(today);
+      startDate.setDate(today.getDate() - 7);
+      startDate.setHours(0, 0, 0, 0);
 
-      if (adjustedDayOfWeek === 0) {
-        // Monday
-        // Show only Monday's data
-        startDate = new Date(today);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999);
-      } else {
-        // Show from Monday to current day
-        const mondayDate = new Date(today);
-        mondayDate.setDate(today.getDate() - adjustedDayOfWeek);
-
-        startDate = new Date(mondayDate);
-        startDate.setHours(0, 0, 0, 0);
-
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999);
-      }
+      // End at the final millisecond of the current day
+      endDate = new Date(today);
+      endDate.setHours(23, 59, 59, 999);
       break;
 
     case "monthly":

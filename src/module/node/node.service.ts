@@ -112,7 +112,13 @@ class NodeService {
       const url = `${environment.nodeInfoUrl}/qubetics/provider/v2/providers`;
       const [fetchRes, transactions, total_users] = await Promise.all([
         fetchRequest(url, "GET", null),
-        prisma.dvpnTransaction.findMany(),
+        prisma.dvpnTransaction.findMany({
+          where: {
+            txhash: {
+              not: null,
+            },
+          },
+        }),
         prisma.dvpnTransaction.count({
           where: { type: DVPN_TYPE.START_SUBSCRIPTION },
         }),

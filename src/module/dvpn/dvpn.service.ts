@@ -12,60 +12,58 @@ import { fetchRequest, formatNodes } from "../../Utility/common";
 class DvpnService {
   async getAccountSummary(): Promise<IESResponse> {
     try {
-      const result = await prisma.dvpnTransaction.findMany({
-        where: {
-          type: DVPN_TYPE.START_SESSION,
-        },
-        orderBy: { createdAt: "desc" },
-      });
-      const { startDate, endDate } = await getDateRange("monthly");
-
-      const filteredMonthlyData = result.filter((item) => {
-        const date = new Date(item.createdAt);
-        return date >= startDate && date <= endDate;
-      });
-
-      // For weekly data
-      const { startDate: weekStart, endDate: weekEnd } =
-        await getDateRange("weekly");
-
-      const filteredWeeklyData = result.filter((item) => {
-        const date = new Date(item.createdAt);
-        return date >= weekStart && date <= weekEnd;
-      });
-
-      // For daily data
-      const { startDate: dayStart, endDate: dayEnd } =
-        await getDateRange("daily");
-
-      const filteredDailyData = result.filter((item) => {
-        const date = new Date(item.createdAt);
-        return date >= dayStart && date <= dayEnd;
-      });
-
+      const types = [DVPN_TYPE.START_SESSION, DVPN_TYPE.START_SUBSCRIPTION];
+  
+      // 1. Get Date Ranges (ensure your getDateRange returns the 7-day rolling window we discussed)
+      const { startDate: dayStart, endDate: dayEnd } = await getDateRange("daily");
+      const { startDate: weekStart, endDate: weekEnd } = await getDateRange("weekly");
+      const { startDate: monStart, endDate: monEnd } = await getDateRange("monthly");
+  
+      /**
+       * Helper to fetch unique users via groupBy.
+       * We don't need 'orderBy' here because we just need the count of unique groups.
+       */
+      const getUniqueUserCount = async (start: Date, end: Date) => {
+        const result = await prisma.dvpnTransaction.groupBy({
+          by: ['accAddress'],
+          where: {
+            type: { in: types },
+            accAddress: { not: null },
+            createdAt: {
+              gte: start,
+              lte: end,
+            },
+          },
+        });
+        return result.length; // Each item in the array is one unique accAddress
+      };
+  
+      // 2. Execute counts in parallel for performance
+      const [dailyCount, weeklyCount, monthlyCount] = await Promise.all([
+        getUniqueUserCount(dayStart, dayEnd),
+        getUniqueUserCount(weekStart, weekEnd),
+        getUniqueUserCount(monStart, monEnd),
+      ]);
+  
       return {
         error: false,
         message: RES_MSG.SUCCESS,
         data: {
-          filteredDailyData:
-            convertBigIntToNumber(filteredDailyData)?.length || 0,
-          filteredWeeklyData:
-            convertBigIntToNumber(filteredWeeklyData)?.length || 0,
-          filteredMonthlyData:
-            convertBigIntToNumber(filteredMonthlyData)?.length || 0,
-
+          filteredDailyData: dailyCount,   // Unique users last 24h
+          filteredWeeklyData: weeklyCount, // Unique users last 7 days
+          filteredMonthlyData: monthlyCount, // Unique users last 30 days
           native: true,
         },
       };
     } catch (err) {
+      console.error("Account Summary Error:", err);
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
           return { error: true, message: RES_MSG.SERVER_ERROR };
         }
         return { error: true, message: err.message };
-      } else {
-        return { error: true, message: RES_MSG.ERROR };
       }
+      return { error: true, message: RES_MSG.ERROR };
     }
   }
 
