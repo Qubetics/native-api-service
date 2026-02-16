@@ -176,7 +176,13 @@ class NodeService {
         })
         .map(({ country, long, lat }: any) => ({ country, long, lat }));
 
-      const result = await prisma.dvpnTransaction.findMany();
+      const result = await prisma.dvpnTransaction.findMany({
+        where: {
+          txhash: {
+            not: null,
+          },
+        },
+      });
       const lastDayTxns = lastDayTransactions(result); // your array
 
       return {
