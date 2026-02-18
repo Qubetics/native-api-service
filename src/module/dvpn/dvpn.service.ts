@@ -1,5 +1,5 @@
 import prisma from "../../lib/db";
-import { DVPN_TYPE, RES_MSG } from "../../constant/index";
+import { DVPN_TYPE, MSG_START_SUBSCRIPTION, RES_MSG } from "../../constant/index";
 import { IESResponse } from "../../interfaces/index";
 import {
   convertBigIntToNumber,
@@ -197,13 +197,13 @@ class DvpnService {
       const totalEarning: any = await prisma.$queryRaw`
       SELECT CAST(SUM(CAST(NULLIF(price, '') AS DECIMAL)) AS VARCHAR) as total
       FROM "DvpnTransaction"
-      WHERE "provAddress" = ${address || ""}
+      WHERE "provAddress" = ${address || ""} AND "type" = ${MSG_START_SUBSCRIPTION}
     `;
 
       const dailyEarning: any = await prisma.$queryRaw`
       SELECT CAST(SUM(CAST(NULLIF(price, '') AS DECIMAL)) AS VARCHAR) as total
       FROM "DvpnTransaction"
-      WHERE "provAddress" = ${address || ""}
+      WHERE "provAddress" = ${address || ""} AND "type" = ${MSG_START_SUBSCRIPTION}
       AND DATE("createdAt") = CURRENT_DATE
     `;
 
