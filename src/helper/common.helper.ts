@@ -106,6 +106,28 @@ export const extractIP = (url: string): string => {
   }
 };
 
+export const extractBothIP = (remoteUrl: string): string | null => {
+  try {
+    if (!remoteUrl) return null;
+    // Remove scheme if present
+    let url = remoteUrl.replace(/^https?:\/\//, '');
+    // Handle IPv6 with port
+    if (url.includes(']')) {
+      // [IPv6]:port
+      url = url.substring(0, url.indexOf(']') + 1);
+    } else if (url.includes(':')) {
+      // raw IPv6 or IPv4 with port
+      url = url.substring(0, url.lastIndexOf(':'));
+    }
+    // Remove surrounding brackets for IPv6
+    url = url.replace(/^\[|\]$/g, '');
+    return url;
+  } catch (err) {
+    console.error("extractBothIP error:", err);
+    return null;
+  }
+};
+
 export const getActiveItems = (data: any) => {
   const grouped: Record<
     string,
