@@ -13,12 +13,11 @@ class DvpnService {
   async getAccountSummary(): Promise<IESResponse> {
     try {
       const types = [DVPN_TYPE.START_SESSION, DVPN_TYPE.START_SUBSCRIPTION];
-  
       // 1. Get Date Ranges (ensure your getDateRange returns the 7-day rolling window we discussed)
       const { startDate: dayStart, endDate: dayEnd } = await getDateRange("daily");
       const { startDate: weekStart, endDate: weekEnd } = await getDateRange("weekly");
       const { startDate: monStart, endDate: monEnd } = await getDateRange("monthly");
-  
+
       /**
        * Helper to fetch unique users via groupBy.
        * We don't need 'orderBy' here because we just need the count of unique groups.
@@ -37,14 +36,14 @@ class DvpnService {
         });
         return result.length; // Each item in the array is one unique accAddress
       };
-  
+
       // 2. Execute counts in parallel for performance
       const [dailyCount, weeklyCount, monthlyCount] = await Promise.all([
         getUniqueUserCount(dayStart, dayEnd),
         getUniqueUserCount(weekStart, weekEnd),
         getUniqueUserCount(monStart, monEnd),
       ]);
-  
+
       return {
         error: false,
         message: RES_MSG.SUCCESS,
@@ -159,7 +158,7 @@ class DvpnService {
 
       const activeUsers = getActiveItems(transactions);
 
-      const formattedNodes = formatNodes(fetchRes.data.nodes);
+      const formattedNodes = await formatNodes(fetchRes.data.nodes);
 
       const totalCountries = new Set(
         formattedNodes.map((node: any) => node.country),
@@ -268,7 +267,7 @@ class DvpnService {
         AND "nodeAddress" = ${address}
         AND DATE("createdAt") = CURRENT_DATE
     `;
-    
+
 
       return {
         error: false,

@@ -34,7 +34,7 @@ class NodeService {
         error,
       } = fetchRes;
 
-      const formattedNodes = formatNodes(nodes);
+      const formattedNodes = await formatNodes(nodes);
 
       return {
         error,
@@ -167,7 +167,7 @@ class NodeService {
         throw new Error(RES_MSG.NOT_FOUND);
       }
       const seenCountries = new Set();
-      const formattedNodes = formatNodes(fetchRes?.data?.nodes);
+      const formattedNodes = await formatNodes(fetchRes?.data?.nodes);
       const uniqueCountries = formattedNodes
         .filter(({ country }: any) => {
           if (seenCountries.has(country)) return false;
