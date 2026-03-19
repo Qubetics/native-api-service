@@ -34,7 +34,7 @@ class NodeService {
         error,
       } = fetchRes;
 
-      const formattedNodes = formatNodes(nodes);
+      const formattedNodes = await formatNodes(nodes);
 
       return {
         error,
@@ -112,7 +112,13 @@ class NodeService {
       const url = `${environment.nodeInfoUrl}/qubetics/provider/v2/providers`;
       const [fetchRes, transactions, total_users] = await Promise.all([
         fetchRequest(url, "GET", null),
-        prisma.dvpnTransaction.findMany(),
+        prisma.dvpnTransaction.findMany({
+          where: {
+            txhash: {
+              not: null,
+            },
+          },
+        }),
         prisma.dvpnTransaction.count({
           where: { type: DVPN_TYPE.START_SUBSCRIPTION },
         }),
@@ -161,7 +167,7 @@ class NodeService {
         throw new Error(RES_MSG.NOT_FOUND);
       }
       const seenCountries = new Set();
-      const formattedNodes = formatNodes(fetchRes?.data?.nodes);
+      const formattedNodes = await formatNodes(fetchRes?.data?.nodes);
       const uniqueCountries = formattedNodes
         .filter(({ country }: any) => {
           if (seenCountries.has(country)) return false;
@@ -170,7 +176,13 @@ class NodeService {
         })
         .map(({ country, long, lat }: any) => ({ country, long, lat }));
 
-      const result = await prisma.dvpnTransaction.findMany();
+      const result = await prisma.dvpnTransaction.findMany({
+        where: {
+          txhash: {
+            not: null,
+          },
+        },
+      });
       const lastDayTxns = lastDayTransactions(result); // your array
 
       return {

@@ -40,6 +40,7 @@ export const RES_MSG = {
   FETCH_SUCCESS: "data fetched successfully",
   ACTIVE: "active",
   INACTIVE: "inactive",
+  UNABLE_TO_FIND_LOC: "Unable to find the location",
   YES: "yes",
   NO: "no",
   VETO: "veto",
@@ -132,6 +133,10 @@ export const CONTRACTLOGS = {
   status: true,
   timestamp: true,
   createdAt: true,
+};
+
+export const MAXMIND_CONFIG = {
+  DATABASE_PATH: process.env.MAXMIND_DATABASE_PATH || "./data/GeoLite2-City.mmdb",
 };
 
 export const CONTRACT = {
