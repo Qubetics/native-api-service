@@ -1,0 +1,22 @@
+name: "[prod] Deploy dvpn-release native api"
+
+on:
+  push:
+    branches:
+      - dvpn_release
+
+jobs:
+  deploy_qubetics_indexer:
+    uses: Qubetics/argocd-qubetics/.github/workflows/deployment.yaml@prod
+    with:
+      SWR_ORGANIZATION: prod-qubetics
+      ARGOCD_BRANCH: prod
+      HUAWEI_REGION: "ap-southeast-1"
+      ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
+      DEPLOYMENT_PATH: native-api-dvpn-release/deployment.yaml
+      HUAWEI_IMAGE: native-api-dvpn-release
+      DOCKER_USERNAME: ap-southeast-1@${{ vars.DOCKER_USERNAME_V2 }}
+      ENV: ${{ vars.DEV_DVPN_NATIVE_API_ENV }} # not requried for backend service
+    secrets:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD_V2 }}
+      GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY_NEW }}
