@@ -67,6 +67,10 @@ export const RES_MSG = {
   CONTRACT_TX: "conract transaction fetched successfully",
   CONTRACT_TX_NOT_FOUND: "data not found",
   INVALID_ADDRESS: "invalid address",
+  TRANSACTION_DONE: "Transaction Successful",
+  INVALID_USER_ERROR: "invalid user",
+  CAPTCHA_ERROR: "invalid captcha",
+  NO_DELEGATION: "No delegation",
   INVALID_MESSAGE: "this message type data not found ",
 };
 

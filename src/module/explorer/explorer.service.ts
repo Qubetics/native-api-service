@@ -195,14 +195,14 @@ class ExplorerService {
   // Method to get data from Redis
   getRedisValue = async (): Promise<
     | {
-        tokenPrice: number;
-        marketCap: number;
-        apy: number;
-        totalSupply: number;
-        inflation: number;
-        totalValidator: number;
-        circulation_supply: number;
-      }
+      tokenPrice: number;
+      marketCap: number;
+      apy: number;
+      totalSupply: number;
+      inflation: number;
+      totalValidator: number;
+      circulation_supply: number;
+    }
     | false
   > => {
     try {
@@ -797,7 +797,7 @@ class ExplorerService {
         data: {
           apy: CURRENT_DEFAULT_APR,
           inflation: data.inflation,
-          totalSupply: data.totalSupply,
+          // totalSupply: data.totalSupply,
           totalValidator: data.totalValidator,
           circulation_supply: circulationSupply,
           apr: data?.apr ? Number(data?.apr) : CURRENT_DEFAULT_APR,

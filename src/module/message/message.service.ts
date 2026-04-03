@@ -176,8 +176,8 @@ class MessageService {
       const alignedCurrent = isYearly ? startOfMonth(currentDate) : currentDate;
       const intervals = isYearly
         ? eachMonthOfInterval({ start: alignedFrom, end: alignedCurrent }).map(
-            (d) => startOfMonth(d),
-          )
+          (d) => startOfMonth(d),
+        )
         : eachDayOfInterval({ start: alignedFrom, end: alignedCurrent });
 
       // Format response
