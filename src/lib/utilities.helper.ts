@@ -376,11 +376,11 @@ export function cursorPagination(
     orderBy === "desc" ||
     (orderBy === "asc" && getFilter === "oldest")
   ) {
-    nextCursor = sortedResults[sortedResults.length - 1][uniqueParam];
-    previousCursor = sortedResults[0][uniqueParam];
+    nextCursor = Number(sortedResults[sortedResults.length - 1][uniqueParam]);
+    previousCursor = Number(sortedResults[0][uniqueParam]);
   } else {
-    nextCursor = result[0][uniqueParam];
-    previousCursor = result[result.length - 1][uniqueParam];
+    nextCursor = Number(result[0][uniqueParam]);
+    previousCursor = Number(result[result.length - 1][uniqueParam]);
   }
 
   const lastPageRemainder = totalRecords % Number(limit);

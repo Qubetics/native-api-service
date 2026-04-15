@@ -309,9 +309,9 @@ class BlockService {
           where: isFirstPage
             ? {}
             : {
-                blocknumber:
-                  data.order === "asc" ? { gt: data.page } : { lt: data.page },
-              },
+              blocknumber:
+                data.order === "asc" ? { gt: data.page } : { lt: data.page },
+            },
           take: data.limit,
         }),
         RedisService.getString(REDIS_KEY.NATIVE_BLOCKS_COUNT),
@@ -320,7 +320,7 @@ class BlockService {
 
       if (!blocks?.length) throw new Error(RES_MSG.ERROR_FETCH_LATEST_BLOCK);
 
-      let blockCount = Number(cachedBlockCount);
+      let blockCount: number = Number(cachedBlockCount);
       if (!cachedBlockCount) {
         const result = await prisma.blocks.count();
         blockCount = result;
@@ -399,7 +399,7 @@ class BlockService {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
         data: {
-          blockCount,
+          blockCount: convertBigIntToNumber(blockCount),
           blocks: convertBigIntToNumber(blocks),
           nextCursor: cursorPages.nextCursor,
           prevCursor: cursorPages.previousCursor,
