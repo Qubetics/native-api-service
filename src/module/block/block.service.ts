@@ -300,92 +300,70 @@ class BlockService {
     filterBy: string;
   }): Promise<IESResponse> {
     try {
-      let isLimitFullFilled = true;
-
-      let zerothElement = 0;
       const isFirstPage = data.page === 1;
-      let blocks = await prisma.blocks.findMany({
-        orderBy: {
-          blocknumber: data.order,
-        },
-        // orderBy: {
-        // 	blocknumber:
-        // 		data.filterBy === 'newest' && data.order === 'desc'
-        // 			? 'asc'
-        // 			: 'desc',
-        // },
-        where: isFirstPage
-          ? {}
-          : {
-              blocknumber:
-                data.order === "asc" ? { gt: data.page } : { lt: data.page },
-            },
-        take: data.limit,
-      });
 
-      // check if limit is fullfilled with current block range
-      if (blocks.length < data.limit) {
-        isLimitFullFilled = false;
-      }
+      // Fetch main data and metadata in parallel
+      const [blocks, cachedBlockCount, cachedMinMax] = await Promise.all([
+        prisma.blocks.findMany({
+          orderBy: { blocknumber: data.order },
+          where: isFirstPage
+            ? {}
+            : {
+                blocknumber: data.order === "asc" ? { gt: data.page } : { lt: data.page },
+              },
+          take: data.limit,
+        }),
+        RedisService.getString(REDIS_KEY.NATIVE_BLOCKS_COUNT),
+        RedisService.getString("BLOCK_MIN_MAX"),
+      ]);
+
       if (!blocks?.length) throw new Error(RES_MSG.ERROR_FETCH_LATEST_BLOCK);
 
-      let blockCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_BLOCKS_COUNT,
-      );
+      let blockCount = Number(cachedBlockCount);
+      if (!cachedBlockCount) {
+        const result = await prisma.blocks.count();
+        blockCount = result;
+        await RedisService.setStringWithExpiry(REDIS_KEY.NATIVE_BLOCKS_COUNT, blockCount.toString(), 300);
+      }
 
-      if (!blockCount) {
-        const result = await prisma.blocks.aggregate({
-          _count: {
-            blocknumber: true,
-          },
+      let minMaxData = cachedMinMax ? JSON.parse(cachedMinMax) : null;
+      if (!minMaxData) {
+        const blockCountData = await prisma.blocks.aggregate({
+          _min: { blocknumber: true },
+          _max: { blocknumber: true },
         });
-        blockCount = result._count.blocknumber;
-        await RedisService.setString(
-          REDIS_KEY.NATIVE_BLOCKS_COUNT,
-          blockCount.toString(),
-        );
+        minMaxData = {
+          minimumId: Number(blockCountData?._min.blocknumber),
+          maximumId: Number(blockCountData?._max.blocknumber),
+        };
+        await RedisService.setStringWithExpiry("BLOCK_MIN_MAX", JSON.stringify(minMaxData), 600);
       }
 
-      const blockCountData = await prisma.blocks.aggregate({
-        // _count: { id: true },
-        _min: { blocknumber: true },
-        _max: { blocknumber: true },
-      });
+      const { minimumId, maximumId } = minMaxData;
 
-      // blockCount = blockCountData?._count.id;
-      const minimumId: number = Number(blockCountData?._min.blocknumber);
-      const maximumId: number = Number(blockCountData?._max.blocknumber);
+      // Use caching for lastPageResult too if possible, or only fetch when needed
+      // Actually, lastPage is based on blockCount and min/max. Let's see if we can optimize it.
+      const lastPageCacheKey = `BLOCK_LAST_PAGE_${data.filterBy || 'newest'}_${data.order}`;
+      let lastPage = await RedisService.getString(lastPageCacheKey);
 
-      console.log("------blockCountData----------", blockCountData);
-
-      zerothElement = serializeBigInt(blocks[0].blocknumber);
-      console.log(zerothElement, "zerothElement");
-
-      if (!blocks?.length) throw new Error(RES_MSG.ERROR_FETCH_LATEST_BLOCK);
-      console.log("data.filterBy", data.filterBy, data.order);
-      const lastPageResult = await prisma.blocks.findMany({
-        select: {
-          blocknumber: true,
-        },
-        orderBy: {
-          blocknumber:
-            data.filterBy === "newest" || !data.filterBy ? "asc" : "desc",
-        },
-        where: {
-          blocknumber:
-            data.filterBy === "newest" || !data.filterBy
-              ? { gt: minimumId }
-              : { lt: maximumId },
-        },
-        take: blockCount % data.limit || data.limit,
-      });
-      console.log("lastPageResult", lastPageResult);
-      const offset: number = blockCount % data.limit || data.limit;
-
-      const lastPage = serializeBigInt(
-        lastPageResult[lastPageResult.length - 1].blocknumber,
-      );
-      console.log("lastPage", lastPage);
+      if (lastPage === null) {
+        const lastPageResult = await prisma.blocks.findMany({
+          select: { blocknumber: true },
+          orderBy: {
+            blocknumber: data.filterBy === "newest" || !data.filterBy ? "asc" : "desc",
+          },
+          where: {
+            blocknumber: data.filterBy === "newest" || !data.filterBy ? { gt: minimumId } : { lt: maximumId },
+          },
+          take: blockCount % data.limit || data.limit,
+        });
+        if (lastPageResult.length > 0) {
+          lastPage = serializeBigInt(lastPageResult[lastPageResult.length - 1].blocknumber);
+          await RedisService.setStringWithExpiry(lastPageCacheKey, lastPage.toString(), 300);
+        } else {
+          lastPage = 0;
+        }
+      }
 
       const cursorPages = cursorPagination(
         blocks,
@@ -400,22 +378,18 @@ class BlockService {
 
       return {
         error: false,
-        message: RES_MSG.BLOCK_TRANSACTION_FETCH,
+        message: RES_MSG.FETCH_SUCCESS,
         data: {
-          blockCount: Number(blockCount),
-          blocks: convertBigIntToNumber(cursorPages.sortedResults),
-          nextCursor:
-            blocks.length < data.limit
-              ? null
-              : serializeBigInt(cursorPages.nextCursor),
-          prevCursor: serializeBigInt(cursorPages.previousCursor),
-          lastPage: lastPage,
+          blockCount,
+          blocks: convertBigIntToNumber(blocks),
+          nextCursor: cursorPages.nextCursor,
+          prevCursor: cursorPages.previousCursor,
+          lastPage: Number(lastPage),
         },
       };
     } catch (err) {
-      console.log("--Error BLOCK--", err);
+      console.log("error while getting all blocks : ", err);
       if (err instanceof Error) {
-        console.error(err);
         if (err.message.includes("prisma")) {
           return { error: true, message: RES_MSG.SERVER_ERROR };
         }

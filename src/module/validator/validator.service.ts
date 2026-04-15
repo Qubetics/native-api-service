@@ -17,52 +17,38 @@ class ValidatorService {
     status: string;
   }): Promise<IESResponse> {
     try {
-      let validators;
-      let validatorCount;
-      let activeCount = 0;
-      let inactiveCount = 0;
-      let deactivatingCount = 0;
-
       const excludedAddresses = environment.excludedValidators.split(",");
 
-      // Fetch validators based on status
-      if (
+      const whereClause =
         data.status === "active" ||
         data.status === "deactivating" ||
         data.status === "inactive"
-      ) {
-        validators = await prisma.validator.findMany({
+          ? { status: data.status }
+          : {};
+
+      const [
+        validators,
+        activeValidators,
+        activeCount,
+        inactiveCount,
+        deactivatingCount,
+        validatorCount,
+      ] = await Promise.all([
+        prisma.validator.findMany({
           orderBy: { votingPower: "desc" },
           skip: data.page * data.limit,
           take: data.limit,
-          where: { status: data.status },
-        });
-      } else {
-        validators = await prisma.validator.findMany({
-          orderBy: { votingPower: "desc" },
-          skip: data.page * data.limit,
-          take: data.limit,
-        });
-      }
-
-      const activeValidators = await prisma.validator.findMany({
-        orderBy: { createdAt: "desc" },
-        where: {
-          status: "active",
-        },
-      });
-
-      // Count validators based on status
-      activeCount = await prisma.validator.count({
-        where: { status: "active" },
-      });
-      inactiveCount = await prisma.validator.count({
-        where: { status: "inactive" },
-      });
-      deactivatingCount = await prisma.validator.count({
-        where: { status: "deactivating" },
-      });
-      validatorCount = await prisma.validator.count();
+          where: whereClause,
+        }),
+        prisma.validator.findMany({
+          orderBy: { createdAt: "desc" },
+          where: { status: "active" },
+        }),
+        prisma.validator.count({ where: { status: "active" } }),
+        prisma.validator.count({ where: { status: "inactive" } }),
+        prisma.validator.count({ where: { status: "deactivating" } }),
+        prisma.validator.count(),
+      ]);
 
       // Filter out excluded addresses
       const filteredValidators = validators.filter(

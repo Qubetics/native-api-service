@@ -364,61 +364,94 @@ class TransactionService {
     order: any;
   }): Promise<IESResponse> {
     try {
+      const [
+        cachedTxCount,
+        cachedActiveAccount,
+        cached30DaysTrxn,
+        cachedMinMax,
+      ] = await Promise.all([
+        RedisService.getString(REDIS_KEY.NATIVE_TRANSACTIONS_COUNT),
+        RedisService.getString(REDIS_KEY.ACTIVE_ACCOUNTS_TODAY),
+        RedisService.getString(REDIS_KEY.TRANSACTIONS_30_DAYS),
+        RedisService.getString("TX_MIN_MAX_IDS"),
+      ]);
+
+      let transactionCount = Number(cachedTxCount);
+      if (!cachedTxCount) {
+        transactionCount = await prisma.transactions.count();
+        await RedisService.setStringWithExpiry(
+          REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
+          transactionCount.toString(),
+          300
+        );
+      }
+
       let transactionsData: any;
       let maxId: any = 0;
       let minId: any = 0;
-      // let transactionCount = await RedisService.getString(
-      //   REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
-      // );
 
-      let transactionCount = await prisma.transactions.count();
-
+      // Parallelize main data fetch and metadata calculation if needed
       if (data.order === "asc") {
-        transactionsData = await this.ascPagination(data.page, data.limit);
-        const result = await prisma.transactions.aggregate({
-          _max: {
-            id: true, // Replace 'id' with your desired column
-          },
-        });
-
-        maxId = result._max.id;
+        const [pData, aggRes] = await Promise.all([
+          this.ascPagination(data.page, data.limit),
+          cachedMinMax ? JSON.parse(cachedMinMax) : prisma.transactions.aggregate({ _max: { id: true } })
+        ]);
+        transactionsData = pData;
+        maxId = (aggRes as any)._max?.id || aggRes.maxId;
       } else {
-        transactionsData = await this.descPagination(data.page, data.limit);
-        minId = await prisma.transactions.findMany({
-          select: {
-            id: true, // Replace 'id' with your desired column
-          },
-          orderBy: {
-            id: "asc",
-          },
-          take: (transactionCount % data.limit) + 1 || data.limit + 1,
-        });
+        const [pData, minIdRes] = await Promise.all([
+          this.descPagination(data.page, data.limit),
+          cachedMinMax ? JSON.parse(cachedMinMax) : prisma.transactions.findMany({
+            select: { id: true },
+            orderBy: { id: "asc" },
+            take: (transactionCount % data.limit) + 1 || data.limit + 1,
+          })
+        ]);
+        transactionsData = pData;
+        minId = (minIdRes as any).minId || minIdRes;
+      }
+
+      // Cache Min/Max if we just fetched them
+      if (!cachedMinMax) {
+        // Only cache if we have some data
+        const minMaxToCache = data.order === "asc" ? { maxId } : { minId };
+        await RedisService.setStringWithExpiry("TX_MIN_MAX_IDS", JSON.stringify(minMaxToCache), 600);
       }
 
       const { transactions, nextCursor, prevCursor } = transactionsData;
       let nextCursorValue: number | null = nextCursor;
 
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+      // Handle other counts with caching
+      let activeAccount = Number(cachedActiveAccount);
+      let previous30DaysTrxn = Number(cached30DaysTrxn);
 
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      if (!cachedActiveAccount || !cached30DaysTrxn) {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const [getActiveAccount, previous30DaysTrxn] = await Promise.all([
-        prisma.$queryRaw`
- 					SELECT COUNT(DISTINCT "fromAddress") AS "count" FROM "Transactions" WHERE "timestamp" >= CAST(${todayStart.toISOString()} AS timestamp) AND "timestamp" <= CAST(${new Date().toISOString()} AS timestamp)`,
-        prisma.transactions.count({
-          where: {
-            createdAt: {
-              gte: thirtyDaysAgo, // Greater than or equal to 30 days ago
-            },
-          },
-        }),
-      ]);
-      // Query the count of transactions
-      const activeAccount: any = convertBigIntToNumber(getActiveAccount);
+        const [getActiveAccount, p30Days] = await Promise.all([
+          !cachedActiveAccount 
+            ? prisma.$queryRaw`SELECT COUNT(DISTINCT "fromAddress") AS "count" FROM "Transactions" WHERE "createdAt" >= ${todayStart}`
+            : Promise.resolve([{ count: cachedActiveAccount }]),
+          !cached30DaysTrxn
+            ? prisma.transactions.count({ where: { createdAt: { gte: thirtyDaysAgo } } })
+            : Promise.resolve(cached30DaysTrxn)
+        ]);
+
+        if (!cachedActiveAccount) {
+          activeAccount = Number((getActiveAccount as any)[0].count);
+          await RedisService.setStringWithExpiry(REDIS_KEY.ACTIVE_ACCOUNTS_TODAY, activeAccount.toString(), 600);
+        }
+        if (!cached30DaysTrxn) {
+          previous30DaysTrxn = Number(p30Days);
+          await RedisService.setStringWithExpiry(REDIS_KEY.TRANSACTIONS_30_DAYS, previous30DaysTrxn.toString(), 600);
+        }
+      }
+
       if (!transactions.length) throw new Error(RES_MSG.TRANSACTION_NOT_FOUND);
-      console.log("MAXMIN", maxId, minId);
+
       if (data.order === "asc") {
         if (maxId === data.page + data.limit) {
           nextCursorValue = null;
@@ -430,8 +463,8 @@ class TransactionService {
       }
 
       const offset = transactionCount % data.limit || data.limit;
-      const lastPage =
-        data.order === "asc" ? maxId - offset : minId[minId.length - 1].id;
+      const lastPage = data.order === "asc" ? maxId - offset : minId[minId.length - 1].id;
+
       return {
         error: false,
         message: RES_MSG.TRANSACTION_FETCH_SUCCESS,
@@ -441,7 +474,7 @@ class TransactionService {
           nextCursor: nextCursorValue,
           prevCursor,
           previous30DaysTrxn,
-          activeAccount: activeAccount ? activeAccount[0].count : 0,
+          activeAccount,
           lastPage,
         },
       };

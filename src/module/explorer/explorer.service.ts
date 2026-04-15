@@ -393,16 +393,25 @@ class ExplorerService {
         );
       }
 
-      const totalAccount = await RedisService.getString(
+      let totalAccount = await RedisService.getString(
         REDIS_KEY.TOTAL_ACCOUNTS,
       );
+
+      if (!totalAccount) {
+        totalAccount = (await prisma.users.count()).toString();
+        await RedisService.setStringWithExpiry(
+          REDIS_KEY.TOTAL_ACCOUNTS,
+          totalAccount,
+          300,
+        );
+      }
 
       return {
         error: false,
         message: RES_MSG.ACCOUNT_HISTORY_SUCCESS,
         data: {
           finalData: finalData as Array<GraphData>,
-          count: await prisma.users.count(),
+          count: Number(totalAccount),
         },
       };
     } catch (err) {
@@ -747,48 +756,55 @@ class ExplorerService {
 
   async dashboard(): Promise<IESResponse> {
     try {
-      const data: any = await calculateData();
+      const [
+        data,
+        latestBlock,
+        transactionCount,
+        marketCapCached,
+        tokenPriceCached,
+        userCountCached,
+        burnedAmountCached,
+        totalSupplyCached,
+      ] = await Promise.all([
+        calculateData(),
+        RedisService.getString(REDIS_KEY.LATEST_BLOCK),
+        RedisService.getString(REDIS_KEY.NATIVE_TRANSACTIONS_COUNT),
+        RedisService.getString(REDIS_KEY.MARKET_CAP),
+        RedisService.getString(REDIS_KEY.COIN_PRICE),
+        RedisService.getString(REDIS_KEY.TOTAL_ACCOUNTS),
+        RedisService.getString(REDIS_KEY.TOTAL_BURNED_AMOUNT),
+        RedisService.getString(REDIS_KEY.TOTAL_SUPPLY),
+      ]);
 
-      const latestBlock = await RedisService.getString(REDIS_KEY.LATEST_BLOCK);
-      const transactionCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
-      );
-      let marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
-      const tokenPrice =
-        (await RedisService.getString(REDIS_KEY.COIN_PRICE)) ??
-        CURRENT_DEFAULT_COIN_PRICE;
-      console.log({ marketCap, tokenPrice });
-
-      // const circulationSupply =
-      //   data?.circulation_supply === 0 || !data.circulation_supply
-      //     ? await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY)
-      //     : data?.circulation_supply;
-
-      // const circulationSupply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
+      const tokenPrice = tokenPriceCached ?? CURRENT_DEFAULT_COIN_PRICE;
 
       const supplyDetails = calculateSupplyDetails();
       const circulationSupply = supplyDetails.circulating_supply;
 
+      let marketCap = marketCapCached;
       if (marketCap === "0" || !marketCap) {
-        marketCap ??= tokenPrice * circulationSupply;
+        marketCap = (Number(tokenPrice) * circulationSupply).toString();
       }
-      // const marketCap = tokenPrice * circulationSupply;
-      const userCount = await prisma.users.count();
 
-      let burnedAmount = await RedisService.getString(
-        REDIS_KEY.TOTAL_BURNED_AMOUNT,
-      );
+      let userCount = Number(userCountCached);
+      if (!userCountCached) {
+        userCount = await prisma.users.count();
+        await RedisService.setStringWithExpiry(
+          REDIS_KEY.TOTAL_ACCOUNTS,
+          userCount.toString(),
+          300, // 5 minutes cache
+        );
+      }
 
+      let burnedAmount = burnedAmountCached;
       if (!burnedAmount) {
-        /** save burned fees */
-        burnedAmount = await this.calculateBurnedAmount();
+        burnedAmount = (await this.calculateBurnedAmount()).toString();
       }
 
-      let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
-
+      let totalSupply = totalSupplyCached;
       if (!totalSupply) {
-        totalSupply = await this.getTotalSupply();
-        console.log("total Supply from-native", totalSupply);
+        const supplyRes = await this.getTotalSupply();
+        totalSupply = (supplyRes.data as any)?.totalSupply?.toString();
       }
 
       return {
@@ -796,21 +812,24 @@ class ExplorerService {
         message: RES_MSG.FETCH_SUCCESS,
         data: {
           apy: CURRENT_DEFAULT_APR,
-          inflation: data.inflation,
-          // totalSupply: data.totalSupply,
-          totalValidator: data.totalValidator,
+          inflation: (data as any).inflation,
+          totalValidator: (data as any).totalValidator,
           circulation_supply: circulationSupply,
-          apr: data?.apr ? Number(data?.apr) : CURRENT_DEFAULT_APR,
-          tokenPrice: tokenPrice ?? CURRENT_DEFAULT_COIN_PRICE,
-          validators: data?.validator ?? 0,
+          apr: (data as any)?.apr
+            ? Number((data as any)?.apr)
+            : CURRENT_DEFAULT_APR,
+          tokenPrice: Number(tokenPrice),
+          validators: (data as any)?.validator ?? 0,
           circulationSupply: circulationSupply,
           latest_block: latestBlock,
           total_transactions: transactionCount,
           total_accounts: userCount,
-          bondedTokens: data?.bondedTokens ? Number(data.bondedTokens) : 0,
-          bondedRate: data?.bondedRate,
+          bondedTokens: (data as any)?.bondedTokens
+            ? Number((data as any).bondedTokens)
+            : 0,
+          bondedRate: (data as any)?.bondedRate,
           marketCap,
-          community_pool: data?.community_pool ?? 0,
+          community_pool: (data as any)?.community_pool ?? 0,
           burnedAmount,
         },
       };
@@ -884,28 +903,26 @@ class ExplorerService {
 
   async calculateBurnedAmount() {
     try {
-      const burnedAmount: any = await prisma.transactions.aggregate({
+      const burnedAmountResult = await prisma.transactions.aggregate({
         _sum: {
           burnedFee: true,
         },
       });
 
-      if (burnedAmount) {
-        return (
-          Number(burnedAmount?._sum.burnedFee) + Number(STATIC_BURNED_AMOUNT)
-        );
-      }
+      const totalBurned =
+        Number(burnedAmountResult?._sum.burnedFee || 0) +
+        Number(STATIC_BURNED_AMOUNT);
 
-      await redisHelper.setStringWithExpiry(
+      await RedisService.setStringWithExpiry(
         REDIS_KEY.TOTAL_BURNED_AMOUNT,
-        burnedAmount,
-        600,
+        totalBurned.toString(),
+        600, // 10 minutes cache
       );
 
-      return Number(STATIC_BURNED_AMOUNT);
+      return totalBurned;
     } catch (error) {
-      console.log(error, "error in calculateBurnedAmount");
-      return false;
+      logger.error("error in calculateBurnedAmount", error);
+      return Number(STATIC_BURNED_AMOUNT);
     }
   }
 

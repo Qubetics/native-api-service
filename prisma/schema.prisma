@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+
 }
 
 model Users {
@@ -13,12 +14,15 @@ model Users {
   balance   String   @default("0")
   txn       BigInt   @default(0)
   createdAt DateTime @default(now())
+
+    @@index([createdAt])
+  @@index([address])
 }
 
 model Blocks {
   id                       Int      @id @default(autoincrement())
   blocknumber              BigInt   @unique
-  blockhash                String  @unique @db.VarChar(255)
+  blockhash                String?  @default("") @db.VarChar(255)
   timestamp                DateTime
   transactionCount         BigInt   @default(0)
   validatorOperatorAddress String
@@ -38,18 +42,22 @@ model Transactions {
   txhash          String        @unique
   timestamp       DateTime
   contractAddress String        @default("N/A")
-  fromAddress     String?       @db.VarChar(255)
-  toAddress       String?       @db.VarChar(255)
+  fromAddress     String?        @db.VarChar(255)
+  toAddress       String?        @db.VarChar(255)
   gasWanted       BigInt        @default(0)
   gasUsed         BigInt        @default(0)
   txFee           String        @default("")
   value           String        @default("0")
+  burnedFee       Float         @default(0)
+
   createdAt       DateTime      @default(now())
   nodeAddress     String?
-  burnedFee       Float         @default(0)
   ContractLogs    ContractLogs?
 
   @@index([blocknumber, txhash])
+    @@index([createdAt])
+  @@index([type])
+  @@index([fromAddress, toAddress])
 }
 
 model Contracts {
@@ -163,7 +171,7 @@ model ValidatorStake {
   validatorOperatorAddress String    @default("")
   delegatorAddress         String
   balanceAmount            Decimal
-  delegatorRewards         Decimal   @default(0)
+  delegatorRewards         Decimal @default(0)
   denom                    String
   delegator                Delegator @relation(fields: [delegatorAddress], references: [address])
 
@@ -216,7 +224,7 @@ model Voters {
 }
 
 model DvpnTransaction {
-  id             Int       @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   txhash         String?    @unique
   blocknumber    BigInt
   planId         String?
@@ -234,13 +242,15 @@ model DvpnTransaction {
   startAt        DateTime?
   statusAt       String?
   inactiveAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   logs           Json?
   price          String?
-  provAddress    String?
   stackingReward String?  @default("0")
+  provAddress    String?
+
   @@index([blocknumber, txhash, planId])
+
 }
 
 model Rewards {
