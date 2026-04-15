@@ -76,7 +76,7 @@ class BlockService {
    */
   async getBlockByHash(hash: string): Promise<IESResponse> {
     try {
-      let blockDetailsByHash = await prisma.blocks.findUnique({
+      let blockDetailsByHash = await prisma.blocks.findFirst({
         where: {
           blockhash: hash,
         },
@@ -309,7 +309,8 @@ class BlockService {
           where: isFirstPage
             ? {}
             : {
-                blocknumber: data.order === "asc" ? { gt: data.page } : { lt: data.page },
+                blocknumber:
+                  data.order === "asc" ? { gt: data.page } : { lt: data.page },
               },
           take: data.limit,
         }),
@@ -323,7 +324,11 @@ class BlockService {
       if (!cachedBlockCount) {
         const result = await prisma.blocks.count();
         blockCount = result;
-        await RedisService.setStringWithExpiry(REDIS_KEY.NATIVE_BLOCKS_COUNT, blockCount.toString(), 300);
+        await RedisService.setStringWithExpiry(
+          REDIS_KEY.NATIVE_BLOCKS_COUNT,
+          blockCount.toString(),
+          300,
+        );
       }
 
       let minMaxData = cachedMinMax ? JSON.parse(cachedMinMax) : null;
@@ -336,30 +341,44 @@ class BlockService {
           minimumId: Number(blockCountData?._min.blocknumber),
           maximumId: Number(blockCountData?._max.blocknumber),
         };
-        await RedisService.setStringWithExpiry("BLOCK_MIN_MAX", JSON.stringify(minMaxData), 600);
+        await RedisService.setStringWithExpiry(
+          "BLOCK_MIN_MAX",
+          JSON.stringify(minMaxData),
+          600,
+        );
       }
 
       const { minimumId, maximumId } = minMaxData;
 
       // Use caching for lastPageResult too if possible, or only fetch when needed
       // Actually, lastPage is based on blockCount and min/max. Let's see if we can optimize it.
-      const lastPageCacheKey = `BLOCK_LAST_PAGE_${data.filterBy || 'newest'}_${data.order}`;
+      const lastPageCacheKey = `BLOCK_LAST_PAGE_${data.filterBy || "newest"}_${data.order}`;
       let lastPage = await RedisService.getString(lastPageCacheKey);
 
       if (lastPage === null) {
         const lastPageResult = await prisma.blocks.findMany({
           select: { blocknumber: true },
           orderBy: {
-            blocknumber: data.filterBy === "newest" || !data.filterBy ? "asc" : "desc",
+            blocknumber:
+              data.filterBy === "newest" || !data.filterBy ? "asc" : "desc",
           },
           where: {
-            blocknumber: data.filterBy === "newest" || !data.filterBy ? { gt: minimumId } : { lt: maximumId },
+            blocknumber:
+              data.filterBy === "newest" || !data.filterBy
+                ? { gt: minimumId }
+                : { lt: maximumId },
           },
           take: blockCount % data.limit || data.limit,
         });
         if (lastPageResult.length > 0) {
-          lastPage = serializeBigInt(lastPageResult[lastPageResult.length - 1].blocknumber);
-          await RedisService.setStringWithExpiry(lastPageCacheKey, lastPage.toString(), 300);
+          lastPage = serializeBigInt(
+            lastPageResult[lastPageResult.length - 1].blocknumber,
+          );
+          await RedisService.setStringWithExpiry(
+            lastPageCacheKey,
+            lastPage.toString(),
+            300,
+          );
         } else {
           lastPage = 0;
         }

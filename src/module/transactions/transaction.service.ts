@@ -36,7 +36,7 @@ class TransactionService {
       ]);
 
       const transactionCount = await RedisService.getString(
-        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT
+        REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
       );
       if (!transactions?.length) throw new Error(RES_MSG.NOT_FOUND);
       const nextCursor =
@@ -120,7 +120,7 @@ class TransactionService {
       const updatedTransactions = convertBigIntToNumber(transactions);
 
       const isContractAddress = updatedTransactions.some(
-        (transaction) => transaction.contractAddress === data.address
+        (transaction) => transaction.contractAddress === data.address,
       );
 
       return {
@@ -183,7 +183,7 @@ class TransactionService {
       // Determine if the input is a block hash or a block number
       if (payloads.value.startsWith("0x") && payloads.value.length === 66) {
         // Query block number from block hash
-        const block = await prisma.blocks.findUnique({
+        const block = await prisma.blocks.findFirst({
           where: { blockhash: payloads.value },
           select: { blocknumber: true },
         });
@@ -246,7 +246,7 @@ class TransactionService {
    */
   async createTransaction(
     txHash: string,
-    data: ICreateTransaction
+    data: ICreateTransaction,
   ): Promise<IESResponse> {
     try {
       let currentDate = Date.now().toString();
@@ -298,7 +298,7 @@ class TransactionService {
    */
   async updateTransaction(
     txHash: string,
-    data: ICreateTransaction
+    data: ICreateTransaction,
   ): Promise<IESResponse> {
     try {
       console.log(data, "data");
@@ -382,7 +382,7 @@ class TransactionService {
         await RedisService.setStringWithExpiry(
           REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
           transactionCount.toString(),
-          300
+          300,
         );
       }
 
@@ -394,18 +394,22 @@ class TransactionService {
       if (data.order === "asc") {
         const [pData, aggRes] = await Promise.all([
           this.ascPagination(data.page, data.limit),
-          cachedMinMax ? JSON.parse(cachedMinMax) : prisma.transactions.aggregate({ _max: { id: true } })
+          cachedMinMax
+            ? JSON.parse(cachedMinMax)
+            : prisma.transactions.aggregate({ _max: { id: true } }),
         ]);
         transactionsData = pData;
         maxId = (aggRes as any)._max?.id || aggRes.maxId;
       } else {
         const [pData, minIdRes] = await Promise.all([
           this.descPagination(data.page, data.limit),
-          cachedMinMax ? JSON.parse(cachedMinMax) : prisma.transactions.findMany({
-            select: { id: true },
-            orderBy: { id: "asc" },
-            take: (transactionCount % data.limit) + 1 || data.limit + 1,
-          })
+          cachedMinMax
+            ? JSON.parse(cachedMinMax)
+            : prisma.transactions.findMany({
+                select: { id: true },
+                orderBy: { id: "asc" },
+                take: (transactionCount % data.limit) + 1 || data.limit + 1,
+              }),
         ]);
         transactionsData = pData;
         minId = (minIdRes as any).minId || minIdRes;
@@ -415,7 +419,11 @@ class TransactionService {
       if (!cachedMinMax) {
         // Only cache if we have some data
         const minMaxToCache = data.order === "asc" ? { maxId } : { minId };
-        await RedisService.setStringWithExpiry("TX_MIN_MAX_IDS", JSON.stringify(minMaxToCache), 600);
+        await RedisService.setStringWithExpiry(
+          "TX_MIN_MAX_IDS",
+          JSON.stringify(minMaxToCache),
+          600,
+        );
       }
 
       const { transactions, nextCursor, prevCursor } = transactionsData;
@@ -432,21 +440,31 @@ class TransactionService {
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
         const [getActiveAccount, p30Days] = await Promise.all([
-          !cachedActiveAccount 
+          !cachedActiveAccount
             ? prisma.$queryRaw`SELECT COUNT(DISTINCT "fromAddress") AS "count" FROM "Transactions" WHERE "createdAt" >= ${todayStart}`
             : Promise.resolve([{ count: cachedActiveAccount }]),
           !cached30DaysTrxn
-            ? prisma.transactions.count({ where: { createdAt: { gte: thirtyDaysAgo } } })
-            : Promise.resolve(cached30DaysTrxn)
+            ? prisma.transactions.count({
+                where: { createdAt: { gte: thirtyDaysAgo } },
+              })
+            : Promise.resolve(cached30DaysTrxn),
         ]);
 
         if (!cachedActiveAccount) {
           activeAccount = Number((getActiveAccount as any)[0].count);
-          await RedisService.setStringWithExpiry(REDIS_KEY.ACTIVE_ACCOUNTS_TODAY, activeAccount.toString(), 600);
+          await RedisService.setStringWithExpiry(
+            REDIS_KEY.ACTIVE_ACCOUNTS_TODAY,
+            activeAccount.toString(),
+            600,
+          );
         }
         if (!cached30DaysTrxn) {
           previous30DaysTrxn = Number(p30Days);
-          await RedisService.setStringWithExpiry(REDIS_KEY.TRANSACTIONS_30_DAYS, previous30DaysTrxn.toString(), 600);
+          await RedisService.setStringWithExpiry(
+            REDIS_KEY.TRANSACTIONS_30_DAYS,
+            previous30DaysTrxn.toString(),
+            600,
+          );
         }
       }
 
@@ -463,7 +481,8 @@ class TransactionService {
       }
 
       const offset = transactionCount % data.limit || data.limit;
-      const lastPage = data.order === "asc" ? maxId - offset : minId[minId.length - 1].id;
+      const lastPage =
+        data.order === "asc" ? maxId - offset : minId[minId.length - 1].id;
 
       return {
         error: false,
