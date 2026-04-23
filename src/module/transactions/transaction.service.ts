@@ -1,8 +1,10 @@
 import prisma from "../../lib/db";
 import { ICreateTransaction, IESResponse } from "../../interfaces";
-import { MSG_TYPE, REDIS_KEY, RES_MSG } from "../../constant";
+import { FETCH_METHODS, HEADERS, MSG_TYPE, QUEUE_NAME, REDIS_KEY, RES_MSG } from "../../constant";
 import { convertBigIntToNumber } from "../../helper/common.helper";
 import { RedisService } from "../../service";
+import rabbitmqService from "../../service/rabbitmq.service";
+import { fetchRequest, getReadableMsgName, getRequest } from "../../lib/utilities.helper";
 
 class TransactionService {
   /**
@@ -145,7 +147,7 @@ class TransactionService {
     }
   }
 
-  async getTransactionByHash(txHash: string): Promise<IESResponse> {
+  async getTransactionByHash_1(txHash: string): Promise<IESResponse> {
     try {
       let transactionData = await prisma.transactions.findUnique({
         where: { txhash: txHash },
@@ -406,10 +408,10 @@ class TransactionService {
           cachedMinMax
             ? JSON.parse(cachedMinMax)
             : prisma.transactions.findMany({
-                select: { id: true },
-                orderBy: { id: "asc" },
-                take: (transactionCount % data.limit) + 1 || data.limit + 1,
-              }),
+              select: { id: true },
+              orderBy: { id: "asc" },
+              take: (transactionCount % data.limit) + 1 || data.limit + 1,
+            }),
         ]);
         transactionsData = pData;
         minId = (minIdRes as any).minId || minIdRes;
@@ -445,8 +447,8 @@ class TransactionService {
             : Promise.resolve([{ count: cachedActiveAccount }]),
           !cached30DaysTrxn
             ? prisma.transactions.count({
-                where: { createdAt: { gte: thirtyDaysAgo } },
-              })
+              where: { createdAt: { gte: thirtyDaysAgo } },
+            })
             : Promise.resolve(cached30DaysTrxn),
         ]);
 
@@ -669,5 +671,123 @@ class TransactionService {
       return { error: true, message: RES_MSG.ERROR };
     }
   }
+
+  async getTransactionByHash(txHash: string): Promise<IESResponse> {
+    try {
+      let theTransaction = await prisma.transactions.findUnique({
+        where: { txhash: txHash },
+        select: {
+          id: true,
+          type: true,
+          status: true,
+          txString: true,
+          blocknumber: true,
+          txhash: true,
+          timestamp: true,
+          gasUsed: true,
+          contractAddress: true,
+          fromAddress: true,
+          toAddress: true,
+          gasWanted: true,
+          txFee: true,
+          value: true,
+          burnedFee: true,
+          createdAt: true,
+        },
+      });
+
+      let transactionData = convertBigIntToNumber([theTransaction])[0];
+
+      if (!transactionData) {
+        const url = `${environment.evmHost}/cosmos/tx/v1beta1/txs/${txHash.replace(/^0x/, '')}`;
+
+        const fetchRes = await getRequest(
+          url,
+          FETCH_METHODS.GET,
+          HEADERS.DEFAULT,
+        );
+
+        const result = fetchRes?.data?.result || fetchRes?.data;
+
+        if (!result) {
+          return { error: true, message: RES_MSG.TRANSACTION_NOT_FOUND };
+        }
+        let txType = 'Unknown';
+        let fromAddress = '';
+        let toAddress = '';
+        let amount = '0';
+
+        if (result?.tx?.body?.messages && result.tx.body.messages.length > 0) {
+          const msgObj = result.tx.body.messages[0];
+          const typeUrl = msgObj['@type'];
+          txType = getReadableMsgName(typeUrl);
+
+          fromAddress =
+            msgObj.from_address ||
+            msgObj.sender ||
+            msgObj.delegator_address ||
+            msgObj.voter ||
+            '';
+          toAddress =
+            msgObj.to_address ||
+            msgObj.receiver ||
+            msgObj.validator_address ||
+            '';
+          amount = msgObj.amount?.[0]?.amount || msgObj.amount?.amount || '0';
+        }
+
+        let txFee = '0';
+        if (
+          result?.tx?.auth_info?.fee?.amount &&
+          result.tx.auth_info.fee.amount.length > 0
+        ) {
+          txFee = result.tx.auth_info.fee.amount[0].amount;
+        }
+
+        const txResponse = result?.tx_response || result?.tx_result || {};
+        const gasUsed = Number(txResponse.gas_used || 0);
+        const statusCode = txResponse.code;
+        const statusStr = statusCode === 0 ? 'SUCCESS' : 'FAILED';
+        const height = Number(txResponse.height || result?.height || 0);
+
+        transactionData = {
+          type: txType,
+          status: statusStr,
+          txString: '',
+          blocknumber: height,
+          txhash: txHash,
+          timestamp: txResponse.timestamp || new Date().toISOString(),
+          gasUsed: gasUsed,
+          gasWanted: Number(txResponse.gas_wanted || 0),
+          txFee: Number(txFee),
+          value: amount,
+          createdAt: new Date(),
+          fromAddress: fromAddress,
+          toAddress: toAddress,
+          contractAddress: '',
+          burnedFee: gasUsed * 0.2,
+
+        } as any;
+
+        rabbitmqService.inQueueData(QUEUE_NAME.DOWNTIME_TXS, txHash);
+      }
+
+      return {
+        error: false,
+        message: RES_MSG.TRANSACTION_FETCH_SUCCESS,
+        data: {
+          transaction: transactionData,
+        },
+      };
+    } catch (err) {
+      if (err instanceof Error) {
+        return { error: true, message: err.message };
+      } else {
+        return { error: true, message: RES_MSG.ERROR };
+      }
+    }
+  }
+
+
 }
 export default new TransactionService();

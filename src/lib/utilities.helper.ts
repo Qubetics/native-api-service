@@ -390,16 +390,16 @@ export function cursorPagination(
     nextCursor:
       (Number(nextCursor) === Number(minimumId) &&
         (!getFilter || getFilter === "newest")) ||
-      (Number(nextCursor) === Number(maximumId) && getFilter === "oldest") ||
-      Number(totalRecords) < Number(limit)
+        (Number(nextCursor) === Number(maximumId) && getFilter === "oldest") ||
+        Number(totalRecords) < Number(limit)
         ? null
         : nextCursor,
     previousCursor:
       (Number(previousCursor) === Number(maximumId) &&
         (!getFilter || getFilter === "newest")) ||
-      (Number(previousCursor) === Number(minimumId) &&
-        getFilter === "oldest") ||
-      Number(totalRecords) < Number(limit)
+        (Number(previousCursor) === Number(minimumId) &&
+          getFilter === "oldest") ||
+        Number(totalRecords) < Number(limit)
         ? null
         : previousCursor,
     lastPageRemainder,
@@ -467,4 +467,47 @@ export function getCurrentDateTime(): Date {
 export function roundToDecimals(value: number, decimals: number = 2): number {
   const multiplier = 10 ** decimals;
   return Math.round(value * multiplier) / multiplier;
+}
+
+export async function getRequest(
+  url: string,
+  method: string,
+  data: any = null,
+) {
+  try {
+    const result = await axios({
+      method,
+      url,
+      data,
+    });
+    return {
+      error: false,
+      data: result.data,
+    };
+  } catch (error) {
+    console.error('error while get ', url, error);
+    return {
+      error: true,
+      data: null,
+    };
+  }
+}
+
+export function getReadableMsgName(typeUrl: string): string {
+  if (!typeUrl) return 'Unknown';
+
+  // Get last part after last dot or slash
+  const lastPart = typeUrl.split('/').pop() || '';
+  const msgName = lastPart.split('.').pop() || lastPart;
+
+  // Remove Msg prefix
+  const withoutPrefix = msgName.replace(/^Msg/, '');
+
+  // Convert camelCase / PascalCase to words
+  const readable = withoutPrefix
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+    .trim();
+
+  return readable;
 }

@@ -190,6 +190,11 @@ export const REDIS_KEY = {
 
 export const QUEUE_NAME = {
   MISSED_BLOCK: "MISSED_BLOCK",
+  TX_BY_HASH: 'TX_BY_HASH',
+  BLOCK_TX_VERIFICATION: 'BLOCK_TX_VERIFICATION',
+  MISSING_TX_SYNC: 'MISSING_TX_SYNC',
+  DOWNTIME_TXS: "NATIVE_DOWNTIME_TXS",
+
 };
 
 export enum TransactionStatus {
@@ -270,8 +275,8 @@ export enum TRANSACTION_TYPE {
 
 export const HEADERS = {
   DEFAULT: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
   },
 };
 
