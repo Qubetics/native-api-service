@@ -73,7 +73,7 @@ class NodeService {
             type: { not: "START_SUBSCRIPTION" },
           },
           orderBy: {
-            createdAt: "desc",
+            timestamp: "desc",
           },
           skip: page * limit,
           take: limit,
