@@ -2,7 +2,9 @@ import axios from "axios";
 import geoip from "geoip-lite";
 import countries from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json"; // import JSON instead of require
-import { extractIP } from "../helper/common.helper";
+import { extractBothIP } from "../helper/common.helper";
+import maxmindHelper from "../helper/maxmind.helper";
+import { RES_MSG } from "../constant";
 
 countries.registerLocale(enLocale);
 
@@ -156,15 +158,27 @@ export function isAlphaNumeric(val: string | number) {
 //     })
 //     .filter(Boolean); // Remove undefined entries where IP extraction failed
 
-export const formatNodes = (nodes: any[]) =>
-  nodes
-    .map((node: any) => {
-      const ip = extractIP(node.remote_url);
-      if (!ip) return null; // return something explicitly if IP not found
+export const formatNodes = async (nodes: any[]) => {
+  const results = await Promise.allSettled(
+    nodes.map(async (node: any) => {
+      const ip = extractBothIP(node.remote_url);
+      if (!ip) return null;
 
-      const geo: any = geoip.lookup(ip);
-      const countryName = countries.getName(geo?.country, "en");
-      const flagUrl = `https://flagcdn.com/w80/${geo?.country?.toLowerCase()}.png`;
+      const geo = await maxmindHelper.getLocationData(String(ip));
+
+      if (!geo) {
+        return {
+          error: true,
+          message: RES_MSG.UNABLE_TO_FIND_LOC,
+        };
+      }
+
+      const countryName = geo?.country || "Unknown";
+
+      const flagUrl =
+        geo?.countryCode && geo.countryCode !== 'Unknown'
+          ? `https://flagcdn.com/w80/${geo.countryCode.toLowerCase()}.png`
+          : 'Unknown';
 
       return {
         address: node.address,
@@ -178,11 +192,16 @@ export const formatNodes = (nodes: any[]) =>
         inactive_at: node?.inactive_at ? new Date(node.inactive_at) : null,
         status: node.status,
         status_at: node?.status_at ? new Date(node.status_at) : null,
-        country: countryName || "Unknown",
+        country: countryName,
         city: geo?.city || "Unknown",
-        long: geo?.ll?.[1]?.toString() || "0",
-        lat: geo?.ll?.[0]?.toString() || "0",
+        long: geo?.longitude?.toString() || "0",
+        lat: geo?.latitude?.toString() || "0",
         flag_url: flagUrl,
       };
     })
-    .filter(Boolean); // Remove null entries
+  );
+
+  return results
+    .filter((r) => r.status === "fulfilled" && r.value)
+    .map((r: any) => r.value);
+};
