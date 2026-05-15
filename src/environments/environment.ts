@@ -64,6 +64,8 @@ class Environment implements IEnvironment {
 
   public ttlTimeRewards: number;
 
+  public redisPassword: string;
+
   /**
    *
    * @param NODE_ENV
@@ -100,6 +102,7 @@ class Environment implements IEnvironment {
     this.excludedValidators = <string>process.env.EXCLUDING_VALIDATORS;
     this.initialSupply = Number(process.env.INITIAL_SUPPLY) || 1366266047.86;
     this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
+    this.redisPassword = <string>process.env.REDIS_PASS;
   }
 
   /**
