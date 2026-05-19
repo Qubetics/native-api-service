@@ -80,58 +80,112 @@ class TransactionService {
    * @param address
    * @returns
    */
-  async getTransactionsByAddress(data: {
+  async getTransactionsByAddress_1(data: {
     page: number;
     limit: number;
     address: string;
   }): Promise<IESResponse> {
     try {
-      const [transactions, transactionCount] = await prisma.$transaction([
-        prisma.transactions.findMany({
-          orderBy: {
-            createdAt: "desc",
-          },
-          where: {
-            OR: [
-              {
-                fromAddress: data.address,
-              },
-              {
-                toAddress: data.address,
-              },
-            ],
-          },
+      const countCacheKey = `TX_COUNT_ADDR:${data.address}`;
+      const pageCacheKey = `TX_PAGE_ADDR:${data.address}:${data.page}:${data.limit}`;
+      const isContractCacheKey = `IS_CONTRACT_ADDR:${data.address}`;
 
-          skip: data.page * data.limit,
-          take: data.limit,
-        }),
-        prisma.transactions.count({
-          where: {
-            OR: [
-              {
-                fromAddress: data.address,
-              },
-              {
-                toAddress: data.address,
-              },
-            ],
-          },
-        }),
+      // Fetch all cache keys in one round-trip
+      const [cachedCount, cachedPage, cachedIsContract] = await Promise.all([
+        RedisService.getString(countCacheKey),
+        RedisService.getString(pageCacheKey),
+        RedisService.getString(isContractCacheKey),
       ]);
-      if (!transactions?.length) throw new Error(RES_MSG.NOT_FOUND);
-      const updatedTransactions = convertBigIntToNumber(transactions);
 
-      const isContractAddress = updatedTransactions.some(
-        (transaction) => transaction.contractAddress === data.address,
-      );
+      // [] is returned by RedisService on connection error — treat as cache miss
+      const hasCachedPage = Array.isArray(cachedPage) && cachedPage.length > 0;
+      const hasCachedCount = cachedCount !== null && !Array.isArray(cachedCount);
+      const hasCachedIsContract = cachedIsContract !== null && !Array.isArray(cachedIsContract);
+
+      const whereClause = {
+        OR: [
+          { fromAddress: data.address },
+          { toAddress: data.address },
+        ],
+      };
+
+      // Run all three DB lookups in parallel; skip each if we already have it cached.
+      // Promise.all (no prisma.$transaction) lets the pool serve queries concurrently.
+      const [txRows, txCount, contractRecord] = await Promise.all([
+        hasCachedPage
+          ? Promise.resolve(cachedPage as any[])
+          : prisma.transactions.findMany({
+              orderBy: { createdAt: "desc" },
+              where: whereClause,
+              skip: data.page * data.limit,
+              take: data.limit,
+              select: {
+                id: true,
+                type: true,
+                status: true,
+                blocknumber: true,
+                txhash: true,
+                timestamp: true,
+                gasUsed: true,
+                contractAddress: true,
+                fromAddress: true,
+                toAddress: true,
+                gasWanted: true,
+                txFee: true,
+                value: true,
+                burnedFee: true,
+                createdAt: true,
+                nodeAddress: true,
+              },
+            }),
+        hasCachedCount
+          ? Promise.resolve(cachedCount as number)
+          : prisma.transactions.count({ where: whereClause }),
+        hasCachedIsContract
+          ? Promise.resolve(null)
+          : prisma.contracts.findUnique({
+              where: { address: data.address },
+              select: { id: true },
+            }),
+      ]);
+
+      const isContractAddress: boolean = hasCachedIsContract
+        ? (cachedIsContract as boolean)
+        : !!contractRecord;
+
+      // Convert BigInts before caching — JSON.stringify cannot handle BigInt
+      const transactions: any[] = hasCachedPage
+        ? (txRows as any[])
+        : convertBigIntToNumber(txRows as any[]);
+
+      const transactionCount = txCount as number;
+
+      // Write cache entries in background — don't block the response
+      const cacheOps: Promise<any>[] = [];
+      if (!hasCachedPage && transactions.length) {
+        cacheOps.push(RedisService.setStringWithExpiry(pageCacheKey, transactions, 30));
+      }
+      if (!hasCachedCount) {
+        cacheOps.push(RedisService.setStringWithExpiry(countCacheKey, transactionCount, 60));
+      }
+      if (!hasCachedIsContract) {
+        cacheOps.push(RedisService.setStringWithExpiry(isContractCacheKey, isContractAddress, 300));
+      }
+      if (cacheOps.length) {
+        Promise.all(cacheOps).catch((err) =>
+          console.error("Cache write error in getTransactionsByAddress:", err),
+        );
+      }
+
+      if (!transactions?.length) throw new Error(RES_MSG.NOT_FOUND);
 
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
         data: {
-          addresses: convertBigIntToNumber(transactions),
+          addresses: transactions,
           count: transactionCount,
-          transactions: convertBigIntToNumber(transactions),
+          transactions,
           isContractAddress,
         },
       };
@@ -787,6 +841,85 @@ class TransactionService {
       }
     }
   }
+
+  async getTransactionsByAddress(data: {
+  page: number;
+  limit: number;
+  address: string;
+}): Promise<IESResponse> {
+  try {
+    // Shared where clause used for both queries to maintain consistency
+    const whereClause = {
+      OR: [
+        { fromAddress: data.address },
+        { toAddress: data.address },
+      ],
+    };
+
+    const [transactions, transactionCount] = await prisma.$transaction([
+      prisma.transactions.findMany({
+        where: whereClause,
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip: data.page * data.limit,
+        take: data.limit,
+          select: {
+                id: true,
+                type: true,
+                status: true,
+                blocknumber: true,
+                txhash: true,
+                timestamp: true,
+                gasUsed: true,
+                contractAddress: true,
+                fromAddress: true,
+                toAddress: true,
+                gasWanted: true,
+                txFee: true,
+                value: true,
+                burnedFee: true,
+                createdAt: true,
+                nodeAddress: true,
+              },
+      }),
+      prisma.transactions.count({
+        where: whereClause,
+      }),
+    ]);
+
+    if (!transactions?.length) throw new Error(RES_MSG.NOT_FOUND);
+
+    // OPTIMIZATION: Convert BigInt only once instead of 3 times
+    const serializedTransactions = convertBigIntToNumber(transactions);
+
+    // OPTIMIZATION: O(n) look up on the already serialized array
+    const isContractAddress = serializedTransactions.some(
+      (transaction) => transaction.contractAddress === data.address,
+    );
+
+    // RESPONSE SHAPE UNCHANGED
+    return {
+      error: false,
+      message: RES_MSG.FETCH_SUCCESS,
+      data: {
+        addresses: serializedTransactions,
+        count: transactionCount,
+        transactions: serializedTransactions,
+        isContractAddress,
+      },
+    };
+  } catch (err) {
+    console.log("error in getTransactionsByAddress : ", err);
+    if (err instanceof Error) {
+      if (err.message.includes("prisma")) {
+        return { error: true, message: RES_MSG.SERVER_ERROR };
+      }
+      return { error: true, message: err.message };
+    }
+    return { error: true, message: RES_MSG.ERROR };
+  }
+}
 
 
 }

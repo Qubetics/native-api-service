@@ -31,6 +31,7 @@ model Blocks {
 
   @@unique([blocknumber, blockhash], name: "BlockNumberAndHashUnique")
   @@index([miner, blockhash, blocknumber])
+  @@index([miner, createdAt(sort: Desc)]) // यह लाइन जोड़ें
 }
 
 model Transactions {
@@ -55,9 +56,11 @@ model Transactions {
   ContractLogs    ContractLogs?
 
   @@index([blocknumber, txhash])
-    @@index([createdAt])
+  @@index([createdAt])
   @@index([type])
-  @@index([fromAddress, toAddress])
+  @@index([fromAddress])
+  @@index([toAddress])
+  @@index([createdAt(sort: Desc)]) // Crucial for the orderBy clause
 }
 
 model Contracts {
