@@ -3,6 +3,7 @@ import prisma from "../../lib/db";
 import { IESResponse } from "../../interfaces/index";
 import { convertBigIntToNumber } from "../../helper/common.helper";
 import { CONTRACT, CONTRACTLOGS, RES_MSG } from "../../constant/index";
+import logger from "../../lib/logger";
 
 class ContractService {
   async getAllContract(data: {
@@ -75,7 +76,6 @@ class ContractService {
         where: { address: contractAddress },
       });
 
-      console.log("contractDatacontractData", contractData);
       const contractDataToSend = {
         ...contractData,
         decimal: contractData?.Tokens?.decimal ?? "",
@@ -135,7 +135,6 @@ class ContractService {
           },
         }),
       ]);
-      console.log("contractLogs : : ", contractLogs);
 
       if (!contractLogs?.length) {
         const [contractTx, contractTxCount] = await prisma.$transaction([
@@ -191,8 +190,8 @@ class ContractService {
         },
       };
     } catch (err) {
+      logger.error("error in getContractLogs", err);
       if (err instanceof Error) {
-        console.log(err);
         if (err.message.includes("prisma")) {
           return { error: true, message: RES_MSG.SERVER_ERROR };
         }

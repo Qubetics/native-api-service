@@ -5,6 +5,7 @@ import { convertBigIntToNumber } from "../../helper/common.helper";
 import { RedisService } from "../../service";
 import rabbitmqService from "../../service/rabbitmq.service";
 import { fetchRequest, getReadableMsgName, getRequest } from "../../lib/utilities.helper";
+import logger from "../../lib/logger";
 
 class TransactionService {
   /**
@@ -48,7 +49,7 @@ class TransactionService {
       const prevCursor = isFirstPage
         ? null
         : data.page && transactions.length > 0
-          ? convertBigIntToNumber(transactions)[0].id + 11
+          ? convertBigIntToNumber(transactions)[0].id + (data.limit + 1)
           : null;
 
       return {
@@ -63,7 +64,7 @@ class TransactionService {
         },
       };
     } catch (err) {
-      console.log("error in get getAllTransactions_1 : ", err);
+      logger.error("error in getAllTransactions_1", err);
 
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
@@ -173,7 +174,7 @@ class TransactionService {
       }
       if (cacheOps.length) {
         Promise.all(cacheOps).catch((err) =>
-          console.error("Cache write error in getTransactionsByAddress:", err),
+          logger.error("Cache write error in getTransactionsByAddress", err),
         );
       }
 
@@ -190,7 +191,7 @@ class TransactionService {
         },
       };
     } catch (err) {
-      console.log("error in getTransactionsByAddress : ", err);
+      logger.error("error in getTransactionsByAddress", err);
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
           return { error: true, message: RES_MSG.SERVER_ERROR };
@@ -282,7 +283,7 @@ class TransactionService {
         },
       };
     } catch (err) {
-      console.log(err);
+      logger.error("error in getTransactionByBlock", err);
 
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
@@ -357,14 +358,12 @@ class TransactionService {
     data: ICreateTransaction,
   ): Promise<IESResponse> {
     try {
-      console.log(data, "data");
       // Check if transaction with given txhash exists
       const existingTransaction = await prisma.transactions.findUnique({
         where: {
           txhash: txHash,
         },
       });
-      console.log(existingTransaction, "existingTransaction");
 
       if (!existingTransaction) {
         // Transaction not found, create a new transaction
@@ -402,8 +401,8 @@ class TransactionService {
         };
       }
     } catch (err) {
+      logger.error("error in updateTransaction", err);
       if (err instanceof Error) {
-        console.log("err ", err);
         if (err.message.includes("prisma")) {
           return { error: true, message: RES_MSG.TRANSACTION_FAILED };
         }
@@ -554,7 +553,7 @@ class TransactionService {
         },
       };
     } catch (err) {
-      console.error("err", err);
+      logger.error("error in getAllTransactions", err);
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
           return { error: true, message: RES_MSG.SERVER_ERROR };
@@ -715,7 +714,7 @@ class TransactionService {
         },
       };
     } catch (err) {
-      console.log("error in getTransactionsByAddress : ", err);
+      logger.error("error in getTransactionsByAddress", err);
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
           return { error: true, message: RES_MSG.SERVER_ERROR };
@@ -910,7 +909,7 @@ class TransactionService {
       },
     };
   } catch (err) {
-    console.log("error in getTransactionsByAddress : ", err);
+    logger.error("error in getTransactionsByAddress", err);
     if (err instanceof Error) {
       if (err.message.includes("prisma")) {
         return { error: true, message: RES_MSG.SERVER_ERROR };

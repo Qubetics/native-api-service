@@ -2,6 +2,7 @@ import { arrNoExponent, fetchRequest, noExponent } from "../../Utility/common";
 import { FETCH_METHODS, HEADERS, REDIS_KEY, RES_MSG } from "../../constant";
 import { IESResponse } from "../../interfaces/index";
 import prisma from "../../lib/db";
+import logger from "../../lib/logger";
 import redisHelper from "../../service/redis.helper";
 
 class DelegatorService {
@@ -57,8 +58,6 @@ class DelegatorService {
           validatorStakes: arrNoExponent(element?.validatorStakes),
         });
       });
-      console.log("dataToSend: ", dataToSend);
-
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
@@ -68,7 +67,7 @@ class DelegatorService {
         },
       };
     } catch (err) {
-      console.log("error in getAllDelegators : ", err);
+      logger.error("error in getAllDelegators", err);
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
           return { error: true, message: RES_MSG.SERVER_ERROR };
@@ -101,33 +100,27 @@ class DelegatorService {
         throw new Error(RES_MSG.NOT_FOUND);
       }
 
-      let validatorsTotalReward = 0;
-      if (delegatorByAddress?.validatorStakes) {
-        for (const validatorStake of delegatorByAddress?.validatorStakes) {
-          let validator = await prisma.validator.findUnique({
-            where: {
-              operatorAddress: validatorStake?.validatorOperatorAddress,
-            },
-            select: {
-              totalRewards: true,
-              name: true,
-              validatorAddress: true,
-            },
-          });
+      if (delegatorByAddress?.validatorStakes?.length) {
+        const operatorAddresses = delegatorByAddress.validatorStakes.map(
+          (vs: any) => vs.validatorOperatorAddress,
+        );
 
-          if (validator) {
-            validatorsTotalReward = Number(validator?.totalRewards);
-          }
+        const validators = await prisma.validator.findMany({
+          where: { operatorAddress: { in: operatorAddresses } },
+          select: { operatorAddress: true, totalRewards: true, name: true, validatorAddress: true },
+        });
 
-          validatorStake.validatorsTotalReward = validatorsTotalReward;
-          validatorStake.delegatorRewards = Number(
-            validatorStake.delegatorRewards,
-          );
+        const validatorMap = new Map(
+          validators.map((v) => [v.operatorAddress, v]),
+        );
+
+        for (const validatorStake of delegatorByAddress.validatorStakes) {
+          const validator = validatorMap.get(validatorStake.validatorOperatorAddress);
+          validatorStake.validatorsTotalReward = validator ? Number(validator.totalRewards) : 0;
+          validatorStake.delegatorRewards = Number(validatorStake.delegatorRewards);
           validatorStake.name = validator?.name || "";
           validatorStake.validatorAddress = validator?.validatorAddress || "";
-          validatorStake.stake = noExponent(
-            validatorStake?.stake / 10 ** 18 || 0,
-          );
+          validatorStake.stake = noExponent(validatorStake?.stake / 10 ** 18 || 0);
         }
       }
 
@@ -140,7 +133,7 @@ class DelegatorService {
         },
       };
     } catch (err) {
-      console.log("error in getDelegatorByAddress : ", err);
+      logger.error("error in getDelegatorByAddress", err);
       if (err instanceof Error) {
         return { error: true, message: err.message };
       }
@@ -196,7 +189,7 @@ class DelegatorService {
         },
       };
     } catch (err) {
-      console.log("error in getDelegatorByAddress : ", err);
+      logger.error("error in getDelegatorByAddress", err);
       if (err instanceof Error) {
         return { error: true, message: "Something went wrong! " };
       }
@@ -217,21 +210,25 @@ class DelegatorService {
           message: RES_MSG.ERROR,
         };
 
-      const modifiedResponse = await Promise.all(
-        response.data?.unbonding_responses.map(async (item: any) => {
-          const validator = await prisma.validator.findUnique({
-            where: { operatorAddress: item.validator_address },
-            select: { name: true },
-          });
+      const unbondingResponses = response.data?.unbonding_responses ?? [];
 
-          return {
-            validator_name: validator?.name || null,
-            ...item,
-          };
-        }),
+      const validatorAddresses = unbondingResponses.map(
+        (item: any) => item.validator_address,
       );
 
-      console.log("modifiedResponse : ", modifiedResponse);
+      const validators = await prisma.validator.findMany({
+        where: { operatorAddress: { in: validatorAddresses } },
+        select: { operatorAddress: true, name: true },
+      });
+
+      const validatorNameMap = new Map(
+        validators.map((v) => [v.operatorAddress, v.name]),
+      );
+
+      const modifiedResponse = unbondingResponses.map((item: any) => ({
+        validator_name: validatorNameMap.get(item.validator_address) || null,
+        ...item,
+      }));
 
       return {
         error: false,
@@ -239,7 +236,7 @@ class DelegatorService {
         data: modifiedResponse,
       };
     } catch (err) {
-      console.log("error in getDelegatorByAddress : ", err);
+      logger.error("error in getDelegatorByAddress", err);
       if (err instanceof Error) {
         return { error: true, message: "Something went wrong! " };
       }

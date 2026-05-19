@@ -6,6 +6,7 @@ import { convertBigIntToNumber } from "../../helper/common.helper";
 import { RES_MSG, QUEUE_NAME, REDIS_KEY } from "../../constant";
 import { CosmJsRpcMethods } from "../../helper/cosmsClient.helper";
 import { cursorPagination, serializeBigInt } from "../../lib/utilities.helper";
+import logger from "../../lib/logger";
 
 class BlockService {
   cosmjsInstace: CosmJsRpcMethods;
@@ -58,7 +59,7 @@ class BlockService {
         },
       };
     } catch (err) {
-      console.log("error while getting all blocks : ", err);
+      logger.error("error while getting all blocks", err);
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
           return { error: true, message: RES_MSG.SERVER_ERROR };
@@ -132,7 +133,7 @@ class BlockService {
         },
       };
     } catch (err) {
-      console.log("error in getBlockByHash : ", err);
+      logger.error("error in getBlockByHash", err);
       if (err instanceof Error) {
         return { error: true, message: err.message };
       }
@@ -203,7 +204,7 @@ class BlockService {
         data: { block: convertBigIntToNumber([blockDetail])[0] },
       };
     } catch (err) {
-      console.log("error in getBlockByNumber :   ", err);
+      logger.error("error in getBlockByNumber", err);
 
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
@@ -232,7 +233,7 @@ class BlockService {
 
       return blockDetail;
     } catch (err) {
-      console.log("error in getBlockDetails : ", err);
+      logger.error("error in getBlockDetails", err);
 
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
@@ -285,7 +286,7 @@ class BlockService {
         data: dataToSend,
       };
     } catch (err) {
-      console.log("error in getLatestBlock : ", err);
+      logger.error("error in getLatestBlock", err);
       if (err instanceof Error) {
         return { error: true, message: err.message };
       }
@@ -407,7 +408,7 @@ class BlockService {
         },
       };
     } catch (err) {
-      console.log("error while getting all blocks : ", err);
+      logger.error("error while getting all blocks", err);
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
           return { error: true, message: RES_MSG.SERVER_ERROR };

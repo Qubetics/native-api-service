@@ -37,161 +37,6 @@ import axios from "axios";
 import { calculateSupplyDetails } from "../../helper/common.helper";
 
 class ExplorerService {
-  // Dashboard method to fetch data
-  // async dashboard_2(): Promise<IESResponse> {
-  //   try {
-  //     // Initialize an object to store data
-  //     const obj: {
-  //       tokenPrice: number;
-  //       marketCap: number;
-  //       apy: number;
-  //       totalSupply: number;
-  //       inflation: number;
-  //       totalValidator: number;
-  //       circulation_supply: number;
-  //       apr: number;
-  //       total_transactions: number;
-  //       latest_block: number;
-  //       total_accounts: number;
-  //     } = {
-  //       tokenPrice: 0,
-  //       marketCap: 0,
-  //       apy: 0,
-  //       totalSupply: 0,
-  //       inflation: 0,
-  //       totalValidator: 0,
-  //       circulation_supply: 0,
-  //       apr: CURRENT_DEFAULT_APR,
-  //       total_transactions: 0,
-  //       latest_block: 0,
-  //       total_accounts: 0,
-  //     };
-
-  //     //totalAccounts , latestBlock
-  //     // Fetch data from Redis
-  //     const redisData: any = await this.getRedisValue();
-  //     console.log("redisDataInfo", redisData);
-  //     const latestBlock = await RedisService.getString(
-  //       REDIS_KEY.NATIVE_BLOCKS_COUNT,
-  //     );
-  //     const transactionCount = await RedisService.getString(
-  //       REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
-  //     );
-  //     const marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
-  //     const tokenPrice = await RedisService.getString(REDIS_KEY.COIN_PRICE);
-
-  //     const [userCount] = await Promise.all([
-  //       // web3Helper.getBlockNumber().then(Number),
-  //       prisma.users.count(),
-  //     ]);
-
-  //     // const isInvalidRedisData =
-  //     //   !redisData ||
-  //     //   Object.values(redisData).every(
-  //     //     (value) => value === undefined || Number.isNaN(value) || value === 0
-  //     //   );
-
-  //     // Check if Redis data is not available
-  //     if (!isInvalidRedisData) {
-  //       // Set default values and fetch additional data
-
-  //       const data = await calculateData();
-
-  //       if (
-  //         "apy" in data &&
-  //         "inflation" in data &&
-  //         "totalSupply" in data &&
-  //         "totalValidator" in data &&
-  //         "circulation_supply" in data
-  //       ) {
-  //         console.log("calculateData", data);
-  //         const circulationSupply =
-  //           data?.circulation_supply === 0 || !data.circulation_supply
-  //             ? await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY)
-  //             : data?.circulation_supply;
-  //         return {
-  //           error: false,
-  //           message: RES_MSG.FETCH_SUCCESS,
-  //           data: {
-  //             apy: CURRENT_DEFAULT_APR,
-  //             inflation: data.inflation,
-  //             totalSupply: data.totalSupply,
-  //             totalValidator: data.totalValidator,
-  //             circulation_supply: circulationSupply,
-  //             apr: data?.apr ? Number(data?.apr) : CURRENT_DEFAULT_APR,
-  //             tokenPrice: tokenPrice ?? CURRENT_DEFAULT_COIN_PRICE,
-  //             validators: data?.validator ?? 0,
-  //             circulationSupply: circulationSupply,
-  //             latest_block: latestBlock,
-  //             total_transactions: transactionCount,
-  //             total_accounts: userCount,
-  //             bondedTokens: data?.bondedTokens ? Number(data.bondedTokens) : 0,
-  //             bondedRate: data?.bondedRate,
-  //             marketCap,
-  //           },
-  //         };
-  //       } else {
-  //         return { error: true, message: RES_MSG.NOT_FOUND };
-  //       }
-  //     } else {
-  //       // Use Redis data if available
-  //       obj.apy = CURRENT_DEFAULT_APR;
-  //       obj.totalSupply = redisData?.totalSupply;
-  //       obj.inflation = redisData?.inflation;
-  //       obj.tokenPrice = tokenPrice ?? CURRENT_DEFAULT_COIN_PRICE;
-  //       obj.marketCap = marketCap;
-  //       obj.totalValidator = redisData?.totalValidator;
-  //       obj.circulation_supply = redisData?.circulation_supply;
-  //       obj.apr = CURRENT_DEFAULT_APR;
-  //       obj.total_transactions = transactionCount;
-  //       obj.latest_block = latestBlock;
-  //       obj.total_accounts = userCount;
-  //     }
-  //     return {
-  //       error: false,
-  //       message: RES_MSG.FETCH_SUCCESS,
-  //       data: {
-  //         apy: CURRENT_DEFAULT_APR,
-  //         inflation: data.inflation,
-  //         totalSupply: data.totalSupply,
-  //         totalValidator: data.totalValidator,
-  //         circulation_supply: circulationSupply,
-  //         apr: data?.apr ? Number(data?.apr) : CURRENT_DEFAULT_APR,
-  //         tokenPrice: tokenPrice ?? CURRENT_DEFAULT_COIN_PRICE,
-  //         validators: data?.validator ?? 0,
-  //         circulationSupply: circulationSupply,
-  //         latest_block: latestBlock,
-  //         total_transactions: transactionCount,
-  //         total_accounts: userCount,
-  //         bondedTokens: data?.bondedTokens ? Number(data.bondedTokens) : 0,
-  //         bondedRate: data?.bondedRate,
-  //         marketCap,
-  //       },
-  //     };
-  //     // } else {
-  //     //   // Use Redis data if available
-  //     //   obj.apy = CURRENT_DEFAULT_APR;
-  //     //   obj.totalSupply = redisData?.totalSupply;
-  //     //   obj.inflation = redisData?.inflation;
-  //     //   obj.tokenPrice = tokenPrice ?? CURRENT_DEFAULT_COIN_PRICE;
-  //     //   obj.marketCap = marketCap;
-  //     //   obj.totalValidator = redisData?.totalValidator;
-  //     //   obj.circulation_supply = redisData?.circulation_supply;
-  //     //   obj.apr = CURRENT_DEFAULT_APR;
-  //     //   obj.total_transactions = transactionCount;
-  //     //   obj.latest_block = latestBlock;
-  //     //   obj.total_accounts = userCount;
-  //     // }
-  //     // return {
-  //     //   error: false,
-  //     //   message: RES_MSG.FETCH_SUCCESS,
-  //     //   data: obj,
-  //     // };
-  //   } catch (err) {
-  //     logger.error("Error in dashboard data:", err);
-  //     return { error: true, message: RES_MSG.NOT_FOUND };
-  //   }
-  // }
   // Method to get data from Redis
   getRedisValue = async (): Promise<
     | {
@@ -516,16 +361,23 @@ class ExplorerService {
         );
       }
 
-      const totalContractDeployedTx = await RedisService.getString(
-        REDIS_KEY.TOTAL_CONTRACT_DEPLOYED_TX,
-      );
+      let contractsCount: number;
+      const cachedContractsCount = await RedisService.getString(REDIS_KEY.CONTRACTS_COUNT);
+      if (cachedContractsCount && !Array.isArray(cachedContractsCount)) {
+        contractsCount = Number(cachedContractsCount);
+      } else {
+        contractsCount = await prisma.contracts.count();
+        RedisService.setStringWithExpiry(REDIS_KEY.CONTRACTS_COUNT, contractsCount.toString(), 300).catch(
+          (e) => logger.error("Cache write error for CONTRACTS_COUNT", e),
+        );
+      }
 
       return {
         error: false,
         message: RES_MSG.TRANSACTION_HISTORY_SUCCESS,
         data: {
           finalData: finalData as Array<GraphData>,
-          count: await prisma.contracts.count(),
+          count: contractsCount,
         },
       };
     } catch (err) {
@@ -535,8 +387,6 @@ class ExplorerService {
 
   async getAddressDetail(address: string): Promise<IESResponse> {
     try {
-      console.log("address: ", address);
-
       const user = await prisma.users.findFirst({
         where: {
           address: address,
@@ -548,28 +398,31 @@ class ExplorerService {
 
       let txnCount = user ? user.txn : "";
 
-      // Check if USER_BALANCE is in Redis
-      let userBalance = await RedisService.getString(REDIS_KEY.USER_BALANCE);
-      try {
-        const response = await fetchRequest(
-          `${environment.evmHost}/cosmos/bank/v1beta1/spendable_balances/${address}`,
-          FETCH_METHODS.GET,
-          HEADERS.DEFAULT,
-        );
+      const userBalanceCacheKey = `${REDIS_KEY.USER_BALANCE}:${address}`;
+      let userBalance = await RedisService.getString(userBalanceCacheKey);
+      if (!userBalance || Array.isArray(userBalance)) {
+        try {
+          const response = await fetchRequest(
+            `${environment.evmHost}/cosmos/bank/v1beta1/spendable_balances/${address}`,
+            FETCH_METHODS.GET,
+            HEADERS.DEFAULT,
+          );
 
-        // Find the entry with denom "qubetics"
-        console.log(response.data?.balances, "responseF");
-        const qubeticsAmount = response.data?.balances.find(
-          (item: any) => item.denom === "tics",
-        );
+          const qubeticsAmount = response.data?.balances?.find(
+            (item: any) => item.denom === "tics",
+          );
 
-        userBalance = qubeticsAmount.amount;
+          userBalance = qubeticsAmount?.amount ?? "";
 
-        // Store userBalance in Redis
-        await RedisService.setString(REDIS_KEY.USER_BALANCE, userBalance);
-      } catch (error) {
-        console.log("balance error", error);
-        userBalance = "";
+          if (userBalance) {
+            RedisService.setStringWithExpiry(userBalanceCacheKey, userBalance, 30).catch(
+              (e) => logger.error("Cache write error for USER_BALANCE", e),
+            );
+          }
+        } catch (error) {
+          logger.error("balance fetch error", error);
+          userBalance = "";
+        }
       }
       const actualBalance = userBalance
         ? (Number(userBalance) / Math.pow(10, 18)).toString()
@@ -578,36 +431,21 @@ class ExplorerService {
       let marketCapPrice = await RedisService.getString(
         CONST_NAME.MARKET_CAP_PRICE,
       );
-      console.log("marketCapPrice", marketCapPrice);
       let value: string;
       if (!marketCapPrice) {
         const latestEntry = await prisma.coinmarketInfo.findFirst({
-          orderBy: {
-            id: "desc",
-          },
-          select: {
-            price: true,
-          },
+          orderBy: { id: "desc" },
+          select: { price: true },
         });
-
-        console.log("latestEntry?.price: ", latestEntry?.price);
 
         const price = latestEntry?.price?.toString() ?? "";
         value = price ? (Number(price) * Number(actualBalance)).toString() : "";
       } else {
-        marketCapPrice = marketCapPrice;
-
         value =
           marketCapPrice?.price && actualBalance
             ? (Number(marketCapPrice?.price) * Number(actualBalance)).toString()
             : "";
       }
-
-      console.log("coinBalance ", {
-        coinBalance: actualBalance,
-        value: value,
-        transactionCount: Number(txnCount),
-      });
 
       return {
         error: false,
@@ -619,7 +457,7 @@ class ExplorerService {
         },
       };
     } catch (err) {
-      console.log("error : ", err);
+      logger.error("error in getAddressDetail", err);
 
       return {
         error: true,
@@ -633,8 +471,6 @@ class ExplorerService {
     interval: number;
   }): Promise<IGraphResponse> {
     try {
-      console.log(payloads.time);
-      console.log(payloads.interval);
       let graphData;
       let finalData;
       let startDate = "";
@@ -725,8 +561,6 @@ class ExplorerService {
 
   async getUserByAddress(address: string): Promise<IESResponse> {
     try {
-      console.log("address: ", address);
-
       const user = await prisma.users.findFirst({
         where: {
           address: address,
@@ -736,7 +570,6 @@ class ExplorerService {
         },
       });
 
-      console.log(user, "user");
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
@@ -745,7 +578,7 @@ class ExplorerService {
         },
       };
     } catch (err) {
-      console.log("error getUserByAddress: ", err);
+      logger.error("error in getUserByAddress", err);
 
       return {
         error: true,
@@ -757,7 +590,7 @@ class ExplorerService {
   async dashboard(): Promise<IESResponse> {
     try {
       const [
-        data,
+        cachedCalcData,
         latestBlock,
         transactionCount,
         marketCapCached,
@@ -766,7 +599,7 @@ class ExplorerService {
         burnedAmountCached,
         totalSupplyCached,
       ] = await Promise.all([
-        calculateData(),
+        RedisService.getString(REDIS_KEY.EXPLORER_CALCULATE_DATA),
         RedisService.getString(REDIS_KEY.LATEST_BLOCK),
         RedisService.getString(REDIS_KEY.NATIVE_TRANSACTIONS_COUNT),
         RedisService.getString(REDIS_KEY.MARKET_CAP),
@@ -775,6 +608,20 @@ class ExplorerService {
         RedisService.getString(REDIS_KEY.TOTAL_BURNED_AMOUNT),
         RedisService.getString(REDIS_KEY.TOTAL_SUPPLY),
       ]);
+
+      let data: any;
+      if (cachedCalcData && !Array.isArray(cachedCalcData)) {
+        data = typeof cachedCalcData === "string"
+          ? JSON.parse(cachedCalcData)
+          : cachedCalcData;
+      } else {
+        data = await calculateData();
+        RedisService.setStringWithExpiry(
+          REDIS_KEY.EXPLORER_CALCULATE_DATA,
+          JSON.stringify(data),
+          60,
+        ).catch((e) => logger.error("Cache write error for EXPLORER_CALCULATE_DATA", e));
+      }
 
       const tokenPrice = tokenPriceCached ?? CURRENT_DEFAULT_COIN_PRICE;
 
@@ -856,7 +703,6 @@ class ExplorerService {
 
         const { initialSupply } = environment;
         const totalSupply = initialSupply - burnedAmount;
-        console.log("native-initialSupply", initialSupply, totalSupply);
         await redisHelper.setString(REDIS_KEY.TOTAL_SUPPLY, totalSupply);
       }
 
@@ -935,7 +781,6 @@ class ExplorerService {
       // 	circulationSupplyUrl + '/explorer/circulation-supply',
       // );
 
-      console.log(circulatingSupply, supplyDetails, "CRCLFRMNATIVE");
       // circulationSupply = result?.data?.data?.circulationSupply;
 
       return {

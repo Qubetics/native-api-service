@@ -3,7 +3,7 @@ import { RES_MSG } from "../../constant";
 import { IESResponse } from "../../interfaces";
 import { noExponent } from "../../Utility/common";
 import { convertBigIntToNumber } from "../../helper/common.helper";
-import { add } from "winston";
+import logger from "../../lib/logger";
 
 class ProposalService {
   /**
@@ -17,68 +17,38 @@ class ProposalService {
     status: string;
   }): Promise<IESResponse> {
     try {
-      let proposals;
-      let totalCount;
-      let votingCount = 0;
-      let depositCount = 0;
-      let passedCount = 0;
-      let rejectCount = 0;
-      let failedCount = 0;
-
-      if (
+      const hasStatusFilter =
         data.status === "voting" ||
         data.status === "deposit" ||
         data.status === "passed" ||
         data.status === "rejected" ||
-        data.status === "failed"
-      ) {
-        proposals = await prisma.proposals.findMany({
-          orderBy: { votingStartTime: "desc" },
+        data.status === "failed";
+
+      const [proposals, statusGroups, totalCount] = await Promise.all([
+        prisma.proposals.findMany({
+          orderBy: hasStatusFilter
+            ? { votingStartTime: "desc" }
+            : { votingEndTime: "desc" },
           skip: data.page * data.limit,
           take: data.limit,
-          where: { status: data.status },
-        });
+          ...(hasStatusFilter ? { where: { status: data.status } } : {}),
+        }),
+        prisma.proposals.groupBy({
+          by: ["status"],
+          _count: { status: true },
+        }),
+        prisma.proposals.count(),
+      ]);
 
-        votingCount = await prisma.proposals.count({
-          where: { status: "voting" },
-        });
-        depositCount = await prisma.proposals.count({
-          where: { status: "deposit" },
-        });
-        passedCount = await prisma.proposals.count({
-          where: { status: "passed" },
-        });
-        rejectCount = await prisma.proposals.count({
-          where: { status: "rejected" },
-        });
-        failedCount = await prisma.proposals.count({
-          where: { status: "failed" },
-        });
-        totalCount = await prisma.proposals.count();
-      } else {
-        proposals = await prisma.proposals.findMany({
-          orderBy: { votingEndTime: "desc" },
-          skip: data.page * data.limit,
-          take: data.limit,
-        });
-        votingCount = await prisma.proposals.count({
-          where: { status: "voting" },
-        });
-        depositCount = await prisma.proposals.count({
-          where: { status: "deposit" },
-        });
-        passedCount = await prisma.proposals.count({
-          where: { status: "passed" },
-        });
-        rejectCount = await prisma.proposals.count({
-          where: { status: "rejected" },
-        });
-        failedCount = await prisma.proposals.count({
-          where: { status: "failed" },
-        });
+      const countByStatus = new Map(
+        statusGroups.map((g) => [g.status, g._count.status]),
+      );
 
-        totalCount = await prisma.proposals.count();
-      }
+      const votingCount = countByStatus.get("voting") ?? 0;
+      const depositCount = countByStatus.get("deposit") ?? 0;
+      const passedCount = countByStatus.get("passed") ?? 0;
+      const rejectCount = countByStatus.get("rejected") ?? 0;
+      const failedCount = countByStatus.get("failed") ?? 0;
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
@@ -93,7 +63,7 @@ class ProposalService {
         },
       };
     } catch (err) {
-      console.log("error in getAllProposals : ", err);
+      logger.error("error in getAllProposals", err);
 
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
@@ -142,75 +112,43 @@ class ProposalService {
     proposalId: string;
   }): Promise<IESResponse> {
     try {
-      let voters;
-      let totalCount;
+      const hasAnswerFilter = [RES_MSG.YES, RES_MSG.NO, RES_MSG.VETO, RES_MSG.ABSTAIN].includes(
+        data.answer,
+      );
 
-      // Check if the proposalId exists
-      const proposalExists = await prisma.voters.findFirst({
-        where: {
-          proposalId: data.proposalId,
-        },
-      });
+      const whereClause: { proposalId: string; answer?: string } = {
+        proposalId: data.proposalId,
+        ...(hasAnswerFilter ? { answer: data.answer } : {}),
+      };
 
-      if (!proposalExists) {
+      // Single groupBy replaces 4 count queries; also confirms proposalId exists
+      const [answerGroups, voters, totalCount] = await Promise.all([
+        prisma.voters.groupBy({
+          by: ["answer"],
+          where: { proposalId: data.proposalId },
+          _count: { answer: true },
+        }),
+        prisma.voters.findMany({
+          orderBy: { blockNumber: "desc" },
+          skip: data.page * data.limit,
+          take: data.limit,
+          where: whereClause,
+        }),
+        prisma.voters.count({ where: whereClause }),
+      ]);
+
+      if (answerGroups.length === 0 && totalCount === 0) {
         throw new Error(RES_MSG.NOT_FOUND);
       }
 
-      // Define the common where clause with optional answer
-      const whereClause: {
-        proposalId: string;
-        answer?: string;
-      } = {
-        proposalId: data.proposalId,
-      };
+      const countByAnswer = new Map(
+        answerGroups.map((g) => [g.answer, g._count.answer]),
+      );
 
-      // Add answer to where clause if it matches one of the expected values
-      if (
-        [RES_MSG.YES, RES_MSG.NO, RES_MSG.VETO, RES_MSG.ABSTAIN].includes(
-          data.answer,
-        )
-      ) {
-        whereClause.answer = data.answer;
-      }
-
-      // Fetch the voters based on the constructed query
-      voters = await prisma.voters.findMany({
-        orderBy: { blockNumber: "desc" },
-        skip: data.page * data.limit,
-        take: data.limit,
-        where: whereClause,
-      });
-
-      // Calculate the total count of voters that match the criteria
-      totalCount = await prisma.voters.count({
-        where: whereClause,
-      });
-
-      // Calculate the counts for each answer type
-      const yesCount = await prisma.voters.count({
-        where: {
-          proposalId: data.proposalId,
-          answer: RES_MSG.YES,
-        },
-      });
-      const noCount = await prisma.voters.count({
-        where: {
-          proposalId: data.proposalId,
-          answer: RES_MSG.NO,
-        },
-      });
-      const vetoCount = await prisma.voters.count({
-        where: {
-          proposalId: data.proposalId,
-          answer: RES_MSG.VETO,
-        },
-      });
-      const abstainCount = await prisma.voters.count({
-        where: {
-          proposalId: data.proposalId,
-          answer: RES_MSG.ABSTAIN,
-        },
-      });
+      const yesCount = countByAnswer.get(RES_MSG.YES) ?? 0;
+      const noCount = countByAnswer.get(RES_MSG.NO) ?? 0;
+      const vetoCount = countByAnswer.get(RES_MSG.VETO) ?? 0;
+      const abstainCount = countByAnswer.get(RES_MSG.ABSTAIN) ?? 0;
 
       return {
         error: false,
@@ -225,7 +163,7 @@ class ProposalService {
         },
       };
     } catch (err) {
-      console.log("error in getAllVoters : ", err);
+      logger.error("error in getAllVoters", err);
 
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {

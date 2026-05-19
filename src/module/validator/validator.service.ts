@@ -3,6 +3,7 @@ import { CONST_NAME, RES_MSG } from "../../constant";
 import { IESResponse } from "../../interfaces";
 import { noExponent } from "../../Utility/common";
 import { convertBigIntToNumber } from "../../helper/common.helper";
+import logger from "../../lib/logger";
 import axios from "axios";
 
 class ValidatorService {
@@ -41,8 +42,20 @@ class ValidatorService {
           where: whereClause,
         }),
         prisma.validator.findMany({
-          orderBy: { createdAt: "desc" },
+          orderBy: { votingPower: "desc" },
           where: { status: "active" },
+          select: {
+            id: true,
+            name: true,
+            validatorAddress: true,
+            operatorAddress: true,
+            status: true,
+            votingPower: true,
+            commissionRate: true,
+            delegatorCount: true,
+            totalStake: true,
+            jailed: true,
+          },
         }),
         prisma.validator.count({ where: { status: "active" } }),
         prisma.validator.count({ where: { status: "inactive" } }),
@@ -70,7 +83,7 @@ class ValidatorService {
         },
       };
     } catch (err) {
-      console.log("error in getAllValidators : ", err);
+      logger.error("error in getAllValidators", err);
 
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {
@@ -106,7 +119,7 @@ class ValidatorService {
         },
       };
     } catch (err) {
-      console.log("error in getValidatorsByAddress : ", err);
+      logger.error("error in getValidatorsByAddress", err);
 
       if (err instanceof Error) {
         return { error: true, message: err.message };
@@ -126,30 +139,21 @@ class ValidatorService {
     searchTerm: string;
   }): Promise<IESResponse> {
     try {
-      const validatorsDetailsByName: any = await prisma.validator.findMany({
-        where: {
-          name: {
-            contains: data.searchTerm,
-            mode: "insensitive",
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        skip: data.page * data.limit,
-        take: data.limit,
-      });
+      const nameFilter = { name: { contains: data.searchTerm, mode: "insensitive" as const } };
+
+      const [validatorsDetailsByName, validatorCount]: [any, number] = await Promise.all([
+        prisma.validator.findMany({
+          where: nameFilter,
+          orderBy: { createdAt: "desc" },
+          skip: data.page * data.limit,
+          take: data.limit,
+        }),
+        prisma.validator.count({ where: nameFilter }),
+      ]);
+
       if (!validatorsDetailsByName.length) {
         throw new Error(RES_MSG.NOT_FOUND);
       }
-
-      const validatorCount = await prisma.validator.count({
-        where: {
-          name: {
-            contains: data.searchTerm,
-          },
-        },
-      });
       return {
         error: false,
         message: RES_MSG.FETCH_SUCCESS,
@@ -159,7 +163,7 @@ class ValidatorService {
         },
       };
     } catch (err) {
-      console.log("error in getValidatorsByName : ", err);
+      logger.error("error in getValidatorsByName", err);
       if (err instanceof Error) {
         return { error: true, message: err.message };
       }
@@ -184,7 +188,7 @@ class ValidatorService {
         return await this.getValidatorsByName(data);
       }
     } catch (err) {
-      console.log("error in getValidatorSearch : ", err);
+      logger.error("error in getValidatorSearch", err);
 
       if (err instanceof Error) {
         return { error: true, message: err.message };
@@ -199,7 +203,6 @@ class ValidatorService {
    */
   async getValidatorDetails(address: string): Promise<IESResponse> {
     try {
-      console.log("vaddress", address);
       const validatorData = await prisma.validator.findUnique({
         select: {
           totalRewards: true,
@@ -210,7 +213,6 @@ class ValidatorService {
         where: { validatorAddress: address },
       });
 
-      console.log(validatorData, "validatorData");
       if (!validatorData) {
         throw new Error(RES_MSG.NOT_FOUND);
       }
@@ -254,7 +256,7 @@ class ValidatorService {
         data: convertBigIntToNumber([dataToSend])[0],
       };
     } catch (err) {
-      console.log("error in getValidatorDetails : ", err);
+      logger.error("error in getValidatorDetails", err);
 
       if (err instanceof Error) {
         return { error: true, message: err.message };
@@ -276,42 +278,29 @@ class ValidatorService {
         validator = validatorsString.split(",");
       }
 
-      let filteredValidators = [];
+      const apiUrl = environment.evmHost;
 
-      for (let i = 0; i < validator.length; i++) {
-        const validatorAddr = validator[i];
+      const results = await Promise.allSettled(
+        validator.map((validatorAddr) =>
+          axios(`${apiUrl}/cosmos/staking/v1beta1/validators/${validatorAddr}`),
+        ),
+      );
 
-        const apiUrl = environment.evmHost;
+      const BOND_STATUS_MAP: Record<string, string> = {
+        BOND_STATUS_BONDED: "active",
+        BOND_STATUS_UNBONDED: "inactive",
+        BOND_STATUS_UNBONDING: "deactivating",
+      };
 
-        const response = await axios(
-          `${apiUrl}/cosmos/staking/v1beta1/validators/${validatorAddr}`,
-        );
+      const filteredValidators = results
+        .filter((r): r is PromiseFulfilledResult<any> => r.status === "fulfilled")
+        .map((r) => {
+          const validatorData = r.value.data.validator;
+          const status = BOND_STATUS_MAP[validatorData.status] ?? "unknown";
+          return { ...validatorData, status };
+        })
+        .filter((v) => !data.status || v.status === data.status);
 
-        const validatorData = response.data.validator;
-
-        // Map status to 'active', 'inactive', or 'deactivating'
-        let status;
-        switch (validatorData.status) {
-          case "BOND_STATUS_BONDED":
-            status = "active";
-            break;
-          case "BOND_STATUS_UNBONDED":
-            status = "inactive";
-            break;
-          case "BOND_STATUS_UNBONDING":
-            status = "deactivating";
-            break;
-          default:
-            status = "unknown";
-        }
-
-        // Check if the validator matches the requested status
-        if (!data.status || status === data.status) {
-          filteredValidators.push({ ...validatorData, status });
-        }
-      }
-
-      // Check if any validators were found with the requested status
       if (filteredValidators.length === 0) {
         throw new Error(RES_MSG.NOT_FOUND);
       }
@@ -324,7 +313,7 @@ class ValidatorService {
         },
       };
     } catch (err) {
-      console.log("error in getAllValidators : ", err);
+      logger.error("error in getAllValidators", err);
 
       if (err instanceof Error) {
         if (err.message.includes("prisma")) {

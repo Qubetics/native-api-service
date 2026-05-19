@@ -30,9 +30,9 @@ export const RESPONSES = {
 
 export const RATE_LIMITER_MESSAGE = {
   TOO_MANY_REQUEST:
-    "You are doing too many request. Please try again in 5 minutes.",
-  WINDOW_MS: 5 * 60 * 1000, // 5 minutes  600000, // 10 minutes in milliseconds
-  MAX: 20, // 20 request in 10 minutes
+    "Too many requests from this IP, please try again in a minute.",
+  WINDOW_MS: 60 * 1000, // 1 minute window
+  MAX: 300, // 300 requests per minute per IP
 };
 
 export const RES_MSG = {
@@ -191,6 +191,8 @@ export const REDIS_KEY = {
   TOTAL_SUPPLY: "TOTAL_SUPPLY",
   ACTIVE_ACCOUNTS_TODAY: "ACTIVE_ACCOUNTS_TODAY",
   TRANSACTIONS_30_DAYS: "TRANSACTIONS_30_DAYS",
+  EXPLORER_CALCULATE_DATA: "EXPLORER_CALCULATE_DATA",
+  CONTRACTS_COUNT: "CONTRACTS_COUNT",
 };
 
 export const QUEUE_NAME = {
